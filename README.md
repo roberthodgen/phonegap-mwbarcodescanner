@@ -5,26 +5,25 @@ MWBarcodeScanner plugin
 Guide on how to add the mobiScan Phonegap plugin to your project(s)
 
 
-#Install using CLI interface 
+##Install using CLI interface 
 (supposed you have already created the app by using CLI interface and added desired platforms)
 
 
 1. Add plugin to the project with :
-...
+
 	phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
-...
+
 or 
-...
-	phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN_XML (if you are adding from local folder)
-...
+
+	phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN (if you are adding from local folder)
 
 
 2. Add a button to index.html which will call the scanner:
-...
+
 	<form style="width: 100%; text-align: center;">
-      		  <input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
-    	</form>
-...
+		<input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
+	</form>
+
 
 3. Upon license purchase, replace the username/key pairs for the corresponding barcode types in the file 'src/com/manateeworks/BarcodeScannerPlugin.java' (Android), 'Plugins/MWScannerViewController.m' (iOS) or 'Plugins/com.manateeworks.barcodescanner/BarcodeHelper.cs (wp8);
 
@@ -40,7 +39,7 @@ It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/
 
 
 
-#Manual Install
+##Manual Install
 
 ###Android:
 
