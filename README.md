@@ -5,32 +5,36 @@ MWBarcodeScanner plugin
 Guide on how to add the mobiScan Phonegap plugin to your project(s)
 
 
-#Install using CLI interface (supposed you have already created the app by using CLI interface and added desired platforms)
+#Install using CLI interface 
+(supposed you have already created the app by using CLI interface and added desired platforms)
 
 
 1. Add plugin to the project with :
-
-	phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN_XML (if you are adding from local folder)
-
+...
+	phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
+...
 or 
-	phonegap local plugin add https://...
+...
+	phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN_XML (if you are adding from local folder)
+...
 
 
 2. Add a button to index.html which will call the scanner:
-
+...
 	<form style="width: 100%; text-align: center;">
       		  <input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
     	</form>
+...
 
 3. Upon license purchase, replace the username/key pairs for the corresponding barcode types in the file 'src/com/manateeworks/BarcodeScannerPlugin.java' (Android), 'Plugins/MWScannerViewController.m' (iOS) or 'Plugins/com.manateeworks.barcodescanner/BarcodeHelper.cs (wp8);
 
 
 
-##Android Note:
+###Android Note:
 
 You have to import .R file of your project (import YOUR_APP_PACKAGE_NAME.R;) to the 'src/com/manateeworks/ScannerActivity.java'
 
-##WP8 Note:
+###WP8 Note:
 
 It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/javascript" src="cordova.js"></script>' in index.html (or other html files) manually
 
@@ -38,7 +42,7 @@ It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/
 
 #Manual Install
 
-##Android:
+###Android:
 
 
 1. Create a Phonegap Android app;
@@ -54,44 +58,43 @@ It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/
 6. Copy the file 'www/MSBScanner.js' to the 'assets/www/js' folder;
  
 7. Insert the Scanner activity definition into AndroidManifest.xml:
-
+...
  	<activity android:name="com.manateeworks.ScannerActivity"
 		android:screenOrientation="landscape" android:configChanges="orientation|keyboardHidden"
 		android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 	</activity>
-
+...
 
 8. Insert the MWBScanner.js script into index.html:
-
+...
 	<script type="text/javascript" src="js/MWBScanner.js"></script> 
-
+...
 9. Add a test button for calling the scanner to index.html:
-
+...
  	<form style="width: 100%; text-align: center;">
         	    <input type="button" value="Scan Barcode" onclick="startScanning()" style="font-size: 20px; width: 300px; height: 30px; margin-top: 50px;"/>
-        </form>
-
-
+       </form>
+...
 
 
 10. Add the plugin to 'res/xml/config.xml':
 
 	**For Phonegap 2.x **
-
+...
 	<plugins>
     
-		...
+			
 		<plugin name="MWBarcodeScanner" value="com.manateeworks.BarcodeScannerPlugin"/>
     
-		...
 	</plugins>
+...
 
 	**For Phonegap 3 **
-
+...
 	<feature name="MWBarcodeScanner">
        		 <param name="android-package" value="com.manateeworks.BarcodeScannerPlugin" />
    	</feature>
-
+...
 
 
 
@@ -126,7 +129,7 @@ It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/
 	
 	
 
-##iOS:
+###iOS:
 
 1. Create a Phonegap iOS app;
 
@@ -178,7 +181,7 @@ It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/
 
 
 
-#Windows Phone 8:
+###Windows Phone 8:
 
 1. Add (drag & drop) MWBarcodeScanner folder into the project folder named 'plugins'. If needed, create Plugins folder in project previously;
 
