@@ -5,7 +5,7 @@ MWBarcodeScanner plugin
 Guide on how to add the mobiScan Phonegap plugin to your project(s)
 
 
-*Install using CLI interface (supposed you have already created the app by using CLI interface and added desired platforms)*
+#Install using CLI interface (supposed you have already created the app by using CLI interface and added desired platforms)
 
 
 1. Add plugin to the project with :
@@ -26,19 +26,19 @@ or
 
 
 
-*Android Note:*
+##Android Note:
 
 You have to import .R file of your project (import YOUR_APP_PACKAGE_NAME.R;) to the 'src/com/manateeworks/ScannerActivity.java'
 
-*WP8 Note:*
+##WP8 Note:
 
 It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/javascript" src="cordova.js"></script>' in index.html (or other html files) manually
 
 
 
-*Manual Install*
+#Manual Install
 
-*Android:*
+##Android:
 
 
 1. Create a Phonegap Android app;
@@ -126,7 +126,7 @@ It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/
 	
 	
 
-iOS:
+##iOS:
 
 1. Create a Phonegap iOS app;
 
@@ -178,8 +178,7 @@ iOS:
 
 
 
-
-Windows Phone 8:
+#Windows Phone 8:
 
 1. Add (drag & drop) MWBarcodeScanner folder into the project folder named 'plugins'. If needed, create Plugins folder in project previously;
 
