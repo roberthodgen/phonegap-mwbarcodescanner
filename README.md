@@ -11,7 +11,7 @@ Guide on how to add the mobiScan Phonegap plugin to your project(s)
 
 1. Add plugin to the project with :
 
-	phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
+    phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
 
 or 
 
