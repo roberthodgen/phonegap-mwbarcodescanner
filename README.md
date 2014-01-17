@@ -1,7 +1,6 @@
 Manateeworks Barcode Scanner Plugin
-Version 1.1
 =========================
-
+ Version 1.1
 
 Guide on how to add the mobiScan Phonegap plugin to your project(s)
 
