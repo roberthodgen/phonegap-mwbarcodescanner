@@ -9,6 +9,9 @@
 #import <CoreVideo/CoreVideo.h>
 #import <CoreMedia/CoreMedia.h>
 
+#define OM_MW       1
+#define OM_IMAGE    2
+
 @protocol ScanningFinishedDelegate <NSObject>
     - (void)scanningFinished:(NSString *)result withType: (NSString *) lastFormat andRawResult: (NSData *) rawResult;
 @end
@@ -47,6 +50,7 @@ typedef enum eMainScreenState {
     
     IBOutlet UIImageView *cameraOverlay;
     IBOutlet UIButton *closeButton;
+    IBOutlet UIButton *flashButton;
     
 }
 
@@ -58,10 +62,15 @@ typedef enum eMainScreenState {
 @property (nonatomic, retain) AVCaptureDevice *device;
 @property (nonatomic, retain) NSTimer *focusTimer;
 @property (nonatomic, retain) id <ScanningFinishedDelegate> delegate;
+@property (nonatomic, retain) UIButton *flashButton;
 
 
 - (IBAction)doClose:(id)sender;
 + (void) initDecoder;
++ (void) setInterfaceOrientation: (UIInterfaceOrientationMask) interfaceOrientation;
++ (void) enableHiRes: (BOOL) hiRes;
++ (void) enableFlash: (BOOL) flash;
++ (void) setOverlayMode: (int) overlayMode;
 - (void)revertToNormal;
 - (void)decodeResultNotification: (NSNotification *)notification;
 - (void)initCapture;

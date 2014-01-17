@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -37,8 +37,17 @@ namespace BarcodeScannerPage
 {
     public partial class ScannerPage : PhoneApplicationPage
     {
+
+        public enum OverlayMode
+         {
+             OM_MW = 1,
+             OM_IMAGE = 2
+         };
+
         public ScannerPage()
         {
+
+
             InitializeComponent();
 
             int ver = Scanner.MWBgetLibVersion();
@@ -59,8 +68,12 @@ namespace BarcodeScannerPage
 
         }
 
+        public static OverlayMode param_OverlayMode = OverlayMode.OM_MW;
+        public static bool param_EnableHiRes = true;
+        public static bool param_EnableFlash = true;
+        public static SupportedPageOrientation param_Orientation = SupportedPageOrientation.Landscape;
 
-        public const int MAX_RESOLUTION = 1280 * 768;
+        public int MAX_RESOLUTION = 1280 * 768;
 
         public static PhotoCaptureDevice cameraDevice;
         //  public static AudioVideoCaptureDevice cameraDevice;
@@ -86,11 +99,44 @@ namespace BarcodeScannerPage
         {
             base.OnNavigatedTo(e);
 
+            if (param_Orientation == SupportedPageOrientation.Landscape)
+            {
+
+                this.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    this.SupportedOrientations = SupportedPageOrientation.Landscape;
+                }));
+            } else
+                if (param_Orientation == SupportedPageOrientation.Portrait)
+                {
+
+                    this.Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        this.SupportedOrientations = SupportedPageOrientation.Portrait;
+                    }));
+                }
+               
+
             InitializeCamera(CameraSensorLocation.Back);
 
             isProcessing = false;
 
             fixOrientation(Orientation);
+            if ((param_OverlayMode & OverlayMode.OM_MW) > 0)
+            {
+                MWOverlay.addOverlay(canvas);
+            }
+
+            
+
+            if ((param_OverlayMode & OverlayMode.OM_IMAGE) > 0)
+            {
+                cameraOverlay.Visibility = System.Windows.Visibility.Visible;
+            }
+            else
+            {
+                cameraOverlay.Visibility = System.Windows.Visibility.Collapsed;
+            }
 
         }
 
@@ -110,7 +156,10 @@ namespace BarcodeScannerPage
                     Debug.WriteLine("Camera closing error: " + e2.Message);
                 }
             }
-
+            if ((param_OverlayMode & OverlayMode.OM_MW) > 0)
+            {
+                MWOverlay.removeOverlay();
+            }
             base.OnNavigatingFrom(e);
         }
 
@@ -198,6 +247,16 @@ namespace BarcodeScannerPage
 
                 //try to not use too high resolution
 
+                if (param_EnableHiRes)
+                {
+                    MAX_RESOLUTION = 1280 * 800;
+                }
+                else
+                {
+                    MAX_RESOLUTION = 800 * 480;
+                }
+
+
                 if (d.PreviewResolution.Height * d.PreviewResolution.Width > MAX_RESOLUTION)
                 {
 
@@ -253,6 +312,31 @@ namespace BarcodeScannerPage
 
                 cameraDevice.PreviewFrameAvailable += previewFrameHandler;
 
+                IReadOnlyList<object> flashProperties = PhotoCaptureDevice.GetSupportedPropertyValues(sensorLocation, KnownCameraAudioVideoProperties.VideoTorchMode);
+
+                if (param_EnableFlash)
+                {
+
+                    if (flashProperties.ToList().Contains((UInt32)VideoTorchMode.On))
+                    {
+                        flashAvailable = true;
+                        flashActive = false;
+                        cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.Off);
+                        flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png", UriKind.Relative));
+                        flashButton.Visibility = System.Windows.Visibility.Visible;
+                    }
+                    else
+                    {
+                        flashAvailable = false;
+                        flashButton.Visibility = System.Windows.Visibility.Collapsed;
+
+                    }
+                }
+                else
+                {
+                    flashButton.Visibility = System.Windows.Visibility.Collapsed;
+                }
+
                 videoBrush.SetSource(cameraDevice);
                 focusTimer = new DispatcherTimer();
                 focusTimer.Interval = TimeSpan.FromSeconds(3);
@@ -292,7 +376,7 @@ namespace BarcodeScannerPage
 
             lastTime = DateTime.Now;
             //ignore results shorter than 4 characters for barcodes with weak checksum
-            if (resLen > 4 || ((resLen > 0 && Scanner.MWBgetLastType() != Scanner.FOUND_39 && Scanner.MWBgetLastType() != Scanner.FOUND_25_INTERLEAVED && Scanner.MWBgetLastType() != Scanner.FOUND_25_INTERLEAVED)))
+            if (resLen > 4 || ((resLen > 0 && Scanner.MWBgetLastType() != Scanner.FOUND_39 && Scanner.MWBgetLastType() != Scanner.FOUND_25_INTERLEAVED && Scanner.MWBgetLastType() != Scanner.FOUND_25_STANDARD)))
             {
                 string resultString = System.Text.Encoding.UTF8.GetString(result, 0, resLen);
 
@@ -328,6 +412,25 @@ namespace BarcodeScannerPage
               
             }
 
+        }
+
+        private void flashButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (flashAvailable)
+            {
+                flashActive = !flashActive;
+
+                if (flashActive)
+                {
+                    cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.On);
+                    flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonon.png", UriKind.Relative));
+                }
+                else
+                {
+                    cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.Off);
+                    flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png", UriKind.Relative));
+                }
+            }
         }
 
         class ThreadArguments
@@ -399,6 +502,32 @@ namespace BarcodeScannerPage
 
 
                 }
+                else
+                    if ((orientation & PageOrientation.PortraitUp) == (PageOrientation.PortraitUp))
+                    {
+
+                        videoBrush.RelativeTransform = new CompositeTransform()
+                        {
+                            CenterX = 0.5,
+                            CenterY = 0.5,
+                            Rotation = 90
+                        };
+
+
+                    }
+                    else
+                        if ((orientation & PageOrientation.PortraitDown) == (PageOrientation.PortraitDown))
+                        {
+
+                            videoBrush.RelativeTransform = new CompositeTransform()
+                            {
+                                CenterX = 0.5,
+                                CenterY = 0.5,
+                                Rotation = 270
+                            };
+
+
+                        }
 
 
         }

@@ -5,14 +5,21 @@
 
 #import "MWScannerViewController.h"
 #import "BarcodeScanner.h"
+#import "MWOverlay.h"
 
 // !!! Rects are in format: x, y, width, height !!!
-#define RECT_LANDSCAPE_1D       0, 20, 100, 60
-#define RECT_LANDSCAPE_2D       20, 5, 60, 90
-#define RECT_PORTRAIT_1D        20, 0, 60, 100
-#define RECT_PORTRAIT_2D        5, 20, 90, 60
-#define RECT_FULL_1D            0, 0, 100, 100
-#define RECT_FULL_2D            5, 5, 90, 90
+#define RECT_LANDSCAPE_1D       6, 20, 88, 60
+#define RECT_LANDSCAPE_2D       20, 6, 60, 88
+#define RECT_PORTRAIT_1D        20, 6, 60, 88
+#define RECT_PORTRAIT_2D        20, 6, 60, 88
+#define RECT_FULL_1D            6, 6, 88, 88
+#define RECT_FULL_2D            20, 6, 60, 88
+
+
+UIInterfaceOrientationMask param_Orientation = UIInterfaceOrientationMaskLandscapeLeft;
+BOOL param_EnableHiRes = YES;
+BOOL param_EnableFlash = YES;
+int param_OverlayMode = OM_MW;
 
 static NSString *DecoderResultNotification = @"DecoderResultNotification";
 
@@ -43,6 +50,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 @synthesize device = _device;
 @synthesize state;
 @synthesize focusTimer;
+@synthesize flashButton;
 
 #pragma mark -
 #pragma mark Initialization
@@ -151,11 +159,38 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     NSString *libVersion = [NSString stringWithFormat:@"%d.%d.%d", v1, v2, v3];
     NSLog(@"Lib version: %@", libVersion);
 }
+    
++ (void) setInterfaceOrientation: (UIInterfaceOrientationMask) interfaceOrientation {
+    
+    param_Orientation = interfaceOrientation;
+    
+}
+    
++ (void) enableHiRes: (BOOL) hiRes {
+    
+    param_EnableHiRes = hiRes;
+    
+}
+
++ (void) enableFlash: (BOOL) flash {
+    
+    param_EnableFlash = flash;
+    
+}
+    
++ (void) setOverlayMode: (int) overlayMode {
+    
+    param_OverlayMode = overlayMode;
+    
+}
+
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     statusBarHidden =  [[UIApplication sharedApplication] isStatusBarHidden];
     [[UIApplication sharedApplication] setStatusBarHidden:YES];
+    
+    flashButton.hidden = !param_EnableFlash;
     
 #if TARGET_IPHONE_SIMULATOR
     NSLog(@"On iOS simulator camera is not Supported");
@@ -163,12 +198,22 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 	[self initCapture];
 #endif
     
+    if (param_OverlayMode & OM_MW){
+        [MWOverlay addToPreviewLayer:self.prevLayer];
+    }
+    
+    cameraOverlay.hidden = !(param_OverlayMode & OM_IMAGE);
+    
+    
+    [self updateTorch];
+    
 }
 
 - (void)viewWillDisappear:(BOOL) animated {
     [super viewWillDisappear:animated];
     [self stopScanning];
     [self deinitCapture];
+    flashButton.selected = NO;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -207,16 +252,32 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     }
 }
 
+- (void) updateTorch {
+    
+    if (param_EnableFlash && [self.device isTorchModeSupported:AVCaptureTorchModeOn]) {
+        
+        flashButton.hidden = NO;
+        
+    } else {
+        flashButton.hidden = YES;
+    }
+
+}
+    
 - (void)toggleTorch
 {
     if ([self.device isTorchModeSupported:AVCaptureTorchModeOn]) {
         NSError *error;
         
         if ([self.device lockForConfiguration:&error]) {
-            if ([self.device torchMode] == AVCaptureTorchModeOn)
+            if ([self.device torchMode] == AVCaptureTorchModeOn){
                 [self.device setTorchMode:AVCaptureTorchModeOff];
-            else
+                flashButton.selected = NO;
+            }
+            else {
                 [self.device setTorchMode:AVCaptureTorchModeOn];
+                flashButton.selected = YES;
+            }
             
             if([self.device isFocusModeSupported: AVCaptureFocusModeContinuousAutoFocus])
                 self.device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
@@ -230,6 +291,10 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 
 - (void) deinitCapture {
     if (self.captureSession != nil){
+        if (param_OverlayMode & OM_MW){
+            [MWOverlay removeFromPreviewLayer];
+        }
+        
 #if !__has_feature(objc_arc)
         [self.captureSession release];
 #endif
@@ -237,6 +302,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         
         [self.prevLayer removeFromSuperlayer];
         self.prevLayer = nil;
+        
     }
 }
 
@@ -270,7 +336,9 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 	[self.captureSession addOutput:captureOutput];
     
     
-    if ([self.captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720])
+    
+    
+    if (param_EnableHiRes && [self.captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720])
     {
         NSLog(@"Set preview port to 1280X720");
         self.captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
@@ -286,23 +354,43 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
     self.prevLayer = [AVCaptureVideoPreviewLayer layerWithSession: self.captureSession];
     
-    if ([self.prevLayer respondsToSelector:@selector(connection)])
+    
+    if (self.interfaceOrientation == UIInterfaceOrientationLandscapeLeft){
         self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-    else{
-     //   self.prevLayer.orientation = AVCaptureVideoOrientationLandscapeLeft;
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(self.view.frame.size.width,self.view.frame.size.height), MIN(self.view.frame.size.width,self.view.frame.size.height));
     }
-
-//  self.prevLayer.frame = CGRectMake(0, 0, MAX(self.view.frame.size.width,self.view.frame.size.height), MIN(self.view.frame.size.width,self.view.frame.size.height));
-//	self.prevLayer.videoGravity = AVLayerVideoGravityResize;
-    self.prevLayer.frame = CGRectMake(0, 0, MAX([[UIScreen mainScreen] bounds].size.width,[[UIScreen mainScreen] bounds].size.height), MIN([[UIScreen mainScreen] bounds].size.width,[[UIScreen mainScreen] bounds].size.height));
-	self.prevLayer.videoGravity = AVLayerVideoGravityResizeAspectFill; // AVLayerVideoGravityResize;
-//  self.prevLayer.position = self.view.center;
+    if (self.interfaceOrientation == UIInterfaceOrientationLandscapeRight){
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(self.view.frame.size.width,self.view.frame.size.height), MIN(self.view.frame.size.width,self.view.frame.size.height));
+    }
+    
+    
+    if (self.interfaceOrientation == UIInterfaceOrientationPortrait) {
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortrait;
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(self.view.frame.size.width,self.view.frame.size.height), MAX(self.view.frame.size.width,self.view.frame.size.height));
+    }
+    if (self.interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(self.view.frame.size.width,self.view.frame.size.height), MAX(self.view.frame.size.width,self.view.frame.size.height));
+    }
+    
+	self.prevLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    
 	[self.view.layer addSublayer: self.prevLayer];
+    
+    if (![self.device isTorchModeSupported:AVCaptureTorchModeOn]) {
+        flashButton.hidden = YES;
+    }
     
     [self.view bringSubviewToFront:cameraOverlay];
     [self.view bringSubviewToFront:closeButton];
+    [self.view bringSubviewToFront:flashButton];
     
-    self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(reFocus) userInfo:nil repeats:YES]; 
+
+    
+    self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(reFocus) userInfo:nil repeats:YES];
+    
+    
 }
 
 - (void) onVideoStart: (NSNotification*) note
@@ -385,7 +473,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 	CVPixelBufferUnlockBaseAddress(imageBuffer,0);
 	
     //ignore results less than 4 characters - probably false detection
-    if (resLength > 4 || ((resLength > 0 && MWB_getLastType() != FOUND_39 && MWB_getLastType() != FOUND_25_INTERLEAVED && MWB_getLastType() != FOUND_25_INTERLEAVED)))
+    if (resLength > 4 || ((resLength > 0 && MWB_getLastType() != FOUND_39 && MWB_getLastType() != FOUND_25_INTERLEAVED && MWB_getLastType() != FOUND_25_STANDARD)))
 	{
 		int bcType = MWB_getLastType();
     	NSString *typeName=@"";
@@ -464,7 +552,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (IBAction)doClose:(id)sender {
     [self dismissModalViewControllerAnimated:YES];
-   // [self.delegate scanningFinished:@"" withType:@"CustomAction" andRawResult:[[NSData alloc] init]];
+    [self.delegate scanningFinished:@"" withType:@"Cancel" andRawResult:[[NSData alloc] init]];
+    
+}
+    
+- (IBAction)doFlashToggle:(id)sender {
+    
+    [self toggleTorch];
     
 }
 
@@ -533,7 +627,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (NSUInteger)supportedInterfaceOrientations {
     
-    return UIInterfaceOrientationMaskLandscapeLeft;
+    return param_Orientation;
 }
 
 - (BOOL) shouldAutorotate {
@@ -546,9 +640,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 	return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    [self toggleTorch];
-}
 
 @end
 

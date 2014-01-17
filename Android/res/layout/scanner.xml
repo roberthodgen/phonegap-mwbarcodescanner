@@ -22,7 +22,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <SurfaceView
+	 <SurfaceView
         android:id="@+id/preview_view"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
@@ -30,14 +30,23 @@
         android:layout_alignParentTop="true"
         android:layout_centerInParent="true" />
 
-    <LinearLayout
-        android:id="@+id/LinearLayout1"
+
+    <ImageView
+        android:id="@+id/overlayImage"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="@drawable/overlay"
-        android:orientation="vertical"
-        android:visibility="visible" >
+        android:scaleType="fitXY"
+        android:src="@drawable/overlay" />
 
-    </LinearLayout>
+    <ImageButton
+        android:id="@+id/flashButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="10dp"
+        android:background="#00000000"
+        android:scaleType="fitXY"
+        android:src="@drawable/flashbuttonoff" />
 
 </RelativeLayout>

@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1280</int>
-		<string key="IBDocument.SystemVersion">12E55</string>
+		<string key="IBDocument.SystemVersion">12F45</string>
 		<string key="IBDocument.InterfaceBuilderVersion">4510</string>
-		<string key="IBDocument.AppKitVersion">1187.39</string>
+		<string key="IBDocument.AppKitVersion">1187.40</string>
 		<string key="IBDocument.HIToolboxVersion">626.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
@@ -42,6 +42,7 @@
 						<object class="NSPSMatrix" key="NSFrameMatrix"/>
 						<string key="NSFrameSize">{480, 320}</string>
 						<reference key="NSSuperview" ref="461705783"/>
+						<reference key="NSNextKeyView" ref="527659263"/>
 						<bool key="IBUIOpaque">NO</bool>
 						<bool key="IBUIClearsContextBeforeDrawing">NO</bool>
 						<bool key="IBUIUserInteractionEnabled">NO</bool>
@@ -51,12 +52,13 @@
 							<string key="NSResourceName">overlay.png</string>
 						</object>
 					</object>
-					<object class="IBUIButton" id="250007140">
+					<object class="IBUIButton" id="527659263">
 						<reference key="NSNextResponder" ref="461705783"/>
 						<int key="NSvFlags">1316</int>
 						<object class="NSPSMatrix" key="NSFrameMatrix"/>
-						<string key="NSFrame">{{3, 1}, {24, 24}}</string>
+						<string key="NSFrame">{{5, 5}, {32, 32}}</string>
 						<reference key="NSSuperview" ref="461705783"/>
+						<reference key="NSNextKeyView" ref="250007140"/>
 						<bool key="IBUIOpaque">NO</bool>
 						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
 						<int key="IBUIContentHorizontalAlignment">0</int>
@@ -69,8 +71,7 @@
 							<int key="NSColorSpace">3</int>
 							<bytes key="NSWhite">MQA</bytes>
 						</object>
-						<string key="IBUINormalTitle">Button</string>
-						<object class="NSColor" key="IBUINormalTitleShadowColor">
+						<object class="NSColor" key="IBUINormalTitleShadowColor" id="2135932">
 							<int key="NSColorSpace">3</int>
 							<bytes key="NSWhite">MC41AA</bytes>
 						</object>
@@ -78,19 +79,47 @@
 							<string key="NSClassName">NSImage</string>
 							<string key="NSResourceName">close_button.png</string>
 						</object>
-						<object class="IBUIFontDescription" key="IBUIFontDescription">
+						<object class="IBUIFontDescription" key="IBUIFontDescription" id="519278702">
 							<int key="type">2</int>
 							<double key="pointSize">15</double>
 						</object>
-						<object class="NSFont" key="IBUIFont">
+						<object class="NSFont" key="IBUIFont" id="1070053824">
 							<string key="NSName">HelveticaNeue-Bold</string>
 							<double key="NSSize">15</double>
 							<int key="NSfFlags">16</int>
 						</object>
 					</object>
+					<object class="IBUIButton" id="250007140">
+						<reference key="NSNextResponder" ref="461705783"/>
+						<int key="NSvFlags">1313</int>
+						<object class="NSPSMatrix" key="NSFrameMatrix"/>
+						<string key="NSFrame">{{443, 5}, {32, 32}}</string>
+						<reference key="NSSuperview" ref="461705783"/>
+						<bool key="IBUIOpaque">NO</bool>
+						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
+						<int key="IBUIContentHorizontalAlignment">0</int>
+						<int key="IBUIContentVerticalAlignment">0</int>
+						<object class="NSColor" key="IBUINormalTitleColor">
+							<int key="NSColorSpace">1</int>
+							<bytes key="NSRGB">MC4xOTYwNzg0MzQ2IDAuMzA5ODAzOTMyOSAwLjUyMTU2ODY1NgA</bytes>
+						</object>
+						<reference key="IBUIHighlightedTitleColor" ref="634956600"/>
+						<reference key="IBUINormalTitleShadowColor" ref="2135932"/>
+						<object class="NSCustomResource" key="IBUISelectedImage">
+							<string key="NSClassName">NSImage</string>
+							<string key="NSResourceName">flashbuttonon.png</string>
+						</object>
+						<object class="NSCustomResource" key="IBUINormalImage">
+							<string key="NSClassName">NSImage</string>
+							<string key="NSResourceName">flashbuttonoff.png</string>
+						</object>
+						<reference key="IBUIFontDescription" ref="519278702"/>
+						<reference key="IBUIFont" ref="1070053824"/>
+					</object>
 				</array>
 				<object class="NSPSMatrix" key="NSFrameMatrix"/>
 				<string key="NSFrameSize">{480, 320}</string>
+				<reference key="NSNextKeyView" ref="187158117"/>
 				<reference key="IBUIBackgroundColor" ref="634956600"/>
 				<object class="IBUISimulatedOrientationMetrics" key="IBUISimulatedOrientationMetrics">
 					<int key="IBUIInterfaceOrientation">3</int>
@@ -116,14 +145,6 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchOutletConnection" key="connection">
-						<string key="label">closeButton</string>
-						<reference key="source" ref="759277155"/>
-						<reference key="destination" ref="250007140"/>
-					</object>
-					<string key="id">84</string>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBCocoaTouchOutletConnection" key="connection">
 						<string key="label">view</string>
 						<reference key="source" ref="759277155"/>
 						<reference key="destination" ref="461705783"/>
@@ -131,13 +152,38 @@
 					<string key="id">80</string>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchOutletConnection" key="connection">
+						<string key="label">closeButton</string>
+						<reference key="source" ref="759277155"/>
+						<reference key="destination" ref="527659263"/>
+					</object>
+					<string key="id">q2q-f6-wB8</string>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchOutletConnection" key="connection">
+						<string key="label">flashButton</string>
+						<reference key="source" ref="759277155"/>
+						<reference key="destination" ref="250007140"/>
+					</object>
+					<string key="id">5ff-IH-6lU</string>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchEventConnection" key="connection">
-						<string key="label">doClose:</string>
+						<string key="label">doFlashToggle:</string>
 						<reference key="source" ref="250007140"/>
 						<reference key="destination" ref="759277155"/>
 						<int key="IBEventType">7</int>
 					</object>
-					<string key="id">83</string>
+					<string key="id">5iB-28-TGo</string>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchEventConnection" key="connection">
+						<string key="label">doClose:</string>
+						<reference key="source" ref="527659263"/>
+						<reference key="destination" ref="759277155"/>
+						<int key="IBEventType">7</int>
+					</object>
+					<string key="id">quu-Zk-eU1</string>
 				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -164,6 +210,7 @@
 						<reference key="object" ref="461705783"/>
 						<array class="NSMutableArray" key="children">
 							<reference ref="187158117"/>
+							<reference ref="527659263"/>
 							<reference ref="250007140"/>
 						</array>
 						<reference key="parent" ref="0"/>
@@ -178,6 +225,13 @@
 						<string key="id">82</string>
 						<reference key="object" ref="250007140"/>
 						<reference key="parent" ref="461705783"/>
+						<string key="objectName">Flash Button</string>
+					</object>
+					<object class="IBObjectRecord">
+						<string key="id">cWs-o0-SmB</string>
+						<reference key="object" ref="527659263"/>
+						<reference key="parent" ref="461705783"/>
+						<string key="objectName">Close Button</string>
 					</object>
 				</array>
 			</object>
@@ -195,8 +249,12 @@
 				<reference key="67.IBUserGuides" ref="0"/>
 				<boolean value="NO" key="67.showNotes"/>
 				<string key="82.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
+				<real value="2" key="82.IBUIButtonInspectorSelectedStateConfigurationMetadataKey"/>
 				<reference key="82.IBUserGuides" ref="0"/>
 				<boolean value="NO" key="82.showNotes"/>
+				<string key="cWs-o0-SmB.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
+				<reference key="cWs-o0-SmB.IBUserGuides" ref="0"/>
+				<boolean value="NO" key="cWs-o0-SmB.showNotes"/>
 			</dictionary>
 			<dictionary class="NSMutableDictionary" key="unlocalizedProperties"/>
 			<nil key="activeLocalization"/>
@@ -219,6 +277,8 @@
 		<int key="IBDocument.defaultPropertyAccessControl">3</int>
 		<dictionary class="NSMutableDictionary" key="IBDocument.LastKnownImageSizes">
 			<string key="close_button.png">{64, 64}</string>
+			<string key="flashbuttonoff.png">{48, 48}</string>
+			<string key="flashbuttonon.png">{48, 48}</string>
 			<string key="overlay.png">{480, 320}</string>
 		</dictionary>
 		<string key="IBCocoaTouchPluginVersion">3742</string>

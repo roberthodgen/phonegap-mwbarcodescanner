@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Rect;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -16,12 +17,12 @@ import android.view.KeyEvent;
 public class BarcodeScannerPlugin extends CordovaPlugin {
 	
 	  // !!! Rects are in format: x, y, width, height !!!
-    public static final Rect RECT_LANDSCAPE_1D = new Rect(0, 20, 100, 60);
-    public static final Rect RECT_LANDSCAPE_2D = new Rect(20, 5, 60, 90);
-    public static final Rect RECT_PORTRAIT_1D = new Rect(20, 0, 60, 100);
-    public static final Rect RECT_PORTRAIT_2D = new Rect(20, 5, 60, 90);
-    public static final Rect RECT_FULL_1D = new Rect(0, 0, 100, 100);
-    public static final Rect RECT_FULL_2D = new Rect(20, 5, 60, 90);
+    public static final Rect RECT_LANDSCAPE_1D = new Rect(2, 20, 96, 60);
+    public static final Rect RECT_LANDSCAPE_2D = new Rect(20, 2, 60, 96);
+    public static final Rect RECT_PORTRAIT_1D = new Rect(20, 2, 60, 96);
+    public static final Rect RECT_PORTRAIT_2D = new Rect(20, 2, 60, 96);
+    public static final Rect RECT_FULL_1D = new Rect(2, 2, 96, 96);
+    public static final Rect RECT_FULL_2D = new Rect(20, 2, 60, 96);
 	private static CallbackContext cbc;
 	private static String lastType;
 
@@ -91,6 +92,44 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         	return true;
             
         } 
+    	
+        else if ("setInterfaceOrientation".equals(action)) {
+        	
+        	String orientation = args.getString(0);
+        	if (orientation.equalsIgnoreCase("Portrait")){
+        		ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        	}
+        	if (orientation.equalsIgnoreCase("LandscapeLeft")){
+        		ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        	}
+        	if (orientation.equalsIgnoreCase("LandscapeRight")){
+        		ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        	}
+        	
+        	return true;
+            
+        } 
+    	
+        else if ("setOverlayMode".equals(action)) {
+        	
+        	ScannerActivity.param_OverlayMode = args.getInt(0);
+        	return true;
+            
+        }
+    	
+        else if ("enableHiRes".equals(action)) {
+        	
+        	ScannerActivity.param_EnableHiRes = args.getBoolean(0);
+        	return true;
+            
+        }
+    	
+        else if ("enableFlash".equals(action)) {
+        	ScannerActivity.param_EnableFlash = args.getBoolean(0);
+        	return true;
+            
+        }
+    	
         
         return false;
     }
@@ -128,7 +167,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 		    		JSONObject jsonResult = new JSONObject();
 		    		try {
 						jsonResult.put("code", "");
-						jsonResult.put("type", "");
+						jsonResult.put("type", "Cancel");
 						jsonResult.put("bytes", "");
 						
 					} catch (JSONException e) {

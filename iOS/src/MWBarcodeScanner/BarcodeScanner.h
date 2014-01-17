@@ -204,6 +204,26 @@ extern unsigned int MWB_getSupportedCodes(void);
  * @retval      MWB_RT_BAD_PARAM    Rectange percentages invalid (out of range)
  */
 extern int MWB_setScanningRect(const uint32_t codeMask, float left, float top, float width, float height);
+    
+    
+
+/**
+ * Get rectangular area for barcode scanning with selected single or multiple decoder type(s).
+ * If codeMask is 0, union rectangle of all ACTIVE barcode types will be returned
+ * Output values are in percentages of screeen width and height (range 0 - 100)
+ *
+ * @param[in]   codeMask             Single decoder type selector (MWB_CODE_MASK_...) or 0
+ * @param[out]  left                 X coordinate of left edge
+ * @param[out]  top                  Y coordinate of top edge
+ * @param[out]  width                Rectangle witdh (x axis)
+ * @param[out]  height               Rectangle height (y axis)
+ *
+ * @retval      MWB_RT_OK            Rectangle get successfully
+ * @retval      MWB_RT_NOT_SUPPORTED Rectangle get failed
+ */
+extern int MWB_getScanningRect(const uint32_t codeMask, float *left, float *top, float *width, float *height);
+    
+    
 
 /**
  * Registers licensing information with single selected decoder type.
@@ -239,6 +259,15 @@ extern int MWB_registerCode(const uint32_t codeMask, char * userName, char * key
  *                                          activation status of all supported types will not be changed.
  */
 extern int MWB_setActiveCodes(const uint32_t codeMask);
+    
+    
+/**
+ * Get active decoder types
+ *
+ * @retval          Active decoder types
+ */
+extern int MWB_getActiveCodes(void);
+    
 
 /**
  * Set active subcodes for given code group flag.
@@ -360,6 +389,14 @@ extern int MWB_setLevel(const int level);
  * @retval      MWB_RT_BAD_PARAM        Direction out of range
  */
 extern int MWB_setDirection(const uint32_t direction);
+    
+    
+/**
+ * Get active scanning direction
+ *
+ * @retval          ORed bit flags of active scanning directions
+ */
+extern int MWB_getDirection(void);
     
   
 extern int MWB_validateVIN(char *vin, int length);

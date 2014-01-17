@@ -1,4 +1,5 @@
 Manateeworks Barcode Scanner Plugin
+Version 1.1
 =========================
 
 
@@ -20,6 +21,15 @@ Guide on how to add the mobiScan Phonegap plugin to your project(s)
 or   
 
     phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN (if you are adding from local folder)   
+
+    
+* Perform initial build for each platform (repeat the command twice if not working after first time, seems there's a bug in phonegap 3.3)
+
+    phonegap local build ios
+    phonegap local build android
+    phonegap local build wp8
+
+
     
 * Add a button to index.html which will call the scanner:
 
@@ -28,6 +38,8 @@ or
 		<input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
 	</form>
 ```
+
+
 
 * Upon license purchase, replace the username/key pairs for the corresponding barcode types in the file 'src/com/manateeworks/BarcodeScannerPlugin.java' (Android), 'Plugins/MWScannerViewController.m' (iOS) or 'Plugins/com.manateeworks.barcodescanner/BarcodeHelper.cs (wp8);
 
@@ -40,7 +52,7 @@ You have to import .R file of your project (import YOUR_APP_PACKAGE_NAME.R;) to 
 
 **WP8 Note**
 
-It's seems there's a bug in Phonegap 3.0 so you have to add '<script type="text/javascript" src="cordova.js"></script>' in index.html (or other html files) manually
+It's seems there's a bug in Phonegap 3.0 so you have to add ```html '<script type="text/javascript" src="cordova.js"></script>' ``` in index.html (or other html files) manually
 
 
 
@@ -274,4 +286,26 @@ Add a notification plugin (if not already present):
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
  
+&nbsp;
+###Changes in 1.1:
+&nbsp;
+
+* Advanced Overlay (MWBsetOverlayMode: function(overlayMode)
+ 
+ You can now choose between Simple Image Overlay and MW Dynamic Overlay, which shows the actual 
+ viewfinder, depending on selected barcode types and their respective scanning rectangles;
+ 
+* Orientation parameter (MWBsetInterfaceOrientation: function(interfaceOrientation))
+ 
+ Now there's only a single function for supplying orientation parameters which makes tweaking the 
+ controller for changing scanner orientation no longer needed; 
+ 
+* Enable or disable high resolution scanning (MWBenableHiRes: function(enableHiRes))
+ 
+ Added option to choose between high or normal resolution scanning to better match user 
+ application requirements;
+ 
+* Flash handling (MWBenableFlash: function(enableFlash))
+
+ Added option to enable or disable the flash toggle button;
 

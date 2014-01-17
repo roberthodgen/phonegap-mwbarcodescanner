@@ -14,18 +14,25 @@
     shell:SystemTray.IsVisible="True" OrientationChanged="PhoneApplicationPage_OrientationChanged">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
-    <StackPanel x:Name="ContentPanel" Margin="0,0,0,0" >
+    <Grid x:Name="ContentPanel" Margin="0,0,0,0" >
 
-        <Canvas Height="480" Width="800">
+        <Canvas Height="Auto" Width="Auto" x:Name="canvas">
             <Canvas.Background>
                 <VideoBrush x:Name="videoBrush"/>
             </Canvas.Background>
 
-            <Image x:Name="cameraOverlay" Stretch="Fill" Height="480" Width="800" Source="/Plugins/com.manateeworks.barcodescanner/overlay.png"/>
-
         </Canvas>
+        <Image x:Name="cameraOverlay" Height="Auto" Width="Auto" Source="/Plugins/com.manateeworks.barcodescanner/overlay.png" Stretch="Fill"/>
+        <Button x:Name="flashButton" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="0" Background="{x:Null}" Height="96" Width="96" Margin="0" BorderThickness="0" Click="flashButton_Click" Visibility="Collapsed">
 
-    </StackPanel>
+            <StackPanel>
+                <Image x:Name="flashButtonImage" Source="/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png" Stretch="Fill" Height="48" Width="48" />
+            </StackPanel>
+
+        </Button>
+
+
+    </Grid>
 
 
     <!--TitlePanel contains the name of the application and page title-->

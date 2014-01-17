@@ -20,6 +20,11 @@
 - (void)setDirection:(CDVInvokedUrlCommand*)command;
 - (void)setScanningRect:(CDVInvokedUrlCommand*)command;
 - (void)setLevel:(CDVInvokedUrlCommand*)command;
+    
+- (void)setInterfaceOrientation:(CDVInvokedUrlCommand*)command;
+- (void)setOverlayMode:(CDVInvokedUrlCommand*)command;
+- (void)enableHiRes:(CDVInvokedUrlCommand*)command;
+- (void)enableFlash:(CDVInvokedUrlCommand*)command;
 
 @end
 

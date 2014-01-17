@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -86,7 +86,40 @@ namespace Cordova.Extension.Commands
              Scanner.MWBsetLevel(Convert.ToInt32(paramsList[0]));
          }
 
+         public void setInterfaceOrientation(string options)
+         {
+             string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+             String orientation = Convert.ToString(paramsList[0]);
 
+             if (orientation.Equals("Portrait"))
+             {
+                 BarcodeScannerPage.ScannerPage.param_Orientation = SupportedPageOrientation.Portrait;
+             } else
+             {
+                BarcodeScannerPage.ScannerPage.param_Orientation = SupportedPageOrientation.Landscape;
+             } 
+
+
+             
+         }
+
+         public void setOverlayMode(string options)
+         {
+             string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+             BarcodeScannerPage.ScannerPage.param_OverlayMode = (BarcodeScannerPage.ScannerPage.OverlayMode)Convert.ToInt32(paramsList[0]);
+         }
+
+         public void enableHiRes(string options)
+         {
+             string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+             BarcodeScannerPage.ScannerPage.param_EnableHiRes = Convert.ToBoolean(paramsList[0]);
+         }
+
+         public void enableFlash(string options)
+         {
+             string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+             BarcodeScannerPage.ScannerPage.param_EnableFlash = Convert.ToBoolean(paramsList[0]);
+         }
 
          void root_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
          {

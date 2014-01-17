@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,13 +19,17 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	
 	
-	
-        
+	public static final int OM_MW = 1;
+	public static final int OM_IMAGE = 2;
    
     private Handler handler;
     public static final int MSG_DECODE = 1;
@@ -32,18 +37,38 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     public static final int MSG_DECODE_SUCCESS = 3;
     public static final int MSG_DECODE_FAILED = 4;
     
-
     private byte[] lastResult;
     private boolean hasSurface;
 
+    public static int param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+    public static boolean param_EnableHiRes = true;
+    public static boolean param_EnableFlash = true;
+    public static int param_OverlayMode = OM_MW;
+    
+    private ImageView overlayImage;
+    private ImageButton buttonFlash;
+    
+    boolean flashOn = false;
 	
 	
 	 @Override
 	    public void onCreate(Bundle savedInstanceState)
 	    {
 	        super.onCreate(savedInstanceState);
-	        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+	        setRequestedOrientation(param_Orientation);
 	        setContentView(R.layout.scanner);
+	        
+	        overlayImage = (ImageView) findViewById(R.id.overlayImage);
+	        
+	        buttonFlash = (ImageButton) findViewById(R.id.flashButton);
+			buttonFlash.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					toggleFlash();
+					
+					
+				}
+			});
 	        
 	        CameraManager.init(getApplication());
 	        
@@ -57,6 +82,19 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 
 	        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.preview_view);
 	        SurfaceHolder surfaceHolder = surfaceView.getHolder();
+	        
+	        if ((param_OverlayMode & OM_MW) > 0){
+	        	MWOverlay.addOverlay(this, surfaceView);
+	        }
+	        
+	        
+	        
+	        if ((param_OverlayMode & OM_IMAGE) > 0){
+	        	overlayImage.setVisibility(View.VISIBLE);	
+	        } else {
+	        	overlayImage.setVisibility(View.GONE);
+	        }
+	        
 	        if (hasSurface)
 	        {
 	            // The activity was paused but not stopped, so the surface still
@@ -86,6 +124,11 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	    protected void onPause()
 	    {
 	        super.onPause();
+	        flashOn = false;
+	        updateFlash();
+	        if ((param_OverlayMode & OM_MW) > 0){
+	        	MWOverlay.removeOverlay();
+	        }
 	        if (handler != null)
 	        {
 	        	CameraManager.get().stopPreview();
@@ -94,7 +137,33 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	        CameraManager.get().closeDriver();
 
 	    }
+	 
+	    private void toggleFlash() {
+			flashOn = !flashOn;
+			updateFlash();
+		}
 
+		private void updateFlash() {
+
+			if (!CameraManager.get().isTorchAvailable() || !param_EnableFlash) {
+				buttonFlash.setVisibility(View.GONE);
+				return;
+
+			} else {
+				buttonFlash.setVisibility(View.VISIBLE);
+			}
+
+			if (flashOn) {
+				buttonFlash.setImageResource(R.drawable.flashbuttonon);
+			} else {
+				buttonFlash.setImageResource(R.drawable.flashbuttonoff);
+			}
+
+			CameraManager.get().setTorch(flashOn);
+
+			buttonFlash.postInvalidate();
+
+		}
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -131,9 +200,14 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	            // Select desired camera resoloution. Not all devices supports all resolutions, closest available will be chosen
 	            // If not selected, closest match to screen resolution will be chosen
 	            // High resolutions will slow down scanning proccess on slower devices
-	            CameraManager.setDesiredPreviewSize(800, 480);
 	            
-	            CameraManager.get().openDriver(surfaceHolder, false);
+	        	if (param_EnableHiRes){
+	        		CameraManager.setDesiredPreviewSize(1280, 720);
+	        	} else {
+	        		CameraManager.setDesiredPreviewSize(800, 480);
+	        	}
+	            
+	            CameraManager.get().openDriver(surfaceHolder, (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT));
 	        }
 	        catch (IOException ioe)
 	        {
@@ -178,7 +252,9 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	        }
 	        
 	        startScanning();
-					
+	        
+	        flashOn = false;
+			updateFlash();		
 				
 	    }
 	 
@@ -214,7 +290,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	        if (rawResult != null && rawResult.length > 4 || (rawResult != null && (rawResult.length > 0 && 
 	        		BarcodeScanner.MWBgetLastType() != BarcodeScanner.FOUND_39 && 
 	        		BarcodeScanner.MWBgetLastType() != BarcodeScanner.FOUND_25_INTERLEAVED && 
-	        		BarcodeScanner.MWBgetLastType() != BarcodeScanner.FOUND_25_INTERLEAVED)))
+	        		BarcodeScanner.MWBgetLastType() != BarcodeScanner.FOUND_25_STANDARD)))
 	        {
 	        	if (handler != null){
 	        		Message message = Message.obtain(handler, MSG_DECODE_SUCCESS, rawResult);

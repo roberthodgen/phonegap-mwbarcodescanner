@@ -96,6 +96,41 @@ NSString *callbackId;
     int level = [[command.arguments objectAtIndex:0] intValue];
     MWB_setLevel(level);
 }
+    
+- (void)setInterfaceOrientation:(CDVInvokedUrlCommand*)command
+{
+    NSString *orientation = [command.arguments objectAtIndex:0];
+    UIInterfaceOrientationMask interfaceOrientation = UIInterfaceOrientationMaskLandscapeLeft;
+    
+    if ([orientation isEqualToString:@"Portrait"]){
+        interfaceOrientation = UIInterfaceOrientationMaskPortrait;
+    }
+    if ([orientation isEqualToString:@"LandscapeLeft"]){
+        interfaceOrientation = UIInterfaceOrientationMaskLandscapeLeft;
+    }
+    if ([orientation isEqualToString:@"LandscapeRight"]){
+        interfaceOrientation = UIInterfaceOrientationMaskLandscapeRight;
+    }
+    
+    [MWScannerViewController setInterfaceOrientation:interfaceOrientation];
+    
+}
+    
+- (void)setOverlayMode:(CDVInvokedUrlCommand*)command{
+    [MWScannerViewController setOverlayMode:[[command.arguments objectAtIndex:0] intValue]];
+}
+    
+- (void)enableHiRes:(CDVInvokedUrlCommand*)command
+{
+    bool hiRes = [[command.arguments objectAtIndex:0] boolValue];
+    [MWScannerViewController enableHiRes:hiRes];
+}
+
+- (void)enableFlash:(CDVInvokedUrlCommand*)command
+{
+    bool flash = [[command.arguments objectAtIndex:0] boolValue];
+    [MWScannerViewController enableFlash:flash];
+}
 
 
 

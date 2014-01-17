@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 
 import android.app.Activity;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 
 public class BarcodeScanner {
@@ -149,8 +150,10 @@ public class BarcodeScanner {
   public native static int MWBgetLibVersion ();
   public native static int MWBgetSupportedCodes ();
   public native static int MWBsetScanningRect (int codeMask, float left, float top, float width, float height);
+  public native static float[] MWBgetScanningRectArray (int codeMask);
   public native static int MWBregisterCode (int codeMask, String userName,String key);
   public native static int MWBsetActiveCodes(int codeMask);
+  public native static int MWBgetActiveCodes();
   public native static int MWBsetActiveSubcodes(int codeMask, int subMask);
   public native static int MWBcleanupLib ();
   public native static int MWBgetLastType ();
@@ -158,12 +161,19 @@ public class BarcodeScanner {
   public native static int MWBsetFlags(int codeMask, int flags);
   public native static int MWBsetLevel(int level);
   public native static int MWBsetDirection(int direction);
+  public native static int MWBgetDirection();
   public native static int MWBvalidateVIN(byte[] vin);
   public native static float[] MWBgetBarcodeLocation();
   
   public static int MWBsetScanningRect (int codeMask, Rect rect){
 	  
 	  return MWBsetScanningRect(codeMask, rect.left, rect.top, rect.width() + rect.left, rect.height() + rect.top);
+	  
+  }
+  
+  public static RectF MWBgetScanningRect (int codeMask) {
+	float f[] = MWBgetScanningRectArray(codeMask);
+	return new RectF(f[0], f[1], f[2], f[3]);
 	  
   }
    

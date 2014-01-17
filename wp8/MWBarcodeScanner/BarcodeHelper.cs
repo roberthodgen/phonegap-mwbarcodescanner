@@ -28,12 +28,12 @@ namespace BarcodeScanners
 
         public static Boolean PDF_OPTIMIZED = false;
 
-        public static Windows.Foundation.Rect RECT_LANDSCAPE_1D = new Windows.Foundation.Rect(0, 20, 100, 60);
-        public static Windows.Foundation.Rect RECT_LANDSCAPE_2D = new Windows.Foundation.Rect(20, 5, 60, 90);
-        public static Windows.Foundation.Rect RECT_PORTRAIT_1D = new Windows.Foundation.Rect(20, 0, 60, 100);
-        public static Windows.Foundation.Rect RECT_PORTRAIT_2D = new Windows.Foundation.Rect(20, 5, 60, 90);
-        public static Windows.Foundation.Rect RECT_FULL_1D = new Windows.Foundation.Rect(0, 0, 100, 100);
-        public static Windows.Foundation.Rect RECT_FULL_2D = new Windows.Foundation.Rect(20, 5, 60, 90);
+        public static Windows.Foundation.Rect RECT_LANDSCAPE_1D = new Windows.Foundation.Rect(6, 20, 88, 60);
+        public static Windows.Foundation.Rect RECT_LANDSCAPE_2D = new Windows.Foundation.Rect(20, 6, 60, 88);
+        public static Windows.Foundation.Rect RECT_PORTRAIT_1D = new Windows.Foundation.Rect(20, 6, 60, 88);
+        public static Windows.Foundation.Rect RECT_PORTRAIT_2D = new Windows.Foundation.Rect(20, 6, 60, 88);
+        public static Windows.Foundation.Rect RECT_FULL_1D = new Windows.Foundation.Rect(6, 6, 88, 88);
+        public static Windows.Foundation.Rect RECT_FULL_2D = new Windows.Foundation.Rect(20, 6, 60, 88);
 
         public static void initDecoder()
         {
@@ -81,6 +81,7 @@ namespace BarcodeScanners
                 // set the scanning rectangle based on scan direction(format in pct: x, y, width, height)
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_25, RECT_FULL_1D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_39, RECT_FULL_1D);
+                MWBsetScanningRect(Scanner.MWB_CODE_MASK_93, RECT_FULL_1D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_128, RECT_FULL_1D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_AZTEC, RECT_FULL_2D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_DM, RECT_FULL_2D);
@@ -147,6 +148,14 @@ namespace BarcodeScanners
         public static void MWBsetScanningRect(int codeMask, Windows.Foundation.Rect rect)
         {
             Scanner.MWBsetScanningRect(codeMask, (float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
+        }
+
+        public static Windows.Foundation.Rect MWBgetScanningRect(int codeMask)
+        {
+            float left, top, width, height;
+            Scanner.MWBgetScanningRect(codeMask, out left, out top, out width, out height);
+
+            return new Windows.Foundation.Rect(left, top, width, height);
         }
 
         public static String getBarcodeName(int bcType)
