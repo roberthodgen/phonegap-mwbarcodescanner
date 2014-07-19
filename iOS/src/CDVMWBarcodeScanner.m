@@ -54,6 +54,14 @@ NSString *callbackId;
     
 }
 
+- (void)registerCode:(CDVInvokedUrlCommand*)command
+{
+    int codeMask = [[command.arguments objectAtIndex:0] intValue];
+    char * userName = (char *) [[command.arguments objectAtIndex:1] UTF8String];
+    char * key =(char *) [[command.arguments objectAtIndex:2] UTF8String];
+    MWB_registerCode(codeMask, userName, key);
+}
+
 - (void)setActiveCodes:(CDVInvokedUrlCommand*)command
 {
     int codeMask = [[command.arguments objectAtIndex:0] intValue];

@@ -12,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -48,6 +49,9 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     private ImageView overlayImage;
     private ImageButton buttonFlash;
     
+    private String package_name;
+    private Resources resources;
+    
     boolean flashOn = false;
 	
 	
@@ -56,11 +60,17 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	    {
 	        super.onCreate(savedInstanceState);
 	        setRequestedOrientation(param_Orientation);
-	        setContentView(R.layout.scanner);
 	        
-	        overlayImage = (ImageView) findViewById(R.id.overlayImage);
+	        package_name = getApplication().getPackageName();
+	        resources = getApplication().getResources();
 	        
-	        buttonFlash = (ImageButton) findViewById(R.id.flashButton);
+	        setContentView(resources.getIdentifier("scanner", "layout", package_name));
+	        
+	       // setContentView(R.layout.scanner);
+	        
+	        overlayImage = (ImageView) findViewById(resources.getIdentifier("overlayImage", "id", package_name));
+	        
+	        buttonFlash = (ImageButton) findViewById(resources.getIdentifier("flashButton", "id", package_name));
 			buttonFlash.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -80,7 +90,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	    {
 	        super.onResume();
 
-	        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.preview_view);
+	        SurfaceView surfaceView = (SurfaceView) findViewById(resources.getIdentifier("preview_view", "id", package_name));
 	        SurfaceHolder surfaceHolder = surfaceView.getHolder();
 	        
 	        if ((param_OverlayMode & OM_MW) > 0){
@@ -154,9 +164,9 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 			}
 
 			if (flashOn) {
-				buttonFlash.setImageResource(R.drawable.flashbuttonon);
+				buttonFlash.setImageResource(resources.getIdentifier("flashbuttonon", "drawable", package_name));
 			} else {
-				buttonFlash.setImageResource(R.drawable.flashbuttonoff);
+				buttonFlash.setImageResource(resources.getIdentifier("flashbuttonoff", "drawable", package_name));
 			}
 
 			CameraManager.get().setTorch(flashOn);
@@ -262,7 +272,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	 private void displayFrameworkBugMessageAndExit()
 	    {
 	        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-	        builder.setTitle(getString(R.string.app_name));
+	        builder.setTitle(getString(resources.getIdentifier("app_name", "string", package_name)));
 	        builder.setMessage("Camera error");
 	        builder.setPositiveButton("OK", new DialogInterface.OnClickListener()
 	        {
@@ -345,6 +355,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	            case BarcodeScanner.FOUND_PDF: typeName = "PDF417";break;
 	            case BarcodeScanner.FOUND_QR: typeName = "QR";break;
 	            case BarcodeScanner.FOUND_CODABAR: typeName = "Codabar";break;
+	            case BarcodeScanner.FOUND_DOTCODE: typeName = "Dotcode";break;
+	            case BarcodeScanner.FOUND_128_GS1: typeName = "Code 128 GS1";break;
 	        }
 	        
 	        Intent data = new Intent();

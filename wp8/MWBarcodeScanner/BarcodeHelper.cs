@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using BarcodeLib;
 
+
 namespace BarcodeScanners
 {
 
@@ -38,8 +39,8 @@ namespace BarcodeScanners
         public static void initDecoder()
         {
 
-            // register your copy of the mobiScan SDK with the given user name / key
-            Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_25, "username", "key");
+            // You can now register codes from MWBScanner.js!
+          /*  Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_25, "username", "key");
             Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_39, "username", "key");
             Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_93, "username", "key");
             Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_128, "username", "key");
@@ -49,7 +50,7 @@ namespace BarcodeScanners
             Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_PDF, "username", "key");
             Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_QR, "username", "key");
             Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_RSS, "username", "key");
-            Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_CODABAR, "username", "key");
+            Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_CODABAR, "username", "key");*/
 
         
             // choose code type or types you want to search for
@@ -180,6 +181,8 @@ namespace BarcodeScanners
             if (bcType == Scanner.FOUND_25_STANDARD) typeName = "Code 25 Standard";
             if (bcType == Scanner.FOUND_93) typeName = "Code 93";
             if (bcType == Scanner.FOUND_CODABAR) typeName = "Codabar";
+            if (bcType == Scanner.FOUND_DOTCODE) typeName = "Dotcode";
+            if (bcType == Scanner.FOUND_128_GS1) typeName = "Code 128 GS1";
 
             return typeName;
         }

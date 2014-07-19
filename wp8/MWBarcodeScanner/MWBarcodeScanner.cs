@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-
-
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Tasks;
 using System.Windows;
@@ -45,6 +42,12 @@ namespace Cordova.Extension.Commands
 
                   root.Navigated += new System.Windows.Navigation.NavigatedEventHandler(root_Navigated);
              });
+         }
+
+         public void registerCode(string options)
+         {
+             string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+             Scanner.MWBregisterCode(Convert.ToInt32(paramsList[0]), paramsList[1], paramsList[2]);
          }
 
          public void setActiveCodes(string options)

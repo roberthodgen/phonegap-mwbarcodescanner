@@ -1,6 +1,6 @@
 Manateeworks Barcode Scanner Plugin
 =========================
- Version 1.1
+ Version 1.2
 
 Guide on how to add the mobiScan Phonegap plugin to your project(s)
 
@@ -14,7 +14,6 @@ Guide on how to add the mobiScan Phonegap plugin to your project(s)
 * Add plugin to the project with:
 
 
-<!-- -->
 
     phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
 or   
@@ -24,12 +23,10 @@ or
     
 * Perform initial build for each platform (repeat the command twice if not working after first time, seems there's a bug in phonegap 3.3)
 
-    phonegap local build ios
-    phonegap local build android
-    phonegap local build wp8
+        phonegap local build ios
+        phonegap local build android
+        phonegap local build wp8
 
-
-    
 * Add a button to index.html which will call the scanner:
 
 ```html
@@ -40,14 +37,11 @@ or
 
 
 
-* Upon license purchase, replace the username/key pairs for the corresponding barcode types in the file 'src/com/manateeworks/BarcodeScannerPlugin.java' (Android), 'Plugins/MWScannerViewController.m' (iOS) or 'Plugins/com.manateeworks.barcodescanner/BarcodeHelper.cs (wp8);
+* Upon license purchase, replace the username/key pairs for the corresponding barcode types in the file 'MWBScanner.js';
 
 
 &nbsp;
 
-**Android Note**
-
-You have to import .R file of your project (import YOUR_APP_PACKAGE_NAME.R;) to the 'src/com/manateeworks/ScannerActivity.java'
 
 **WP8 Note**
 
@@ -284,6 +278,21 @@ Add a notification plugin (if not already present):
 
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
+
+
+&nbsp;
+###Changes in 1.2:
+&nbsp;
+
+* Registering calls moved from native code to MWBScanner.js
+ 
+ You can now enter your licensing info without changing the native code of plugin;
+
+* Import package_name.R manually after adding Android plugin is not necessary anymore
+ 
+* Decoding library updated to 2.9.31
+
+
  
 &nbsp;
 ###Changes in 1.1:

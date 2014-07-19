@@ -56,8 +56,9 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 #pragma mark Initialization
 
 + (void) initDecoder {
-    //register your copy of library with givern user/password
-    MWB_registerCode(MWB_CODE_MASK_39,      "username", "key");
+    //You can now register codes from MWBScanner.js!
+    
+   /* MWB_registerCode(MWB_CODE_MASK_39,      "username", "key");
     MWB_registerCode(MWB_CODE_MASK_93,      "username", "key");
     MWB_registerCode(MWB_CODE_MASK_25,      "username", "key");
     MWB_registerCode(MWB_CODE_MASK_128,     "username", "key");
@@ -67,7 +68,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     MWB_registerCode(MWB_CODE_MASK_QR,      "username", "key");
     MWB_registerCode(MWB_CODE_MASK_PDF,     "username", "key");
     MWB_registerCode(MWB_CODE_MASK_RSS,     "username", "key");
-    MWB_registerCode(MWB_CODE_MASK_CODABAR, "username", "key");
+    MWB_registerCode(MWB_CODE_MASK_CODABAR, "username", "key");*/
     
     
     // choose code type or types you want to search for
@@ -464,90 +465,97 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 			break;
 	}
 	
-	
-	unsigned char *pResult=NULL;
+	unsigned char *frameBuffer = malloc(width * height);
+    memcpy(frameBuffer, baseAddress, width * height);
+    CVPixelBufferUnlockBaseAddress(imageBuffer,0);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     
-    int resLength = MWB_scanGrayscaleImage(baseAddress,width,height, &pResult);
-    NSLog(@"Frame decoded");
-    
-	CVPixelBufferUnlockBaseAddress(imageBuffer,0);
-	
-    //ignore results less than 4 characters - probably false detection
-    if (resLength > 4 || ((resLength > 0 && MWB_getLastType() != FOUND_39 && MWB_getLastType() != FOUND_25_INTERLEAVED && MWB_getLastType() != FOUND_25_STANDARD)))
-	{
-		int bcType = MWB_getLastType();
-    	NSString *typeName=@"";
-    	switch (bcType) {
-    		case FOUND_128: typeName = @"Code 128";break;
-    		case FOUND_39: typeName = @"Code 39";break;
-            case FOUND_93: typeName = @"Code 93";break;
-            case FOUND_25_INTERLEAVED: typeName = @"Code 25 Interleaved";break;
-            case FOUND_25_STANDARD: typeName = @"Code 25 Standard";break;
-    		case FOUND_AZTEC: typeName = @"AZTEC";break;
-    		case FOUND_DM: typeName = @"Datamatrix";break;
-            case FOUND_QR: typeName = @"QR";break;
-    		case FOUND_EAN_13: typeName = @"EAN 13";break;
-    		case FOUND_EAN_8: typeName = @"EAN 8";break;
-    		case FOUND_NONE: typeName = @"None";break;
-    		case FOUND_RSS_14: typeName = @"Databar 14";break;
-    		case FOUND_RSS_14_STACK: typeName = @"Databar 14 Stacked";break;
-    		case FOUND_RSS_EXP: typeName = @"Databar Expanded";break;
-    		case FOUND_RSS_LIM: typeName = @"Databar Limited";break;
-    		case FOUND_UPC_A: typeName = @"UPC A";break;
-    		case FOUND_UPC_E: typeName = @"UPC E";break;
-            case FOUND_PDF: typeName = @"PDF417";break;
-            case FOUND_CODABAR: typeName = @"Codabar";break;
+        unsigned char *pResult=NULL;
+        
+        int resLength = MWB_scanGrayscaleImage(frameBuffer,width,height, &pResult);
+        free(frameBuffer);
+        NSLog(@"Frame decoded");
+        
+        
+        
+        //ignore results less than 4 characters - probably false detection
+        if (resLength > 4 || ((resLength > 0 && MWB_getLastType() != FOUND_39 && MWB_getLastType() != FOUND_25_INTERLEAVED && MWB_getLastType() != FOUND_25_STANDARD)))
+        {
+            int bcType = MWB_getLastType();
+            NSString *typeName=@"";
+            switch (bcType) {
+                case FOUND_128: typeName = @"Code 128";break;
+                case FOUND_39: typeName = @"Code 39";break;
+                case FOUND_93: typeName = @"Code 93";break;
+                case FOUND_25_INTERLEAVED: typeName = @"Code 25 Interleaved";break;
+                case FOUND_25_STANDARD: typeName = @"Code 25 Standard";break;
+                case FOUND_AZTEC: typeName = @"AZTEC";break;
+                case FOUND_DM: typeName = @"Datamatrix";break;
+                case FOUND_QR: typeName = @"QR";break;
+                case FOUND_EAN_13: typeName = @"EAN 13";break;
+                case FOUND_EAN_8: typeName = @"EAN 8";break;
+                case FOUND_NONE: typeName = @"None";break;
+                case FOUND_RSS_14: typeName = @"Databar 14";break;
+                case FOUND_RSS_14_STACK: typeName = @"Databar 14 Stacked";break;
+                case FOUND_RSS_EXP: typeName = @"Databar Expanded";break;
+                case FOUND_RSS_LIM: typeName = @"Databar Limited";break;
+                case FOUND_UPC_A: typeName = @"UPC A";break;
+                case FOUND_UPC_E: typeName = @"UPC E";break;
+                case FOUND_PDF: typeName = @"PDF417";break;
+                case FOUND_CODABAR: typeName = @"Codabar";break;
+            }
+            
+            lastFormat = typeName;
+            
+            
+            
+            
+            
+            int size=resLength;
+            
+            char *temp = (char *)malloc(size+1);
+            memcpy(temp, pResult, size+1);
+            NSString *resultString = [[NSString alloc] initWithBytes: temp length: size encoding: NSUTF8StringEncoding];
+            
+            NSLog(@"Detected %@: %@", lastFormat, resultString);
+             self.state = CAMERA;
+            
+            
+            
+            NSMutableString *binString = [[NSMutableString alloc] init];
+            
+            for (int i = 0; i < size; i++)
+                [binString appendString:[NSString stringWithFormat:@"%c", temp[i]]];
+            
+            if (MWB_getLastType() == FOUND_PDF || resultString == nil)
+                resultString = [binString copy];
+            else
+                resultString = [resultString copy];
+            
+            dispatch_async(dispatch_get_main_queue(), ^(void) {
+                if (decodeImage != nil)
+                {
+                    CGImageRelease(decodeImage);
+                    decodeImage = nil;
+                }
+                
+                [self.captureSession stopRunning];
+                NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+                DecoderResult *notificationResult = [DecoderResult createSuccess:resultString format:typeName rawResult:[[NSData alloc] initWithBytes:pResult length:size]];
+                [center postNotificationName:DecoderResultNotification object: notificationResult];
+                
+                free(temp);
+                free(pResult);
+            });
+            
+            
+            
         }
-        
-        lastFormat = typeName;
-        
-        
-        
-        
-		
-		int size=resLength;
-		
-		char *temp = (char *)malloc(size+1);
-		memcpy(temp, pResult, size+1);
-		NSString *resultString = [[NSString alloc] initWithBytes: temp length: size encoding: NSUTF8StringEncoding];
-        
-        NSLog(@"Detected %@: %@", lastFormat, resultString);
-         self.state = CAMERA;
-        
-        
-        
-        NSMutableString *binString = [[NSMutableString alloc] init];
-        
-        for (int i = 0; i < size; i++)
-            [binString appendString:[NSString stringWithFormat:@"%c", temp[i]]];
-        
-        if (MWB_getLastType() == FOUND_PDF || resultString == nil)
-            resultString = [binString copy];
         else
-            resultString = [resultString copy];
-        
-		
-        
-	    if (decodeImage != nil)
-	    {
-			CGImageRelease(decodeImage);
-			decodeImage = nil;
-		}
-		
-        [self.captureSession stopRunning];
-		NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-		DecoderResult *notificationResult = [DecoderResult createSuccess:resultString format:typeName rawResult:[[NSData alloc] initWithBytes:pResult length:size]];
-	    [center postNotificationName:DecoderResultNotification object: notificationResult];
-        
-        free(temp);
-		free(pResult);
-        
-	}
-	else
-	{
-        self.state = CAMERA;
-	}
-	CVPixelBufferUnlockBaseAddress(imageBuffer,0);
+        {
+            self.state = CAMERA;
+        }
+	 });
 }
 
 - (IBAction)doClose:(id)sender {

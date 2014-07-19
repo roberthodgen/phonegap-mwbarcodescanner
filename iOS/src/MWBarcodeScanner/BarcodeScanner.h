@@ -108,6 +108,7 @@ extern "C" {
 #define MWB_CODE_MASK_25                    0x00000100u
 #define MWB_CODE_MASK_93                    0x00000200u
 #define MWB_CODE_MASK_CODABAR               0x00000400u
+#define MWB_CODE_MASK_DOTCODE               0x00000800u
 #define MWB_CODE_MASK_ALL                   0x00ffffffu
 /** @} */
 
@@ -158,6 +159,8 @@ enum res_types {
     FOUND_25_STANDARD,
     FOUND_93,
     FOUND_CODABAR,
+    FOUND_DOTCODE,
+    FOUND_128_GS1,
 };
 /** @} */
 
@@ -403,7 +406,8 @@ extern int MWB_validateVIN(char *vin, int length);
     
 /**
  * @brief       *Beta* Barcode location points .
- * @details     *Beta* Returns quad points of detected barcode 
+ * @details     *Beta* Returns quad points of detected barcode. Currently Works for PDF 417, 
+ *              QR, Datamatrix and Aztec
  * @param[out]  points                  User provided float buffer to be filled with
  *                                      coordinates in order - X1, Y1, X2, Y2, X3, Y3, X4, Y4
  * @retval      MWB_RT_OK               Barcode location points returned

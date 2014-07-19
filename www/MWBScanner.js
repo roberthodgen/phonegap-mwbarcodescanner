@@ -1,4 +1,4 @@
-/*
+ /*
  
  Version 1.1
  Copyright (c) 2014 Manatee Works. All rights reserved.
@@ -95,6 +95,7 @@ Changes in 1.1:
   var MWB_CODE_MASK_25 =	           0x00000100;
   var MWB_CODE_MASK_93 =               0x00000200;
   var MWB_CODE_MASK_CODABAR =          0x00000400;
+  var MWB_CODE_MASK_DOTCODE =          0x00000800;
   var MWB_CODE_MASK_ALL =              0xffffffff;
   /** @} */
   
@@ -151,6 +152,8 @@ Changes in 1.1:
   var FOUND_25_STANDARD =   16; 
   var FOUND_93 = 			17;
   var FOUND_CODABAR =		18;
+  var FOUND_DOTCODE =		19;
+  var FOUND_128_GS1 =		20;
   
   var OrientationPortrait =         'Portrait';
   var OrientationLandscapeLeft =    'LandscapeLeft';
@@ -184,6 +187,28 @@ Changes in 1.1:
 		 	callback('Error: ' + err);
 		 }, "MWBarcodeScanner", "startScanner", []);
   	 },
+
+/**
+ * Registers licensing information with single selected decoder type.
+ * If registering information is correct, enables full support for selected
+ * decoder type.
+ * It should be called once per decoder type.
+ *
+ * @param[in]   codeMask                Single decoder type selector (MWB_CODE_MASK_...)
+ * @param[in]   userName                User name string
+ * @param[in]   key                     License key string
+ * 
+ * @retval      MWB_RT_OK               Registration successful
+ * @retval      MWB_RT_FAIL             Registration failed
+ * @retval      MWB_RT_BAD_PARAM        More than one decoder flag selected
+ * @retval      MWB_RT_NOT_SUPPORTED    Selected decoder type or its registration
+ *                                      is not supported
+ */
+
+	MWBregisterCode: function(codeMask, userName, key)
+    {
+   	     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "registerCode", [codeMask, userName, key]);
+   	},
 
    /**
     * Sets active or inactive status of decoder types
@@ -342,7 +367,22 @@ scanner = {};
    			//BarcodeScanner.MWBsetFlags(MWB_CODE_MASK_39, MWB_CFG_CODE39_EXTENDED_MODE);
    			//BarcodeScanner.MWBsetDirection(MWB_SCANDIRECTION_VERTICAL);
    			//BarcodeScanner.MWBsetScanningRect(MWB_CODE_MASK_39, 20,20,60,60);	
-
+   			
+   			
+   			//Enter your licensing details here
+   			BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_25,     "username", "key");
+    	    BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_39,     "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_93,     "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_128,    "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_AZTEC,  "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DM,     "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_EANUPC, "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_PDF,    "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_QR,     "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_RSS,    "username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_CODABAR,"username", "key");
+        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DOTCODE,"username", "key");
+   			
 			// Call the barcode scanner screen
 			 BarcodeScanner.MWBstartScanning(function(result) 
    			 {

@@ -87,7 +87,8 @@ public class BarcodeScanner {
   public static final int MWB_CODE_MASK_25 =	           0x00000100;
   public static final int MWB_CODE_MASK_93 =               0x00000200;
   public static final int MWB_CODE_MASK_CODABAR =          0x00000400;
-  public static final int MWB_CODE_MASK_ALL =              0xffffffff;
+  public static final int MWB_CODE_MASK_DOTCODE =          0x00000800;
+    public static final int MWB_CODE_MASK_ALL =              0xffffffff;
   /** @} */
   
   
@@ -143,6 +144,8 @@ public class BarcodeScanner {
   public static final int FOUND_25_STANDARD =   16;
   public static final int FOUND_93 = 			17;
   public static final int FOUND_CODABAR =		18;
+  public static final int FOUND_DOTCODE =		19;
+  public static final int FOUND_128_GS1 =		20;
   
   
   

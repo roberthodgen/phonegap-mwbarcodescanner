@@ -246,6 +246,23 @@ float lastHeight = -1;
     
     int orientation = MWB_getDirection();
     
+    if (previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortrait || previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortraitUpsideDown){
+        
+        double pos1f = log(MWB_SCANDIRECTION_HORIZONTAL) / log(2);
+        double pos2f = log(MWB_SCANDIRECTION_VERTICAL) / log(2);
+        
+        int pos1 = (int)(pos1f + 0.01);
+        int pos2 = (int)(pos2f + 0.01);
+        
+        int bit1 = (orientation >> pos1) & 1;// bit at pos1
+        int bit2 = (orientation >> pos2) & 1;// bit at pos2
+        int mask = (bit2 << pos1) | (bit1 << pos2);
+        orientation = orientation & 0xc;
+        orientation = orientation | mask;
+        
+    }
+
+    
     if (orientation & MWB_SCANDIRECTION_HORIZONTAL || orientation & MWB_SCANDIRECTION_OMNI || orientation & MWB_SCANDIRECTION_AUTODETECT){
         CGContextSetLineWidth(context, blinkingLineWidth);
         CGContextMoveToPoint(context, rect.origin.x, rect.origin.y + rect.size.height / 2);
