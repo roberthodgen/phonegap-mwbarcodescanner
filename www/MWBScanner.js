@@ -1,7 +1,17 @@
  /*
  
- Version 1.1
+ Version 1.2
  Copyright (c) 2014 Manatee Works. All rights reserved.
+ 
+ Changes in 1.2:
+
+ - Registering calls moved from native code to MWBScanner.js
+
+You can now enter your licensing info without changing the native code of plugin;
+
+- Import package_name.R manually after adding Android plugin is not necessary anymore
+
+- Decoding library updated to 2.9.31
  
 Changes in 1.1:
  
