@@ -226,6 +226,67 @@ public final class CameraManager {
     	  previewing = false;
     	
     }
+	
+	public int getMaxZoom() {
+
+		if (camera == null)
+			return -1;
+
+		Parameters cp = camera.getParameters();
+		if (!cp.isZoomSupported()){
+			return -1;
+		}
+		
+		List<Integer> zoomRatios =  cp.getZoomRatios();
+		
+		
+		return zoomRatios.get(zoomRatios.size()-1);
+
+	}
+	
+	public void setZoom(int zoom){
+		
+		if (camera == null)
+			return;
+
+		final Parameters cp = camera.getParameters();
+		
+		int minDist = 100000;
+		int bestIndex = 0;
+		
+		List<Integer> zoomRatios =  cp.getZoomRatios();
+		
+		for (int i = 0; i < zoomRatios.size(); i++){
+			int z = zoomRatios.get(i);
+			
+			if (Math.abs(z - zoom) < minDist){
+				minDist = Math.abs(z - zoom);
+				bestIndex = i;
+			}
+		}
+		
+		final int fBestIndex = bestIndex;
+		
+		if (bestIndex > -1){
+			camera.cancelAutoFocus();
+			
+			Handler handlerTimer = new Handler();
+			
+			handlerTimer.postDelayed(new Runnable() {
+				
+				@Override
+				public void run() {
+					cp.setZoom(fBestIndex); 
+					camera.setParameters(cp);
+					camera.autoFocus(autoFocusCallback);
+					
+				}
+			}, 100);
+			
+			
+		}
+		
+	}
 
 	public boolean isTorchAvailable() {
 

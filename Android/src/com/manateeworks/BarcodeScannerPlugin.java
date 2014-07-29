@@ -23,6 +23,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
     public static final Rect RECT_PORTRAIT_2D = new Rect(20, 2, 60, 96);
     public static final Rect RECT_FULL_1D = new Rect(2, 2, 96, 96);
     public static final Rect RECT_FULL_2D = new Rect(20, 2, 60, 96);
+    public static final Rect RECT_DOTCODE = new Rect(30, 20, 40, 60);
 	private static CallbackContext cbc;
 	private static String lastType;
 
@@ -130,6 +131,27 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
             
         }
     	
+        else if ("enableZoom".equals(action)) {
+        	ScannerActivity.param_EnableZoom = args.getBoolean(0);
+        	return true;
+            
+        }
+    	
+        else if ("setZoomLevels".equals(action)) {
+        	
+        	ScannerActivity.param_ZoomLevel1 = args.getInt(0);
+        	ScannerActivity.param_ZoomLevel2 = args.getInt(1);
+        	ScannerActivity.zoomLevel = args.getInt(2);
+            if (ScannerActivity.zoomLevel > 2){
+            	ScannerActivity.zoomLevel = 2;
+            }
+            if (ScannerActivity.zoomLevel < 0){
+            	ScannerActivity.zoomLevel = 0;
+            }
+        	return true;
+            
+        }
+    	
         
         return false;
     }
@@ -198,6 +220,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         BarcodeScanner.MWBregisterCode(BarcodeScanner.MWB_CODE_MASK_QR,     "username", "key");
         BarcodeScanner.MWBregisterCode(BarcodeScanner.MWB_CODE_MASK_RSS,    "username", "key");
         BarcodeScanner.MWBregisterCode(BarcodeScanner.MWB_CODE_MASK_CODABAR,"username", "key");
+        BarcodeScanner.MWBregisterCode(BarcodeScanner.MWB_CODE_MASK_DOTCODE,"username", "key");
         
         // choose code type or types you want to search for
         
@@ -225,7 +248,8 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         // BarcodeScanner.MWBsetActiveCodes( BarcodeScanner.MWB_CODE_MASK_PDF ); 
         // BarcodeScanner.MWBsetActiveCodes( BarcodeScanner.MWB_CODE_MASK_QR ); 
         // BarcodeScanner.MWBsetActiveCodes( BarcodeScanner.MWB_CODE_MASK_RSS );
-        // BarcodeScanner.MWBsetActiveCodes( BarcodeScanner.MWB_CODE_MASK_CODABAR ); 
+        // BarcodeScanner.MWBsetActiveCodes( BarcodeScanner.MWB_CODE_MASK_CODABAR );
+        // BarcodeScanner.MWBsetActiveCodes( BarcodeScanner.MWB_CODE_MASK_DOTCODE ); 
         
 
         // Our sample app is configured by default to search both directions...
@@ -241,7 +265,8 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_PDF,    RECT_FULL_1D);
         BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_QR,     RECT_FULL_2D);     
         BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_RSS,    RECT_FULL_1D);
-        BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_CODABAR,RECT_FULL_1D); 
+        BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_CODABAR,RECT_FULL_1D);
+        BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DOTCODE,RECT_DOTCODE); 
 
         // But for better performance, set like this for PORTRAIT scanning...
         // BarcodeScanner.MWBsetDirection(BarcodeScanner.MWB_SCANDIRECTION_VERTICAL);
@@ -257,6 +282,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_QR,     RECT_PORTRAIT_2D);     
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_RSS,    RECT_PORTRAIT_1D);
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_CODABAR,RECT_PORTRAIT_1D); 
+        // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
         
         // or like this for LANDSCAPE scanning - Preferred for dense or wide codes...
         // BarcodeScanner.MWBsetDirection(BarcodeScanner.MWB_SCANDIRECTION_HORIZONTAL);
@@ -272,6 +298,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_QR,     RECT_LANDSCAPE_2D);     
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_RSS,    RECT_LANDSCAPE_1D);
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_CODABAR,RECT_LANDSCAPE_1D); 
+        // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
         
         
         // set decoder effort level (1 - 5)

@@ -44,10 +44,19 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     public static int param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
     public static boolean param_EnableHiRes = true;
     public static boolean param_EnableFlash = true;
+    public static boolean param_EnableZoom = true;
     public static int param_OverlayMode = OM_MW;
+    
+    public static int param_ZoomLevel1 = 0;
+    public static int param_ZoomLevel2 = 0;
+    public static int zoomLevel = 0;
+    private int firstZoom = 150;
+	private int secondZoom = 300;
+    
     
     private ImageView overlayImage;
     private ImageButton buttonFlash;
+    private ImageButton buttonZoom;
     
     private String package_name;
     private Resources resources;
@@ -79,6 +88,16 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 					
 				}
 			});
+			
+			buttonZoom = (ImageButton) findViewById(resources.getIdentifier("zoomButton", "id", package_name));
+			buttonZoom.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					toggleZoom();
+					
+					
+				}
+			});
 	        
 	        CameraManager.init(getApplication());
 	        
@@ -90,6 +109,9 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	    {
 	        super.onResume();
 
+	        buttonZoom.setVisibility(View.GONE);
+	        
+	        
 	        SurfaceView surfaceView = (SurfaceView) findViewById(resources.getIdentifier("preview_view", "id", package_name));
 	        SurfaceHolder surfaceHolder = surfaceView.getHolder();
 	        
@@ -152,6 +174,52 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 			flashOn = !flashOn;
 			updateFlash();
 		}
+	    
+	    private void toggleZoom() {
+	    	
+	    	zoomLevel++;
+			if (zoomLevel > 2){
+				zoomLevel = 0;
+			}
+			
+			updateZoom();
+		}
+	    
+	    public void updateZoom(){
+	    	
+	    	if (param_ZoomLevel1 == 0 || param_ZoomLevel2 == 0){
+	    		firstZoom = 150;
+	    		secondZoom = 300;
+	    	} else {
+	    		firstZoom = param_ZoomLevel1;
+	    		secondZoom = param_ZoomLevel2;
+	    		
+	    		int maxZoom = CameraManager.get().getMaxZoom();
+	    		
+	    		if (maxZoom < secondZoom){
+	    			secondZoom = maxZoom;
+	    		}
+	    		if (maxZoom < firstZoom){
+	    			firstZoom = maxZoom;
+	    		}
+	    		
+	    	}
+	    	
+	    	switch (zoomLevel) {
+			case 0:
+				CameraManager.get().setZoom(100);
+				break;
+			case 1:
+				CameraManager.get().setZoom(firstZoom);
+				break;
+			case 2:
+				CameraManager.get().setZoom(secondZoom);
+				break;
+
+			default:
+				break;
+			}
+	    }
 
 		private void updateFlash() {
 
@@ -218,6 +286,16 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	        	}
 	            
 	            CameraManager.get().openDriver(surfaceHolder, (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT));
+	            
+	            int maxZoom = CameraManager.get().getMaxZoom(); 
+				if (maxZoom <= 100){
+					buttonZoom.setVisibility(View.GONE);
+				} else {
+					 if (param_EnableZoom){
+						 buttonZoom.setVisibility(View.VISIBLE);
+				        } 
+					 	updateZoom();
+				}
 	        }
 	        catch (IOException ioe)
 	        {

@@ -49,4 +49,15 @@
         android:scaleType="fitXY"
         android:src="@drawable/flashbuttonoff" />
 
+    <ImageButton
+        android:id="@+id/zoomButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="10dp"
+        android:background="#00000000"
+        android:scaleType="fitXY"
+        android:src="@drawable/zoom" />
+
 </RelativeLayout>

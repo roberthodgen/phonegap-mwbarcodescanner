@@ -51,6 +51,11 @@ typedef enum eMainScreenState {
     IBOutlet UIImageView *cameraOverlay;
     IBOutlet UIButton *closeButton;
     IBOutlet UIButton *flashButton;
+    IBOutlet UIButton *zoomButton;
+    
+    float firstZoom;
+    float secondZoom;
+    BOOL videoZoomSupported;
     
 }
 
@@ -63,6 +68,7 @@ typedef enum eMainScreenState {
 @property (nonatomic, retain) NSTimer *focusTimer;
 @property (nonatomic, retain) id <ScanningFinishedDelegate> delegate;
 @property (nonatomic, retain) UIButton *flashButton;
+@property (nonatomic, retain) UIButton *zoomButton;
 
 
 - (IBAction)doClose:(id)sender;
@@ -71,11 +77,15 @@ typedef enum eMainScreenState {
 + (void) enableHiRes: (BOOL) hiRes;
 + (void) enableFlash: (BOOL) flash;
 + (void) setOverlayMode: (int) overlayMode;
++ (void) enableZoom: (BOOL) zoom;
++ (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel;
+
 - (void)revertToNormal;
 - (void)decodeResultNotification: (NSNotification *)notification;
 - (void)initCapture;
 - (void) startScanning;
 - (void) stopScanning;
 - (void) toggleTorch;
+
 
 @end

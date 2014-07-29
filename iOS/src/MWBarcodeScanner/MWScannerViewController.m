@@ -6,6 +6,7 @@
 #import "MWScannerViewController.h"
 #import "BarcodeScanner.h"
 #import "MWOverlay.h"
+#include <mach/mach_host.h>
 
 // !!! Rects are in format: x, y, width, height !!!
 #define RECT_LANDSCAPE_1D       6, 20, 88, 60
@@ -14,12 +15,18 @@
 #define RECT_PORTRAIT_2D        20, 6, 60, 88
 #define RECT_FULL_1D            6, 6, 88, 88
 #define RECT_FULL_2D            20, 6, 60, 88
+#define RECT_DOTCODE            30, 20, 40, 60
 
 
 UIInterfaceOrientationMask param_Orientation = UIInterfaceOrientationMaskLandscapeLeft;
 BOOL param_EnableHiRes = YES;
 BOOL param_EnableFlash = YES;
+BOOL param_EnableZoom = YES;
 int param_OverlayMode = OM_MW;
+int param_ZoomLevel1 = 0;
+int param_ZoomLevel2 = 0;
+int zoomLevel = 0;
+
 
 static NSString *DecoderResultNotification = @"DecoderResultNotification";
 
@@ -51,6 +58,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 @synthesize state;
 @synthesize focusTimer;
 @synthesize flashButton;
+@synthesize zoomButton;
 
 #pragma mark -
 #pragma mark Initialization
@@ -68,7 +76,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     MWB_registerCode(MWB_CODE_MASK_QR,      "username", "key");
     MWB_registerCode(MWB_CODE_MASK_PDF,     "username", "key");
     MWB_registerCode(MWB_CODE_MASK_RSS,     "username", "key");
-    MWB_registerCode(MWB_CODE_MASK_CODABAR, "username", "key");*/
+    MWB_registerCode(MWB_CODE_MASK_CODABAR, "username", "key");
+    MWB_registerCode(MWB_CODE_MASK_DOTCODE, "username", "key");*/
     
     
     // choose code type or types you want to search for
@@ -98,6 +107,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     // MWB_setActiveCodes( MWB_CODE_MASK_QR );
     // MWB_setActiveCodes( MWB_CODE_MASK_RSS );
     // MWB_setActiveCodes( MWB_CODE_MASK_CODABAR );
+    // MWB_setActiveCodes( MWB_CODE_MASK_DOTCODE );
     
     
     // Our sample app is configured by default to search both directions...
@@ -114,6 +124,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     MWB_setScanningRect(MWB_CODE_MASK_QR,     RECT_FULL_2D);
     MWB_setScanningRect(MWB_CODE_MASK_RSS,    RECT_FULL_1D);
     MWB_setScanningRect(MWB_CODE_MASK_CODABAR,RECT_FULL_1D);
+    MWB_setScanningRect(MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
     
     
     // But for better performance, set like this for PORTRAIT scanning...
@@ -130,6 +141,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     // MWB_setScanningRect(MWB_CODE_MASK_QR,     RECT_PORTRAIT_2D);
     // MWB_setScanningRect(MWB_CODE_MASK_RSS,    RECT_PORTRAIT_1D);
     // MWB_setScanningRect(MWB_CODE_MASK_CODABAR,RECT_PORTRAIT_1D);
+    // MWB_setScanningRect(MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
     
     // or like this for LANDSCAPE scanning - Preferred for dense or wide codes...
     // MWB_setDirection(MWB_SCANDIRECTION_HORIZONTAL);
@@ -145,6 +157,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     // MWB_setScanningRect(MWB_CODE_MASK_QR,     RECT_LANDSCAPE_2D);
     // MWB_setScanningRect(MWB_CODE_MASK_RSS,    RECT_LANDSCAPE_1D);
     // MWB_setScanningRect(MWB_CODE_MASK_CODABAR,RECT_LANDSCAPE_1D);
+    // MWB_setScanningRect(MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
     
     
     // set decoder effort level (1 - 5)
@@ -185,6 +198,27 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
 }
 
++ (void) enableZoom: (BOOL) zoom {
+    
+    param_EnableZoom = zoom;
+    
+}
+
++ (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel {
+    
+    param_ZoomLevel1 = zoomLevel1;
+    param_ZoomLevel2 = zoomLevel2;
+    zoomLevel = initialZoomLevel;
+    if (zoomLevel > 2){
+        zoomLevel = 2;
+    }
+    if (zoomLevel < 0){
+        zoomLevel = 0;
+    }
+    
+}
+
+
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
@@ -192,6 +226,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     [[UIApplication sharedApplication] setStatusBarHidden:YES];
     
     flashButton.hidden = !param_EnableFlash;
+    zoomButton.hidden = !param_EnableZoom;
     
 #if TARGET_IPHONE_SIMULATOR
     NSLog(@"On iOS simulator camera is not Supported");
@@ -290,6 +325,34 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     }
 }
 
+- (void) updateDigitalZoom {
+    
+    if (param_EnableZoom && videoZoomSupported){
+        
+        [self.device lockForConfiguration:nil];
+        
+        switch (zoomLevel) {
+            case 0:
+                [self.device setVideoZoomFactor:1 /*rampToVideoZoomFactor:1 withRate:4*/];
+                break;
+            case 1:
+                [self.device setVideoZoomFactor:firstZoom /*rampToVideoZoomFactor:firstZooom withRate:4*/];
+                break;
+            case 2:
+                [self.device setVideoZoomFactor:secondZoom /*rampToVideoZoomFactor:secondZoom withRate:4*/];
+                break;
+                
+            default:
+                break;
+        }
+        [self.device unlockForConfiguration];
+        
+       zoomButton.hidden = false;
+    } else {
+        zoomButton.hidden = true;
+    }
+}
+
 - (void) deinitCapture {
     if (self.captureSession != nil){
         if (param_OverlayMode & OM_MW){
@@ -351,6 +414,23 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
             self.captureSession.sessionPreset = AVCaptureSessionPreset640x480;
         }
     
+    // Limit camera FPS to 15 for single core devices (iPhone 4 and older) so more CPU power is available for decoder
+    host_basic_info_data_t hostInfo;
+    mach_msg_type_number_t infoCount;
+    infoCount = HOST_BASIC_INFO_COUNT;
+    host_info( mach_host_self(), HOST_BASIC_INFO, (host_info_t)&hostInfo, &infoCount ) ;
+    
+    if (hostInfo.max_cpus < 2){
+        if ([self.device respondsToSelector:@selector(setActiveVideoMinFrameDuration:)]){
+            [self.device lockForConfiguration:nil];
+            [self.device setActiveVideoMinFrameDuration:CMTimeMake(1, 15)];
+            [self.device unlockForConfiguration];
+        } else {
+            AVCaptureConnection *conn = [captureOutput connectionWithMediaType:AVMediaTypeVideo];
+            [conn setVideoMinFrameDuration:CMTimeMake(1, 15)];
+        }
+    }
+    
 	/*We add the preview layer*/
     
     self.prevLayer = [AVCaptureVideoPreviewLayer layerWithSession: self.captureSession];
@@ -383,9 +463,59 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         flashButton.hidden = YES;
     }
     
+    videoZoomSupported = false;
+    
+    if ([self.device respondsToSelector:@selector(setActiveFormat:)]){
+        float maxZoom = self.device.activeFormat.videoZoomFactorUpscaleThreshold;
+        float maxZoomTotal = self.device.activeFormat.videoMaxZoomFactor;
+        
+        if ([self.device respondsToSelector:@selector(setVideoZoomFactor:)] && maxZoomTotal > 1.1){
+            videoZoomSupported = true;
+        }
+        
+        if (param_ZoomLevel1 != 0 && param_ZoomLevel2 != 0){
+            
+            if (param_ZoomLevel1 > maxZoomTotal * 100){
+                param_ZoomLevel1 = (int)(maxZoomTotal * 100);
+            }
+            if (param_ZoomLevel2 > maxZoomTotal * 100){
+                param_ZoomLevel2 = (int)(maxZoomTotal * 100);
+            }
+            
+            firstZoom = 0.01 * param_ZoomLevel1;
+            secondZoom = 0.01 * param_ZoomLevel2;
+            
+            
+        } else {
+        
+            if (maxZoomTotal > 2){
+                
+                if (maxZoom > 1.0 && maxZoom <= 2.0){
+                    firstZoom = maxZoom;
+                    secondZoom = maxZoom * 2;
+                } else
+                    if (maxZoom > 2.0){
+                        firstZoom = 2.0;
+                        secondZoom = 4.0;
+                    }
+                
+            }
+        }
+        
+        
+        
+    }
+    
+    if (!videoZoomSupported){
+        zoomButton.hidden = true;
+    } else {
+        [self updateDigitalZoom];
+    }
+    
     [self.view bringSubviewToFront:cameraOverlay];
     [self.view bringSubviewToFront:closeButton];
     [self.view bringSubviewToFront:flashButton];
+    [self.view bringSubviewToFront:zoomButton];
     
 
     
@@ -474,7 +604,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         
         int resLength = MWB_scanGrayscaleImage(frameBuffer,width,height, &pResult);
         free(frameBuffer);
-        NSLog(@"Frame decoded");
+        //NSLog(@"Frame decoded");
         
         
         
@@ -567,6 +697,17 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (IBAction)doFlashToggle:(id)sender {
     
     [self toggleTorch];
+    
+}
+
+- (IBAction)doZoomToggle:(id)sender {
+    
+    zoomLevel++;
+    if (zoomLevel > 2){
+        zoomLevel = 0;
+    }
+    
+    [self updateDigitalZoom];
     
 }
 

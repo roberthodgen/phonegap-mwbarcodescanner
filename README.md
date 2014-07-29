@@ -1,6 +1,6 @@
 Manateeworks Barcode Scanner Plugin
 =========================
- Version 1.2
+ Version 1.3
 
 Guide on how to add the mobiScan Phonegap plugin to your project(s)
 
@@ -279,6 +279,19 @@ Add a notification plugin (if not already present):
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
 
+
+
+&nbsp;
+###Changes in 1.3:
+&nbsp;
+
+* Zoom feature added for iOS and Android. It's not supported on WP8 due to API limitation.
+ 
+* Fixed 'frameworks was not added to the references' on WP8
+ 
+* Fixed freezing if missing org.apache.cordova.device plugin
+
+* Added x86 lib for Android
 
 &nbsp;
 ###Changes in 1.2:

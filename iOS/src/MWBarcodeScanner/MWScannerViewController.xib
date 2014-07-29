@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="8.00">
 	<data>
-		<int key="IBDocument.SystemTarget">1280</int>
-		<string key="IBDocument.SystemVersion">12F45</string>
-		<string key="IBDocument.InterfaceBuilderVersion">4510</string>
-		<string key="IBDocument.AppKitVersion">1187.40</string>
-		<string key="IBDocument.HIToolboxVersion">626.00</string>
+		<int key="IBDocument.SystemTarget">1536</int>
+		<string key="IBDocument.SystemVersion">13E28</string>
+		<string key="IBDocument.InterfaceBuilderVersion">5056</string>
+		<string key="IBDocument.AppKitVersion">1265.21</string>
+		<string key="IBDocument.HIToolboxVersion">698.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
-			<string key="NS.object.0">3742</string>
+			<string key="NS.object.0">3733</string>
 		</object>
 		<array key="IBDocument.IntegratedClassDependencies">
 			<string>IBProxyObject</string>
@@ -33,7 +33,7 @@
 				<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
 			</object>
 			<object class="IBUIView" id="461705783">
-				<nil key="NSNextResponder"/>
+				<reference key="NSNextResponder"/>
 				<int key="NSvFlags">1298</int>
 				<array class="NSMutableArray" key="NSSubviews">
 					<object class="IBUIImageView" id="187158117">
@@ -42,6 +42,7 @@
 						<object class="NSPSMatrix" key="NSFrameMatrix"/>
 						<string key="NSFrameSize">{480, 320}</string>
 						<reference key="NSSuperview" ref="461705783"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="527659263"/>
 						<bool key="IBUIOpaque">NO</bool>
 						<bool key="IBUIClearsContextBeforeDrawing">NO</bool>
@@ -58,6 +59,7 @@
 						<object class="NSPSMatrix" key="NSFrameMatrix"/>
 						<string key="NSFrame">{{5, 5}, {32, 32}}</string>
 						<reference key="NSSuperview" ref="461705783"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="250007140"/>
 						<bool key="IBUIOpaque">NO</bool>
 						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
@@ -95,6 +97,8 @@
 						<object class="NSPSMatrix" key="NSFrameMatrix"/>
 						<string key="NSFrame">{{443, 5}, {32, 32}}</string>
 						<reference key="NSSuperview" ref="461705783"/>
+						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView" ref="297527525"/>
 						<bool key="IBUIOpaque">NO</bool>
 						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
 						<int key="IBUIContentHorizontalAlignment">0</int>
@@ -116,9 +120,35 @@
 						<reference key="IBUIFontDescription" ref="519278702"/>
 						<reference key="IBUIFont" ref="1070053824"/>
 					</object>
+					<object class="IBUIButton" id="297527525">
+						<reference key="NSNextResponder" ref="461705783"/>
+						<int key="NSvFlags">1289</int>
+						<object class="NSPSMatrix" key="NSFrameMatrix"/>
+						<string key="NSFrame">{{443, 281}, {32, 32}}</string>
+						<reference key="NSSuperview" ref="461705783"/>
+						<reference key="NSWindow"/>
+						<bool key="IBUIOpaque">NO</bool>
+						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
+						<int key="IBUIContentHorizontalAlignment">0</int>
+						<int key="IBUIContentVerticalAlignment">0</int>
+						<object class="NSColor" key="IBUINormalTitleColor">
+							<int key="NSColorSpace">1</int>
+							<bytes key="NSRGB">MC4xOTYwNzg0MzQ2IDAuMzA5ODAzOTMyOSAwLjUyMTU2ODY1NgA</bytes>
+						</object>
+						<reference key="IBUIHighlightedTitleColor" ref="634956600"/>
+						<reference key="IBUINormalTitleShadowColor" ref="2135932"/>
+						<object class="NSCustomResource" key="IBUINormalImage">
+							<string key="NSClassName">NSImage</string>
+							<string key="NSResourceName">zoom.png</string>
+						</object>
+						<reference key="IBUIFontDescription" ref="519278702"/>
+						<reference key="IBUIFont" ref="1070053824"/>
+					</object>
 				</array>
 				<object class="NSPSMatrix" key="NSFrameMatrix"/>
 				<string key="NSFrameSize">{480, 320}</string>
+				<reference key="NSSuperview"/>
+				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="187158117"/>
 				<reference key="IBUIBackgroundColor" ref="634956600"/>
 				<object class="IBUISimulatedOrientationMetrics" key="IBUISimulatedOrientationMetrics">
@@ -168,6 +198,14 @@
 					<string key="id">5ff-IH-6lU</string>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchOutletConnection" key="connection">
+						<string key="label">zoomButton</string>
+						<reference key="source" ref="759277155"/>
+						<reference key="destination" ref="297527525"/>
+					</object>
+					<string key="id">qnW-0L-9UI</string>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchEventConnection" key="connection">
 						<string key="label">doFlashToggle:</string>
 						<reference key="source" ref="250007140"/>
@@ -184,6 +222,15 @@
 						<int key="IBEventType">7</int>
 					</object>
 					<string key="id">quu-Zk-eU1</string>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchEventConnection" key="connection">
+						<string key="label">doZoomToggle:</string>
+						<reference key="source" ref="297527525"/>
+						<reference key="destination" ref="290766447"/>
+						<int key="IBEventType">7</int>
+					</object>
+					<string key="id">DBb-OJ-hlK</string>
 				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -212,6 +259,7 @@
 							<reference ref="187158117"/>
 							<reference ref="527659263"/>
 							<reference ref="250007140"/>
+							<reference ref="297527525"/>
 						</array>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -232,6 +280,12 @@
 						<reference key="object" ref="527659263"/>
 						<reference key="parent" ref="461705783"/>
 						<string key="objectName">Close Button</string>
+					</object>
+					<object class="IBObjectRecord">
+						<string key="id">ugY-bn-eZZ</string>
+						<reference key="object" ref="297527525"/>
+						<reference key="parent" ref="461705783"/>
+						<string key="objectName">Flash Button</string>
 					</object>
 				</array>
 			</object>
@@ -255,19 +309,77 @@
 				<string key="cWs-o0-SmB.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 				<reference key="cWs-o0-SmB.IBUserGuides" ref="0"/>
 				<boolean value="NO" key="cWs-o0-SmB.showNotes"/>
+				<string key="ugY-bn-eZZ.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
+				<real value="0.0" key="ugY-bn-eZZ.IBUIButtonInspectorSelectedStateConfigurationMetadataKey"/>
+				<reference key="ugY-bn-eZZ.IBUserGuides" ref="0"/>
+				<boolean value="NO" key="ugY-bn-eZZ.showNotes"/>
 			</dictionary>
 			<dictionary class="NSMutableDictionary" key="unlocalizedProperties"/>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
 		</object>
-		<object class="IBClassDescriber" key="IBDocument.Classes"/>
+		<object class="IBClassDescriber" key="IBDocument.Classes">
+			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
+				<object class="IBPartialClassDescription">
+					<string key="className">MWScannerViewController</string>
+					<string key="superclassName">UIViewController</string>
+					<dictionary class="NSMutableDictionary" key="actions">
+						<string key="doClose:">id</string>
+						<string key="doFlashToggle:">id</string>
+						<string key="doZoomToggle:">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="actionInfosByName">
+						<object class="IBActionInfo" key="doClose:">
+							<string key="name">doClose:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="doFlashToggle:">
+							<string key="name">doFlashToggle:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="doZoomToggle:">
+							<string key="name">doZoomToggle:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="outlets">
+						<string key="cameraOverlay">UIImageView</string>
+						<string key="closeButton">UIButton</string>
+						<string key="flashButton">UIButton</string>
+						<string key="zoomButton">UIButton</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<object class="IBToOneOutletInfo" key="cameraOverlay">
+							<string key="name">cameraOverlay</string>
+							<string key="candidateClassName">UIImageView</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="closeButton">
+							<string key="name">closeButton</string>
+							<string key="candidateClassName">UIButton</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="flashButton">
+							<string key="name">flashButton</string>
+							<string key="candidateClassName">UIButton</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="zoomButton">
+							<string key="name">zoomButton</string>
+							<string key="candidateClassName">UIButton</string>
+						</object>
+					</dictionary>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/MWScannerViewController.h</string>
+					</object>
+				</object>
+			</array>
+		</object>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaTouchFramework</string>
 		<bool key="IBDocument.previouslyAttemptedUpgradeToXcode5">YES</bool>
 		<object class="NSMutableDictionary" key="IBDocument.PluginDeclaredDependencyDefaults">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaTouchPlugin.iPhoneOS</string>
-			<real value="1280" key="NS.object.0"/>
+			<real value="1536" key="NS.object.0"/>
 		</object>
 		<object class="NSMutableDictionary" key="IBDocument.PluginDeclaredDevelopmentDependencies">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaTouchPlugin.InterfaceBuilder3</string>
@@ -280,7 +392,8 @@
 			<string key="flashbuttonoff.png">{48, 48}</string>
 			<string key="flashbuttonon.png">{48, 48}</string>
 			<string key="overlay.png">{480, 320}</string>
+			<string key="zoom.png">{48, 48}</string>
 		</dictionary>
-		<string key="IBCocoaTouchPluginVersion">3742</string>
+		<string key="IBCocoaTouchPluginVersion">3733</string>
 	</data>
 </archive>

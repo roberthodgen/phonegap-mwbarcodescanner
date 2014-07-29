@@ -1,17 +1,31 @@
- /*
+/*
  
- Version 1.2
+ Version 1.3
  Copyright (c) 2014 Manatee Works. All rights reserved.
- 
- Changes in 1.2:
+                                                                                                 
+Changes in 1.3:
 
- - Registering calls moved from native code to MWBScanner.js
+- Zoom feature added for iOS and Android. It's not supported on WP8 due to API limitation.
+ 
+- Fixed 'frameworks was not added to the references' on WP8
+ 
+- Fixed freezing if missing org.apache.cordova.device plugin
+
+- Added x86 lib for Android
+
+
+                                                                                                 
+Changes in 1.2:
+
+- Registering calls moved from native code to MWBScanner.js
 
 You can now enter your licensing info without changing the native code of plugin;
 
 - Import package_name.R manually after adding Android plugin is not necessary anymore
 
 - Decoding library updated to 2.9.31
+                                                                                                 
+                                                                                                 
  
 Changes in 1.1:
  
@@ -198,23 +212,22 @@ Changes in 1.1:
 		 }, "MWBarcodeScanner", "startScanner", []);
   	 },
 
-/**
- * Registers licensing information with single selected decoder type.
- * If registering information is correct, enables full support for selected
- * decoder type.
- * It should be called once per decoder type.
- *
- * @param[in]   codeMask                Single decoder type selector (MWB_CODE_MASK_...)
- * @param[in]   userName                User name string
- * @param[in]   key                     License key string
- * 
- * @retval      MWB_RT_OK               Registration successful
- * @retval      MWB_RT_FAIL             Registration failed
- * @retval      MWB_RT_BAD_PARAM        More than one decoder flag selected
- * @retval      MWB_RT_NOT_SUPPORTED    Selected decoder type or its registration
- *                                      is not supported
- */
-
+    /**
+     * Registers licensing information with single selected decoder type.
+     * If registering information is correct, enables full support for selected
+     * decoder type.
+     * It should be called once per decoder type.
+     *
+     * @param[in]   codeMask                Single decoder type selector (MWB_CODE_MASK_...)
+     * @param[in]   userName                User name string
+     * @param[in]   key                     License key string
+     * 
+     * @retval      MWB_RT_OK               Registration successful
+     * @retval      MWB_RT_FAIL             Registration failed
+     * @retval      MWB_RT_BAD_PARAM        More than one decoder flag selected
+     * @retval      MWB_RT_NOT_SUPPORTED    Selected decoder type or its registration
+     *                                      is not supported
+    */
 	MWBregisterCode: function(codeMask, userName, key)
     {
    	     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "registerCode", [codeMask, userName, key]);
@@ -354,7 +367,32 @@ Changes in 1.1:
     MWBenableFlash: function(enableFlash)
     {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "enableFlash", [enableFlash]);
-    }
+    },
+               
+   /**
+    * Enable or disable zoom button on scanning screen. If device doesn't support zoom,
+    * button will be hidden regardles of param. Zoom is not supported on Windows Phone 8 
+    * as there's no zooming api available!
+    *
+    * Default value is true (enabled)
+    */
+   MWBenableZoom: function(enableZoom)
+   {
+   cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "enableZoom", [enableZoom]);
+   },
+               
+   /**
+    * Set two desired zoom levels in percentage and initial level. Set first two params to zero for default 
+    * levels. On iOS, first zoom level is set to maximum non-interpolated level available on device, and
+    * second is double of first level. On Android, default first zoom is 150% and second is 300%. Zoom is
+    * not supported on Windows Phone 8 as there's no zooming api available!
+    * Initial zoom level can be 0 (100% - non zoomed), 1 (zoomLevel1) or 2 (zoomLevel2). Default is 0.
+    *
+    */
+   MWBsetZoomLevels: function(zoomLevel1, zoomLevel2, initialZoomLevel)
+   {
+   cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setZoomLevels", [zoomLevel1, zoomLevel2, initialZoomLevel]);
+   },
 	
   };
   
@@ -376,22 +414,60 @@ scanner = {};
 			//BarcodeScanner.MWBsetLevel(2);
    			//BarcodeScanner.MWBsetFlags(MWB_CODE_MASK_39, MWB_CFG_CODE39_EXTENDED_MODE);
    			//BarcodeScanner.MWBsetDirection(MWB_SCANDIRECTION_VERTICAL);
-   			//BarcodeScanner.MWBsetScanningRect(MWB_CODE_MASK_39, 20,20,60,60);	
+   			//BarcodeScanner.MWBsetScanningRect(MWB_CODE_MASK_39, 20,20,60,60);
+                                      
+            //BarcodeScanner.MWBenableZoom(false);
+            //BarcodeScanner.MWBsetZoomLevels(200, 400, 1);
+            
    			
    			
-   			//Enter your licensing details here
-   			BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_25,     "username", "key");
-    	    BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_39,     "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_93,     "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_128,    "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_AZTEC,  "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DM,     "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_EANUPC, "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_PDF,    "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_QR,     "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_RSS,    "username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_CODABAR,"username", "key");
-        	BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DOTCODE,"username", "key");
+              //Enter your licensing details for specific platform here
+              
+              if (device.platform == "Android"){
+                  //Android
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_25,     "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_39,     "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_93,     "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_128,    "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_AZTEC,  "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DM,     "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_EANUPC, "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_PDF,    "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_QR,     "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_RSS,    "username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_CODABAR,"username", "key");
+                  BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DOTCODE,"username", "key");
+              } else
+                  if (device.platform == "iOS"){
+                      //iOS
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_25,     "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_39,     "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_93,     "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_128,    "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_AZTEC,  "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DM,     "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_EANUPC, "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_PDF,    "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_QR,     "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_RSS,    "username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_CODABAR,"username", "key");
+                      BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DOTCODE,"username", "key");
+                  } else
+                      if (device.platform == "Win32NT") {
+                          //Windows phone 8
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_25, "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_39,     "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_93,     "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_128,    "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_AZTEC,  "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DM,     "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_EANUPC, "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_PDF,    "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_QR,     "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_RSS,    "username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_CODABAR,"username", "key");
+                          BarcodeScanner.MWBregisterCode(MWB_CODE_MASK_DOTCODE,"username", "key");
+                      }
    			
 			// Call the barcode scanner screen
 			 BarcodeScanner.MWBstartScanning(function(result) 
