@@ -63,6 +63,7 @@
      <source-file src="Android/res/drawable/zoom.png" target-dir="res/drawable" />
      
      <source-file src="Android/libs/armeabi/libBarcodeScannerLib.so" target-dir="libs/armeabi" />
+     <source-file src="Android/libs/x86/libBarcodeScannerLib.so" target-dir="libs/x86" />
      <source-file src="Android/libs/armeabi-v7a/libBarcodeScannerLib.so" target-dir="libs/armeabi-v7a" />
      
      </platform>
@@ -128,8 +129,9 @@
         
         <source-file src="wp8/BarcodeLib.winmd" framework="true"/>
         <source-file src="wp8/BarcodeLib.dll"/>
-
+      <framework src ="wp8/BarcodeLib.winmd"/>
 	<source-file src="wp8/WBEx/WriteableBitmapExWinPhone.dll" framework="true"/>
+      <framework src ="wp8/WBEx/WriteableBitmapExWinPhone.dll"/>
 	<source-file src="wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.dll" framework="true"/>
 	<source-file src="wp8/WBEx/WriteableBitmapExWinPhone.pdb"/>
 	<source-file src="wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.pdb"/>
