@@ -207,6 +207,17 @@ float lastHeight = -1;
     
     MWB_getScanningRect(0, &left, &top, &width, &height);
     
+    if (previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortrait || previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortraitUpsideDown){
+        
+        float tmp = left;
+        left = top;
+        top = tmp;
+        tmp = height;
+        height = width;
+        width = tmp;
+        
+    }
+    
     CGRect rect = CGRectMake(xOffset + left * xScale, yOffset + top * yScale, width * xScale, height * yScale);
     
     rect.origin.x *= overlayWidth;
