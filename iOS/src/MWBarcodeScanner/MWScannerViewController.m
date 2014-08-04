@@ -327,7 +327,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 
 - (void) updateDigitalZoom {
     
-    if (param_EnableZoom && videoZoomSupported){
+    if (videoZoomSupported){
         
         [self.device lockForConfiguration:nil];
         
@@ -347,12 +347,11 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         }
         [self.device unlockForConfiguration];
         
-       zoomButton.hidden = false;
+        zoomButton.hidden = !param_EnableZoom;
     } else {
         zoomButton.hidden = true;
     }
 }
-
 - (void) deinitCapture {
     if (self.captureSession != nil){
         if (param_OverlayMode & OM_MW){
@@ -399,8 +398,12 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 	[self.captureSession addInput:captureInput];
 	[self.captureSession addOutput:captureOutput];
     
-    
-    
+    //uncomment lines below if you want to use highest resolution available on device
+   /* if (param_EnableHiRes && [self.captureSession canSetSessionPreset:AVCaptureSessionPreset1920x1080])
+    {
+        NSLog(@"Set preview port to 1920X1080");
+        self.captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
+    } else*/
     
     if (param_EnableHiRes && [self.captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720])
     {
