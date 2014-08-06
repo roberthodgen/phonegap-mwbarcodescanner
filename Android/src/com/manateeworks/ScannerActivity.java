@@ -45,6 +45,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     public static boolean param_EnableHiRes = true;
     public static boolean param_EnableFlash = true;
     public static boolean param_EnableZoom = true;
+    public static boolean param_DefaultFlashOn = false;
     public static int param_OverlayMode = OM_MW;
     
     public static int param_ZoomLevel1 = 0;
@@ -149,6 +150,18 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 	        int v3 = (ver & 0xff);
 	        String libVersion = "Lib version: " + String.valueOf(v1)+"."+String.valueOf(v2)+"."+String.valueOf(v3);
 	        Toast.makeText(this, libVersion, Toast.LENGTH_LONG).show();
+	        
+	        if (param_DefaultFlashOn){
+	        
+		        new Handler().postDelayed(new Runnable() {
+					
+		        	@Override
+		        	public void run() {
+		        		flashOn = true;
+		        	         updateFlash();		
+		        	}
+		        }, 1000);
+	        }
 	        
 	    }
 	 

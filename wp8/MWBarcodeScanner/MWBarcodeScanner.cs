@@ -124,6 +124,12 @@ namespace Cordova.Extension.Commands
              BarcodeScannerPage.ScannerPage.param_EnableFlash = Convert.ToBoolean(paramsList[0]);
          }
 
+         public void turnFlashOn(string options)
+         {
+             string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+             BarcodeScannerPage.ScannerPage.param_DefaultFlashOn = Convert.ToBoolean(paramsList[0]);
+         }
+
          void root_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
          {
              if ((e.Content is BarcodeScannerPage.ScannerPage)) return;

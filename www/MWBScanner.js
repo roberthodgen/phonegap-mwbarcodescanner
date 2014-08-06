@@ -7,6 +7,8 @@ Changes in 1.3:
 
 - Zoom feature added for iOS and Android. It's not supported on WP8 due to API limitation.
  
+- Added function to turn Flash ON by default
+ 
 - Fixed 'frameworks was not added to the references' on WP8
  
 - Fixed freezing if missing org.apache.cordova.device plugin
@@ -368,6 +370,16 @@ Changes in 1.1:
     {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "enableFlash", [enableFlash]);
     },
+      
+   /**
+    * Set default state of flash (torch) when scanner activity is started
+    *
+    * Default value is false (disabled)
+    */
+    MWBturnFlashOn: function(flashOn)
+    {
+        cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "turnFlashOn", [flashOn]);
+    },
                
    /**
     * Enable or disable zoom button on scanning screen. If device doesn't support zoom,
@@ -409,6 +421,7 @@ scanner = {};
             //BarcodeScanner.MWBsetOverlayMode(OverlayModeImage);
             //BarcodeScanner.MWBenableHiRes(false);
             //BarcodeScanner.MWBenableFlash(false);
+            //BarcodeScanner.MWBturnFlashOn(true);
 
 			//BarcodeScanner.MWBsetActiveCodes(MWB_CODE_MASK_39);
 			//BarcodeScanner.MWBsetLevel(2);

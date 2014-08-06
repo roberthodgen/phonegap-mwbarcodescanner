@@ -131,6 +131,12 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
             
         }
     	
+        else if ("turnFlashOn".equals(action)) {
+        	ScannerActivity.param_DefaultFlashOn = args.getBoolean(0);
+        	return true;
+            
+        }
+    	
         else if ("enableZoom".equals(action)) {
         	ScannerActivity.param_EnableZoom = args.getBoolean(0);
         	return true;

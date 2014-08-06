@@ -140,6 +140,12 @@ NSString *callbackId;
     [MWScannerViewController enableFlash:flash];
 }
 
+- (void)turnFlashOn:(CDVInvokedUrlCommand*)command
+{
+    bool flashOn = [[command.arguments objectAtIndex:0] boolValue];
+    [MWScannerViewController turnFlashOn:flashOn];
+}
+
 - (void)enableZoom:(CDVInvokedUrlCommand*)command
 {
     bool zoom = [[command.arguments objectAtIndex:0] boolValue];
@@ -148,9 +154,11 @@ NSString *callbackId;
 
 - (void)setZoomLevels:(CDVInvokedUrlCommand*)command
 {
-    [MWScannerViewController setZoomLevels:[[command.arguments objectAtIndex:0] intValue] zoomLevel2:[[command.arguments objectAtIndex:1] intValue] 
-     initialZoomLevel:[[command.arguments objectAtIndex:2] intValue]];
+   
+    [MWScannerViewController setZoomLevels:[[command.arguments objectAtIndex:0] intValue] zoomLevel2:[[command.arguments objectAtIndex:1] intValue] initialZoomLevel:[[command.arguments objectAtIndex:2] intValue]];
 }
+
+
 
 
 

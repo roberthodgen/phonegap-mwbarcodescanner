@@ -76,6 +76,7 @@ typedef enum eMainScreenState {
 + (void) setInterfaceOrientation: (UIInterfaceOrientationMask) interfaceOrientation;
 + (void) enableHiRes: (BOOL) hiRes;
 + (void) enableFlash: (BOOL) flash;
++ (void) turnFlashOn: (BOOL) flashOn;
 + (void) setOverlayMode: (int) overlayMode;
 + (void) enableZoom: (BOOL) zoom;
 + (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel;

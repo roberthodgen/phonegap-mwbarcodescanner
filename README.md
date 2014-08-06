@@ -287,6 +287,8 @@ Add a notification plugin (if not already present):
 
 * Zoom feature added for iOS and Android. It's not supported on WP8 due to API limitation.
  
+* Added function to turn Flash ON by default
+
 * Fixed 'frameworks was not added to the references' on WP8
  
 * Fixed freezing if missing org.apache.cordova.device plugin

@@ -22,6 +22,7 @@ UIInterfaceOrientationMask param_Orientation = UIInterfaceOrientationMaskLandsca
 BOOL param_EnableHiRes = YES;
 BOOL param_EnableFlash = YES;
 BOOL param_EnableZoom = YES;
+BOOL param_defaultFlashOn = NO;
 int param_OverlayMode = OM_MW;
 int param_ZoomLevel1 = 0;
 int param_ZoomLevel2 = 0;
@@ -191,6 +192,12 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     param_EnableFlash = flash;
     
 }
+
++ (void) turnFlashOn: (BOOL) flashOn {
+    
+    param_defaultFlashOn = flashOn;
+    
+}
     
 + (void) setOverlayMode: (int) overlayMode {
     
@@ -241,15 +248,33 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     cameraOverlay.hidden = !(param_OverlayMode & OM_IMAGE);
     
     
+    if (param_EnableFlash && [self.device isTorchModeSupported:AVCaptureTorchModeOn] && param_defaultFlashOn){
+        if ([self.device lockForConfiguration:NULL]) {
+            if ([self.device torchMode] == AVCaptureTorchModeOff){
+                [self.device setTorchMode:AVCaptureTorchModeOn];
+                flashButton.selected = YES;
+            }
+        }
+    }
+    
+    
     [self updateTorch];
+    
     
 }
 
 - (void)viewWillDisappear:(BOOL) animated {
     [super viewWillDisappear:animated];
+    if (param_EnableFlash && [self.device isTorchModeSupported:AVCaptureTorchModeOn] && [self.device lockForConfiguration:NULL]) {
+        if ([self.device torchMode] == AVCaptureTorchModeOn){
+            [self.device setTorchMode:AVCaptureTorchModeOff];
+            flashButton.selected = NO;
+        }
+    }
     [self stopScanning];
     [self deinitCapture];
     flashButton.selected = NO;
+    
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -326,7 +351,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 }
 
 - (void) updateDigitalZoom {
-    
+   
     if (videoZoomSupported){
         
         [self.device lockForConfiguration:nil];
@@ -347,11 +372,12 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         }
         [self.device unlockForConfiguration];
         
-        zoomButton.hidden = !param_EnableZoom;
+       zoomButton.hidden = !param_EnableZoom;
     } else {
         zoomButton.hidden = true;
     }
 }
+
 - (void) deinitCapture {
     if (self.captureSession != nil){
         if (param_OverlayMode & OM_MW){
@@ -398,12 +424,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 	[self.captureSession addInput:captureInput];
 	[self.captureSession addOutput:captureOutput];
     
-    //uncomment lines below if you want to use highest resolution available on device
-   /* if (param_EnableHiRes && [self.captureSession canSetSessionPreset:AVCaptureSessionPreset1920x1080])
-    {
-        NSLog(@"Set preview port to 1920X1080");
-        self.captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
-    } else*/
+    
+    
     
     if (param_EnableHiRes && [self.captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720])
     {
