@@ -50,10 +50,7 @@
      <source-file src="Android/src/com/manateeworks/BarcodeScannerPlugin.java" target-dir="src/com/manateeworks" />
      <source-file src="Android/src/com/manateeworks/ScannerActivity.java" target-dir="src/com/manateeworks" />
      <source-file src="Android/src/com/manateeworks/MWOverlay.java" target-dir="src/com/manateeworks" />
-     <source-file src="Android/src/com/manateeworks/camera/AutoFocusCallback.java" target-dir="src/com/manateeworks/camera" />
-     <source-file src="Android/src/com/manateeworks/camera/CameraConfigurationManager.java" target-dir="src/com/manateeworks/camera" />
      <source-file src="Android/src/com/manateeworks/camera/CameraManager.java" target-dir="src/com/manateeworks/camera" />
-     <source-file src="Android/src/com/manateeworks/camera/PreviewCallback.java" target-dir="src/com/manateeworks/camera" />
      
      <source-file src="Android/res/layout/scanner.xml" target-dir="res/layout" />
      <source-file src="Android/res/drawable/overlay.png" target-dir="res/drawable" />

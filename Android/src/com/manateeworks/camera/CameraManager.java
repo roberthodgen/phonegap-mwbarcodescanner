@@ -1,75 +1,62 @@
 package com.manateeworks.camera;
 
 import java.io.IOException;
-import java.util.Currency;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import java.util.List;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 
-/**
- * This object wraps the Camera service object and expects to be the only one
- * talking to it. The implementation encapsulates the steps needed to take
- * preview-sized images, which are used for both preview and decoding.
- * 
- * @author dswitkin@google.com (Daniel Switkin)
- */
 public final class CameraManager {
 
-	private static final String TAG = CameraManager.class.getSimpleName();
-
-	private static final int MIN_FRAME_WIDTH = 240;
-	private static final int MIN_FRAME_HEIGHT = 160;
-	private static final int MAX_FRAME_WIDTH = 1920;
-	private static final int MAX_FRAME_HEIGHT = 1080;
+	
+	public static int REFOCUSING_DELAY = 2500; 
+	public static boolean USE_SAMSUNG_FOCUS_ZOOM_PATCH = false;
 
 	private static CameraManager cameraManager;
-
-	static final int SDK_INT; // Later we can use Build.VERSION.SDK_INT
-	static {
-		int sdkInt;
-		try {
-			sdkInt = Integer.parseInt(Build.VERSION.SDK);
-		} catch (NumberFormatException nfe) {
-			// Just to be safe
-			sdkInt = 10000;
-		}
-		SDK_INT = sdkInt;
-	}
 
 	private final Context context;
 	public final CameraConfigurationManager configManager;
 	public Camera camera;
-	private Rect framingRect;
-	private Rect framingRectInPreview;
 	private boolean initialized;
 	public boolean previewing;
 	private final boolean useOneShotPreviewCallback;
 	public static boolean useBufferedCallback = true;
 	private Camera.PreviewCallback cb;
 
-	public static int mDesiredWidth = 0;
-	public static int mDesiredHeight = 0;
+	public static int mDesiredWidth = 1280;
+	public static int mDesiredHeight = 720;
 	
 	public SurfaceHolder lastHolder;
 	
-	private static boolean shouldTakePicture = false;
+	public Timer focusTimer;
+	
+	public static AutoFocusCallback afCallback;
+	public static boolean refocusingActive = false;	
 
 	public static void setDesiredPreviewSize(int width, int height) {
-
 		mDesiredWidth = width;
 		mDesiredHeight = height;
-
 	}
 	
 	public Point getMaxResolution() {
@@ -81,36 +68,26 @@ public final class CameraManager {
 
 	}
 	
+	public Point getNormalResolution(Point normalRes) {
 
-	/**
-	 * Preview frames are delivered here, which we pass on to the registered
-	 * handler. Make sure to clear the handler so it will only receive one
-	 * message.
-	 */
+		if (camera != null)
+			return CameraConfigurationManager.getCameraResolution(camera.getParameters(), normalRes);
+		else
+			return null;
+
+	}
+	
 	public final PreviewCallback previewCallback;
-	/**
-	 * Autofocus callbacks arrive here, and are dispatched to the Handler which
-	 * requested them.
-	 */
-	private final AutoFocusCallback autoFocusCallback;
+	
 
-	/**
-	 * Initializes this static object with the Context of the calling Activity.
-	 * 
-	 * @param context
-	 *            The Activity which wants to use the camera.
-	 */
 	public static void init(Context context) {
 		if (cameraManager == null) {
 			cameraManager = new CameraManager(context);
+			
 		}
 	}
 
-	/**
-	 * Gets the CameraManager singleton instance.
-	 * 
-	 * @return A reference to the CameraManager singleton.
-	 */
+	
 	public static CameraManager get() {
 		return cameraManager;
 	}
@@ -120,43 +97,32 @@ public final class CameraManager {
 		this.context = context;
 		this.configManager = new CameraConfigurationManager(context);
 
-		// Camera.setOneShotPreviewCallback() has a race condition in Cupcake,
-		// so we use the older
-		// Camera.setPreviewCallback() on 1.5 and earlier. For Donut and later,
-		// we need to use
-		// the more efficient one shot callback, as the older one can swamp the
-		// system and cause it
-		// to run out of memory. We can't use SDK_INT because it was introduced
-		// in the Donut SDK.
-		// useOneShotPreviewCallback = Integer.parseInt(Build.VERSION.SDK) >
-		// Build.VERSION_CODES.CUPCAKE;
-		useOneShotPreviewCallback = Integer.parseInt(Build.VERSION.SDK) > 3; // 3
-																				// =
-																				// Cupcake
-		useBufferedCallback = Integer.parseInt(Build.VERSION.SDK) >= 8;
+		useOneShotPreviewCallback = true;
+		useBufferedCallback = true;
 
 		previewCallback = new PreviewCallback(configManager, useOneShotPreviewCallback);
-		autoFocusCallback = new AutoFocusCallback();
+		
 	}
 
-	/**
-	 * Opens the camera driver and initializes the hardware parameters.
-	 * 
-	 * @param holder
-	 *            The surface object which the camera will draw preview frames
-	 *            into.
-	 * @throws IOException
-	 *             Indicates the camera driver failed to open.
-	 */
 	public void openDriver(SurfaceHolder holder, boolean isPortrait) throws IOException {
+		
 		if (camera == null) {
 			camera = Camera.open();
 			if (camera == null) {
-				throw new IOException();
+				
+				camera = Camera.open(0);
+				
+				if (camera == null){
+					throw new IOException();
+				}
 			}
 			
-			if (isPortrait)
-            	camera.setDisplayOrientation(90);
+			if (android.os.Build.VERSION.SDK_INT >= 9) {
+				setCameraDisplayOrientation(0, camera, isPortrait);     
+			} else {
+				if (isPortrait)
+	            	camera.setDisplayOrientation(90);	
+			}
 			
 			if (holder != null){
 				lastHolder = holder;
@@ -164,68 +130,19 @@ public final class CameraManager {
 			} else {
 				camera.setPreviewDisplay(lastHolder);
 			}
-			
-			
 
 			if (!initialized) {
 				initialized = true;
 				configManager.initFromCameraParameters(camera);
 			}
 			configManager.setDesiredCameraParameters(camera);
-			setPictureSize(1280, 1280);
 
 		}
-	}
-	
-	public boolean setPictureSize (int width, int height){
-		try{
-			Camera.Parameters cp =  camera.getParameters();
-			List<Size> sizes = cp.getSupportedPictureSizes();
-			
-			int minDiff = 9999999;
-			int minIndex = -1;
-			if (sizes != null && sizes.size() > 0)
-				for (int i = 0; i < sizes.size(); i++){
-					int size =sizes.get(i).width * sizes.get(i).height;
-					if (size >= width * height){
-						if (size -width * height < minDiff){
-							minDiff = size -width * height;
-							minIndex = i;
-						}
-					}
-				}
-			if (minIndex >=0){
-				cp.setPictureSize(sizes.get(minIndex).width, sizes.get(minIndex).height);
-				camera.setParameters(cp);
-				return true;
-			} else
-				return false;
-		} catch (Exception e){
-			return false;
-		}
+		
+		
 		
 	}
 	
-	public void requestImageCapture (){
-		
-		shouldTakePicture = true;
-		
-	}
-	
-	private void CaptureImage(int orientation){
-    	
-    	  if (useBufferedCallback){
-    		 
-    		  camera.setOneShotPreviewCallback(cb);
-    		  
-    	  }
-    	  
-    	  camera.autoFocus(autoFocusCallback);
-    	  
-    	  AutoFocusCallback.takePicture = true;
-    	  previewing = false;
-    	
-    }
 	
 	public int getMaxZoom() {
 
@@ -238,7 +155,6 @@ public final class CameraManager {
 		}
 		
 		List<Integer> zoomRatios =  cp.getZoomRatios();
-		
 		
 		return zoomRatios.get(zoomRatios.size()-1);
 
@@ -254,6 +170,15 @@ public final class CameraManager {
 		int minDist = 100000;
 		int bestIndex = 0;
 		
+		if (zoom == -1) {
+			int zoomIndex = cp.getZoom() - 1;
+			
+			if (zoomIndex >= 0){
+				zoom = cp.getZoomRatios().get(zoomIndex);
+			}
+		
+		}
+		
 		List<Integer> zoomRatios =  cp.getZoomRatios();
 		
 		for (int i = 0; i < zoomRatios.size(); i++){
@@ -267,24 +192,46 @@ public final class CameraManager {
 		
 		final int fBestIndex = bestIndex;
 		
-		if (bestIndex > -1){
-			camera.cancelAutoFocus();
+		if (USE_SAMSUNG_FOCUS_ZOOM_PATCH){
 			
-			Handler handlerTimer = new Handler();
-			
-			handlerTimer.postDelayed(new Runnable() {
+			if (bestIndex > 10){
 				
-				@Override
-				public void run() {
-					cp.setZoom(fBestIndex); 
-					camera.setParameters(cp);
-					camera.autoFocus(autoFocusCallback);
+				//camera.cancelAutoFocus();
+				stopFocusing();
+	
+				cp.setZoom(fBestIndex-5); 
+				camera.setParameters(cp);
+				camera.autoFocus(null);
+				
+				new Handler().postDelayed(new Runnable() {
 					
-				}
-			}, 100);
+					@Override
+					public void run() {
+						if (camera != null){
+							camera.cancelAutoFocus();
+							cp.setZoom(fBestIndex); 
+							camera.setParameters(cp);
+						}
+						
+						startFocusing();
+						
+					}
+				}, 200);
+				
+			} else {
+				stopFocusing();
+				cp.setZoom(fBestIndex);
+				camera.setParameters(cp);
+				startFocusing();
+			}
 			
-			
+		} else {
+			stopFocusing();
+			cp.setZoom(fBestIndex);
+			camera.setParameters(cp);
+			startFocusing();
 		}
+		
 		
 	}
 
@@ -302,24 +249,38 @@ public final class CameraManager {
 
 	}
 
-	public void setTorch(boolean enabled) {
+	public void setTorch(final boolean enabled) {
 
 		if (camera == null)
 			return;
 
 		try {
-			Parameters cp = camera.getParameters();
+			final Parameters cp = camera.getParameters();
 
 			List<String> flashModes = cp.getSupportedFlashModes();
 
 			if (flashModes != null && flashModes.contains(Parameters.FLASH_MODE_TORCH)) {
+				camera.cancelAutoFocus();
+				
+				
+				new Handler().postDelayed(new Runnable() {
+					
+					@Override
+					public void run() {
+						if (camera != null){
+							if (enabled)
+								cp.setFlashMode(Parameters.FLASH_MODE_TORCH);
+							else
+								cp.setFlashMode(Parameters.FLASH_MODE_OFF);
+							camera.setParameters(cp);
+						}
+						
+					}
+				}, 300);
+				
+				
 
-				if (enabled)
-					cp.setFlashMode(Parameters.FLASH_MODE_TORCH);
-				else
-					cp.setFlashMode(Parameters.FLASH_MODE_OFF);
-
-				camera.setParameters(cp);
+				
 
 			}
 		} catch (Exception e) {
@@ -327,10 +288,65 @@ public final class CameraManager {
 		}
 
 	}
+	
+	public float[] getExposureCompensationRange(){
+		
+		if (camera == null)
+			return null;
 
-	/**
-	 * Closes the camera driver if still in use.
-	 */
+		try{
+		
+			Parameters cp = camera.getParameters();
+			
+			float ecStep = cp.getExposureCompensationStep();
+			float minEC = cp.getMinExposureCompensation();
+			float maxEC = cp.getMaxExposureCompensation();
+			
+			float[] res = new float[3];
+			res[0] = minEC;
+			res[1] = maxEC;
+			res[2] = ecStep;
+			
+			return res;
+			
+		} catch (Exception e) {
+			
+			return null;
+		}
+		
+	}
+	
+	public void setExposureCompensation(float value) {
+
+		if (camera == null)
+			return;
+
+		try{
+		
+			Parameters cp = camera.getParameters();
+			//int currentEC = cp.getExposureCompensation();
+			float ecStep = cp.getExposureCompensationStep();
+			float minEC = cp.getMinExposureCompensation();
+			float maxEC = cp.getMaxExposureCompensation();
+			
+			if (value > maxEC)
+				value = maxEC;
+			if (value < minEC)
+				value = minEC;
+			
+			cp.setExposureCompensation((int) value);
+			
+			camera.setParameters(cp);
+			
+			//Log.d("exposure compensation", String.valueOf(value));
+			
+		} catch (Exception e) {
+			//Log.d("exposure compensation", "failed to set");
+		}
+
+	}
+
+	
 	public void closeDriver() {
 
 		if (camera != null) {
@@ -344,19 +360,53 @@ public final class CameraManager {
 		}
 	}
 
-	/**
-	 * Asks the camera hardware to begin drawing preview frames to the screen.
-	 */
+	public void startFocusing(){
+		
+		if (refocusingActive){
+			return;
+		}
+		refocusingActive = true;
+		
+		focusTimer = new Timer();
+		focusTimer.schedule(new TimerTask() {
+			
+			@Override
+			public void run() {
+				if (camera != null){
+					camera.autoFocus(null);
+				}
+				
+			}
+		}, 500, REFOCUSING_DELAY);
+	}
+	
+	public void stopFocusing(){
+		
+		camera.cancelAutoFocus();
+		if (!refocusingActive){
+			return;
+		}
+		
+		if (focusTimer != null){
+			focusTimer.cancel();
+			focusTimer.purge();
+		}
+		
+		refocusingActive = false;
+		
+	}
+	
 	public void startPreview() {
 		if (camera != null && !previewing) {
 			camera.startPreview();
 			previewing = true;
+			
+			startFocusing();
+			
 		}
 	}
 
-	/**
-	 * Tells the camera to stop drawing preview frames.
-	 */
+	
 	public void stopPreview() {
 		if (camera != null && previewing) {
 
@@ -366,34 +416,15 @@ public final class CameraManager {
 			if (!useOneShotPreviewCallback) {
 				camera.setPreviewCallback(null);
 			}
-
+			stopFocusing();
 			camera.stopPreview();
 			previewCallback.setHandler(null, 0);
-			autoFocusCallback.setHandler(null, 0);
 			previewing = false;
 		}
 	}
 
-	/**
-	 * A single preview frame will be returned to the handler supplied. The data
-	 * will arrive as byte[] in the message.obj field, with width and height
-	 * encoded as message.arg1 and message.arg2, respectively.
-	 * 
-	 * @param handler
-	 *            The handler to send the message to.
-	 * @param message
-	 *            The what field of the message to be sent.
-	 */
+	
 	public void requestPreviewFrame(Handler handler, int message) {
-		
-		if (shouldTakePicture){
-			if (handler != null){
-				previewCallback.setHandler(handler, message);
-				shouldTakePicture = false;
-				CaptureImage(0);
-				return;
-			}
-		}
 		
 		if (camera != null && previewing) {
 			previewCallback.setHandler(handler, message);
@@ -411,97 +442,115 @@ public final class CameraManager {
 		}
 	}
 
-	/**
-	 * Asks the camera hardware to perform an autofocus.
-	 * 
-	 * @param handler
-	 *            The Handler to notify when the autofocus completes.
-	 * @param message
-	 *            The message to deliver.
-	 */
+	
 	public void requestAutoFocus(Handler handler, int message) {
-		if (camera != null && previewing) {
+		/*if (camera != null && previewing) {
 			autoFocusCallback.setHandler(handler, message);
-			// Log.d(TAG, "Requesting auto-focus callback");
+			 Log.d(TAG, "Requesting auto-focus callback");
 			camera.autoFocus(autoFocusCallback);
-		}
+			
+		}*/
 	}
 
-	/**
-	 * Calculates the framing rect which the UI should draw to show the user
-	 * where to place the barcode. This target helps with alignment as well as
-	 * forces the user to hold the device far enough away to ensure the image
-	 * will be in focus.
-	 * 
-	 * @return The rectangle to draw on screen in window coordinates.
-	 */
-	public Rect getFramingRect() {
-		Point screenResolution = configManager.getScreenResolution();
-		if (framingRect == null) {
-			if (camera == null) {
-				return null;
+	public int getDeviceDefaultOrientation() {
+
+	    WindowManager windowManager =  (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+
+	    Configuration config = context.getResources().getConfiguration();
+
+	    int rotation = windowManager.getDefaultDisplay().getRotation();
+
+	    if ( ((rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) &&
+	            config.orientation == Configuration.ORIENTATION_LANDSCAPE)
+	        || ((rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) &&    
+	            config.orientation == Configuration.ORIENTATION_PORTRAIT)) {
+	      return Configuration.ORIENTATION_LANDSCAPE;
+	    }
+	    else{ 
+	      return Configuration.ORIENTATION_PORTRAIT;
+	    }
+	}
+	
+	public void updateCameraOrientation(int rotation){
+		
+		if (camera == null) {
+			return;
+		}
+		
+		int deviceOrientation = getDeviceDefaultOrientation();
+		
+		if (deviceOrientation == Configuration.ORIENTATION_PORTRAIT){
+			switch (rotation) {
+			case Surface.ROTATION_0:
+				camera.setDisplayOrientation(90);
+				break;
+			case Surface.ROTATION_180:
+				camera.setDisplayOrientation(270);
+				break;
+			case Surface.ROTATION_270:
+				camera.setDisplayOrientation(180);
+				break;
+			case Surface.ROTATION_90:
+				camera.setDisplayOrientation(0);
+				break;
+			
+			default:
+				break;
+			} 
+		}else {
+				
+			switch (rotation) {
+			case Surface.ROTATION_0:
+				camera.setDisplayOrientation(0);
+				break;
+			case Surface.ROTATION_180:
+				camera.setDisplayOrientation(180);
+				break;
+			case Surface.ROTATION_270:
+				camera.setDisplayOrientation(90);
+				break;
+			case Surface.ROTATION_90:
+				camera.setDisplayOrientation(270);
+				break;
+			
+			default:
+				break;	
 			}
-
-			int width, height;
-
-			width = screenResolution.y;
-			height = screenResolution.y;
-
-			int leftOffset = (screenResolution.x - width) / 2;
-			int topOffset = (screenResolution.y - height) / 2;
-			framingRect = new Rect(leftOffset, topOffset, leftOffset + width, topOffset + height);
-			Log.d(TAG, "Calculated framing rect: " + framingRect);
+				
 		}
-		return framingRect;
+		
 	}
+	
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
+	public void setCameraDisplayOrientation(int cameraId, android.hardware.Camera camera, boolean isPortrait) {
+	     android.hardware.Camera.CameraInfo info =
+	             new android.hardware.Camera.CameraInfo();
+	     android.hardware.Camera.getCameraInfo(cameraId, info);
+	     
+	    
+	     
+	     Display d = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-	/**
-	 * Like {@link #getFramingRect} but coordinates are in terms of the preview
-	 * frame, not UI / screen.
-	 */
-	public Rect getFramingRectInPreview() {
-		if (framingRectInPreview == null) {
-			Rect rect = new Rect(getFramingRect());
-			Point cameraResolution = configManager.getCameraResolution();
-			Point screenResolution = configManager.getScreenResolution();
-			rect.left = rect.left * cameraResolution.x / screenResolution.x;
-			rect.right = rect.right * cameraResolution.x / screenResolution.x;
-			rect.top = rect.top * cameraResolution.y / screenResolution.y;
-			rect.bottom = rect.bottom * cameraResolution.y / screenResolution.y;
-			framingRectInPreview = rect;
-		}
-		return framingRectInPreview;
-	}
+	     
+	     int rotation =d.getRotation();
+	     
+	     int degrees = 0;
+	     switch (rotation) {
+	         case Surface.ROTATION_0: degrees = 0; break;
+	         case Surface.ROTATION_90: degrees = 90; break;
+	         case Surface.ROTATION_180: degrees = 180; break;
+	         case Surface.ROTATION_270: degrees = 270; break;
+	     }
 
-	/**
-	 * Converts the result points from still resolution coordinates to screen
-	 * coordinates.
-	 * 
-	 * @param data
-	 *            A preview frame.
-	 * @param width
-	 *            The width of the image.
-	 * @param height
-	 *            The height of the image.
-	 * @return A PlanarYUVLuminanceSource instance.
-	 */
-	public byte[] buildLuminanceSource(byte[] data, int width, int height) {
-		Rect rect = getFramingRect();
-		int w = rect.right - rect.left + 1;
-		int h = rect.bottom - rect.top + 1;
-		int i = width * rect.top + rect.left;
-		int j = 0;
-		byte[] image = new byte[w * h];
-		for (int y = rect.top; y <= rect.bottom; y++) {
-			for (int x = rect.left; x <= rect.right; x++) {
-				image[j++] = data[i + x];
-			}
-			i += width;
-		}
-		width = w;
-		height = h;
-		return image;
-	}
+	     int result;
+	     if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+	         result = (info.orientation + degrees) % 360;
+	         result = (360 - result) % 360;  // compensate the mirror
+	     } else {  // back-facing
+	         result = (info.orientation - degrees + 360) % 360;
+	     }
+	     camera.setDisplayOrientation(result);
+	 }
 
 	public Bitmap renderCroppedGreyscaleBitmap(byte[] data, int width, int height) {
 		int[] pixels = new int[width * height];
@@ -520,14 +569,324 @@ public final class CameraManager {
 		return bitmap;
 	}
 
-	public int getFrameWidth() {
-		Rect rect = getFramingRect();
-		return rect.right - rect.left + 1;
+	
+}
+
+final class CameraConfigurationManager {
+
+	private static final String TAG = CameraConfigurationManager.class.getSimpleName();
+
+	private final Context context;
+	public static Point screenResolution;
+	public Point cameraResolution;
+	private int previewFormat;
+	private String previewFormatString;
+
+	CameraConfigurationManager(Context context) {
+		this.context = context;
 	}
 
-	public int getFrameHeight() {
-		Rect rect = getFramingRect();
-		return rect.bottom - rect.top + 1;
+	/**
+	 * Reads, one time, values from the camera that are needed by the app.
+	 */
+	void initFromCameraParameters(Camera camera) {
+		Camera.Parameters parameters = camera.getParameters();
+		previewFormat = parameters.getPreviewFormat();
+		previewFormatString = parameters.get("preview-format");
+		Log.d(TAG, "Default preview format: " + previewFormat + '/' + previewFormatString);
+		WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		Display display = manager.getDefaultDisplay();
+		screenResolution = new Point(display.getWidth(), display.getHeight());
+		Log.d(TAG, "Screen resolution: " + screenResolution);
+		cameraResolution = getCameraResolution(parameters, new Point(CameraManager.mDesiredWidth, CameraManager.mDesiredHeight));
+		Log.d(TAG, "Camera resolution: " + cameraResolution);
+	}
+
+	
+	void setDesiredCameraParameters(Camera camera) {
+		Camera.Parameters parameters = camera.getParameters();
+		cameraResolution = getCameraResolution(parameters, new Point(CameraManager.mDesiredWidth, CameraManager.mDesiredHeight));
+		Log.d(TAG, "Setting preview size: " + cameraResolution);
+		parameters.setPreviewSize(cameraResolution.x, cameraResolution.y);
+		
+		try {
+			parameters.getInt("anti-shake");
+			parameters.set("anti-shake", 1);
+		} catch (Exception e){
+		}
+		
+		try {
+			String vs = parameters.get("video-stabilization");
+			if (vs != null) {
+				parameters.set("video-stabilization", "true");
+			}
+		} catch (Exception e){
+		}
+		
+		try {
+			String vs = parameters.get("video-stabilization-ocr");
+			if (vs != null) {
+				parameters.set("video-stabilization-ocr", "true");
+			}
+		} catch (Exception e){
+		}
+		
+
+		try {
+			String vs = parameters.get("touch-af-aec-values");
+			if (vs != null) {
+				parameters.set("touch-af-aec-values", "touch-on");
+			}
+		} catch (Exception e){
+		}
+		
+		String focusMode = parameters.getFocusMode();
+		
+		try{
+			parameters.setFocusMode(Parameters.FOCUS_MODE_AUTO);
+			//parameters.setFocusMode("macro");
+			camera.setParameters(parameters);
+		} catch (Exception e){
+			
+			try{
+				parameters.setFocusMode(Parameters.FOCUS_MODE_AUTO);
+				camera.setParameters(parameters);
+			} catch (Exception e2){
+				parameters.setFocusMode(focusMode);			
+			}
+			
+		}
+
+		
+		Log.d(TAG, "Camera parameters flat: " + parameters.flatten());
+		camera.setParameters(parameters);
+	}
+
+	Point getCameraResolution() {
+		return cameraResolution;
+	}
+
+	Point getScreenResolution() {
+		return screenResolution;
+	}
+
+	int getPreviewFormat() {
+		return previewFormat;
+	}
+
+	String getPreviewFormatString() {
+		return previewFormatString;
+	}
+	
+	public static Point getMaxResolution(Camera.Parameters parameters) {
+
+		List<Size> sizes = parameters.getSupportedPreviewSizes();
+
+		int maxIndex = -1;
+		int maxSize = 0;
+
+		for (int i = 0; i < sizes.size(); i++) {
+			int size = sizes.get(i).width * sizes.get(i).height; 
+			if (size > maxSize) {
+				maxSize = size;
+				maxIndex = i;
+			}
+		}
+
+		return new Point(sizes.get(maxIndex).width, sizes.get(maxIndex).height);
+	}
+
+	public static Point getCameraResolution(Camera.Parameters parameters, Point desiredResolution) {
+
+		String previewSizeValueString = parameters.get("preview-size-values");
+		
+		if (previewSizeValueString == null) {
+			previewSizeValueString = parameters.get("preview-size-value");
+		}
+
+		Point cameraResolution = null;
+
+		/*if (CameraManager.mDesiredWidth == 0)
+			CameraManager.mDesiredWidth = desiredResolution.x;
+		if (CameraManager.mDesiredHeight == 0)
+			CameraManager.mDesiredHeight = desiredResolution.y;*/
+
+		List<Size> sizes = parameters.getSupportedPreviewSizes();
+
+		int minDif = 99999;
+		int minIndex = -1;
+		
+		float screenAR = ((float)CameraConfigurationManager.screenResolution.x) / CameraConfigurationManager.screenResolution.y;
+
+		for (int i = 0; i < sizes.size(); i++) {
+			
+			float resAR = ((float)sizes.get(i).width) / sizes.get(i).height;
+			
+			int dif = Math.abs(sizes.get(i).width - desiredResolution.x) + Math.abs(sizes.get(i).height - desiredResolution.y);
+			
+			//int dif = Math.abs((sizes.get(i).width * sizes.get(i).height) - (CameraManager.mDesiredWidth * CameraManager.mDesiredHeight));
+			
+			if (dif < minDif) {
+				minDif = dif;
+				minIndex = i;
+			}
+		}
+		
+		float desiredTotalSize = desiredResolution.x * desiredResolution.y;
+		float bestARdifference = 100;
+		
+		
+		for (int i = 0; i < sizes.size(); i++) {
+			
+			float resAR = ((float)sizes.get(i).width) / sizes.get(i).height;
+			
+			float totalSize = sizes.get(i).width * sizes.get(i).height;
+			
+			float difference;
+			
+			if (totalSize >= desiredTotalSize){
+				difference = totalSize / desiredTotalSize;
+			} else {
+				difference = desiredTotalSize / totalSize;
+			}
+			
+			
+			float ARdifference;
+			
+			if (resAR >= screenAR){
+				ARdifference = resAR / screenAR;
+			} else {
+				ARdifference = screenAR / resAR;
+			}
+			
+			if (difference < 1.1 && ARdifference < bestARdifference){
+				bestARdifference = ARdifference;
+				minIndex = i;		
+			}
+			
+			
+		
+		
+		}
+
+		cameraResolution = new Point(sizes.get(minIndex).width, sizes.get(minIndex).height);
+
+		return cameraResolution;
 	}
 
 }
+
+final class PreviewCallback implements Camera.PreviewCallback {
+
+	int fpscount;
+	public static float currentFPS = 0f;
+	long lasttime = 0;
+
+	private final CameraConfigurationManager configManager;
+	private final boolean useOneShotPreviewCallback;
+	public Handler previewHandler;
+	public int previewMessage;
+
+	public byte[][] frameBuffers;
+	public int fbCounter = 0;
+	public boolean callbackActive = false;
+
+	PreviewCallback(CameraConfigurationManager configManager, boolean useOneShotPreviewCallback) {
+		this.configManager = configManager;
+		this.useOneShotPreviewCallback = useOneShotPreviewCallback;
+	}
+
+	void setHandler(Handler previewHandler, int previewMessage) {
+		this.previewHandler = previewHandler;
+		this.previewMessage = previewMessage;
+	}
+
+	public void onPreviewFrame(byte[] data, Camera camera) {
+		
+		updateFps();
+
+		Point cameraResolution = configManager.getCameraResolution();
+		if (!useOneShotPreviewCallback) {
+			camera.setPreviewCallback(null);
+		}
+		if (previewHandler != null) {
+			Message message = previewHandler.obtainMessage(previewMessage, cameraResolution.x, cameraResolution.y, data);
+			message.sendToTarget();
+			previewHandler = null;
+		}
+	}
+
+
+	public int setPreviewCallback(Camera camera, Camera.PreviewCallback callback, int width, int height) {
+
+		if (callback != null) {
+			if (frameBuffers == null) {
+				// add 10% additional space for any case
+				frameBuffers = new byte[2][width * height * 2 * 110 / 100];
+				fbCounter = 0;
+				Log.i("preview resolution", String.valueOf(width) + "x" + String.valueOf(height));
+
+			}
+			if (!callbackActive) {
+				camera.setPreviewCallbackWithBuffer(callback);
+				callbackActive = true;
+			}
+			// CameraDriver.bufferProccessed = -1;
+			camera.addCallbackBuffer(frameBuffers[fbCounter]);
+			fbCounter = 1 - fbCounter;
+		} else {
+			camera.setPreviewCallbackWithBuffer(callback);
+			callbackActive = false;
+		}
+
+		if (callback == null) {
+			frameBuffers = null;
+			System.gc();
+		}
+
+		return 0;
+	}
+
+	public Camera.PreviewCallback getCallback() {
+
+		return new Camera.PreviewCallback() {
+			@Override
+			public void onPreviewFrame(byte[] data, Camera camera) {
+				
+				updateFps();
+				// camera.addCallbackBuffer(frameBuffers[fbCounter]);
+				// fbCounter = 1 - fbCounter;
+
+				Point cameraResolution = configManager.getCameraResolution();
+
+				if (previewHandler != null) {
+					Message message = previewHandler.obtainMessage(previewMessage, cameraResolution.x, cameraResolution.y, data);
+					message.sendToTarget();
+					previewHandler = null;
+				}
+			}
+		};
+
+	}
+
+	private void updateFps() {
+		if (lasttime == 0) {
+			lasttime = System.currentTimeMillis();
+			fpscount = 0;
+			currentFPS = 0;
+		} else {
+			long delay = System.currentTimeMillis() - lasttime;
+			if (delay > 1000) {
+				lasttime = System.currentTimeMillis();
+				currentFPS = fpscount * 10000 / delay;
+				currentFPS /= 10;
+				fpscount = 0;
+			}
+		}
+		fpscount++;
+	}
+
+}
+ 
+ 
+ 

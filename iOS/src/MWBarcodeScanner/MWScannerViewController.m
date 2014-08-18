@@ -490,42 +490,58 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
     videoZoomSupported = false;
     
-    if ([self.device respondsToSelector:@selector(setActiveFormat:)]){
-        float maxZoom = self.device.activeFormat.videoZoomFactorUpscaleThreshold;
+    if ([self.device respondsToSelector:@selector(setActiveFormat:)] &&
+        [self.device.activeFormat respondsToSelector:@selector(videoMaxZoomFactor)] &&
+        [self.device respondsToSelector:@selector(setVideoZoomFactor:)]){
+        
+        float maxZoom = 0;
+        if ([self.device.activeFormat respondsToSelector:@selector(videoZoomFactorUpscaleThreshold)]){
+                maxZoom = self.device.activeFormat.videoZoomFactorUpscaleThreshold;
+        } else {
+                maxZoom = self.device.activeFormat.videoMaxZoomFactor;
+        }
+        
         float maxZoomTotal = self.device.activeFormat.videoMaxZoomFactor;
         
         if ([self.device respondsToSelector:@selector(setVideoZoomFactor:)] && maxZoomTotal > 1.1){
             videoZoomSupported = true;
-        }
-        
-        if (param_ZoomLevel1 != 0 && param_ZoomLevel2 != 0){
             
-            if (param_ZoomLevel1 > maxZoomTotal * 100){
-                param_ZoomLevel1 = (int)(maxZoomTotal * 100);
+            
+            
+            if (param_ZoomLevel1 != 0 && param_ZoomLevel2 != 0){
+                
+                if (param_ZoomLevel1 > maxZoomTotal * 100){
+                    param_ZoomLevel1 = (int)(maxZoomTotal * 100);
+                }
+                if (param_ZoomLevel2 > maxZoomTotal * 100){
+                    param_ZoomLevel2 = (int)(maxZoomTotal * 100);
+                }
+                
+                firstZoom = 0.01 * param_ZoomLevel1;
+                secondZoom = 0.01 * param_ZoomLevel2;
+                
+                
+            } else {
+                
+                if (maxZoomTotal > 2){
+                    
+                    if (maxZoom > 1.0 && maxZoom <= 2.0){
+                        firstZoom = maxZoom;
+                        secondZoom = maxZoom * 2;
+                    } else
+                        if (maxZoom > 2.0){
+                            firstZoom = 2.0;
+                            secondZoom = 4.0;
+                        }
+                    
+                }
             }
-            if (param_ZoomLevel2 > maxZoomTotal * 100){
-                param_ZoomLevel2 = (int)(maxZoomTotal * 100);
-            }
-            
-            firstZoom = 0.01 * param_ZoomLevel1;
-            secondZoom = 0.01 * param_ZoomLevel2;
-            
+
             
         } else {
-        
-            if (maxZoomTotal > 2){
-                
-                if (maxZoom > 1.0 && maxZoom <= 2.0){
-                    firstZoom = maxZoom;
-                    secondZoom = maxZoom * 2;
-                } else
-                    if (maxZoom > 2.0){
-                        firstZoom = 2.0;
-                        secondZoom = 4.0;
-                    }
-                
-            }
+            
         }
+        
         
         
         

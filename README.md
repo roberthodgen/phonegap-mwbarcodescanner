@@ -295,6 +295,11 @@ Add a notification plugin (if not already present):
 
 * Added x86 lib for Android
 
+* CameraManager.java rework 
+
+ It now contains complete camera handling functionality, other files from camera folder are not necessary
+
+
 &nbsp;
 ###Changes in 1.2:
 &nbsp;
