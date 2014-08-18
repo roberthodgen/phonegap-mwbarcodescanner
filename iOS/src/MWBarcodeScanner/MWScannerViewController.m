@@ -380,6 +380,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 
 - (void) deinitCapture {
     if (self.captureSession != nil){
+        [focusTimer invalidate];
+        
         if (param_OverlayMode & OM_MW){
             [MWOverlay removeFromPreviewLayer];
         }
@@ -560,7 +562,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
 
     
-    self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(reFocus) userInfo:nil repeats:YES];
+    self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:2.5 target:self selector:@selector(reFocus) userInfo:nil repeats:YES];
     
     
 }
