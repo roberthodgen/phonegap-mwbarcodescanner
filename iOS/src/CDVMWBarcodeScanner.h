@@ -25,6 +25,8 @@
 - (void)setOverlayMode:(CDVInvokedUrlCommand*)command;
 - (void)enableHiRes:(CDVInvokedUrlCommand*)command;
 - (void)enableFlash:(CDVInvokedUrlCommand*)command;
+- (void)enableZoom:(CDVInvokedUrlCommand*)command;
+- (void)enablesetZoomLevels:(CDVInvokedUrlCommand*)command;
 
 @end
 
