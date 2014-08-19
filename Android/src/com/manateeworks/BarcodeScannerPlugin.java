@@ -93,6 +93,13 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         	return true;
             
         } 
+        else if ("registerCode".equals(action)) {
+        	
+        	BarcodeScanner.MWBregisterCode(args.getInt(0), args.getString(1), args.getString(2));
+        	return true;
+            
+        }
+    	
     	
         else if ("setInterfaceOrientation".equals(action)) {
         	
