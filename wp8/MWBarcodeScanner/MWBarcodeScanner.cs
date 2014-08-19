@@ -130,6 +130,18 @@ namespace Cordova.Extension.Commands
              BarcodeScannerPage.ScannerPage.param_DefaultFlashOn = Convert.ToBoolean(paramsList[0]);
          }
 
+         public void enableZoom(string options)
+        {
+             //not supported currently on WP8 (technical limitation)
+        }
+
+        public void setZoomLevels(string options)
+        {
+            //not supported currently on WP8 (technical limitation)
+        }
+
+        
+
          void root_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
          {
              if ((e.Content is BarcodeScannerPage.ScannerPage)) return;

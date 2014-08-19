@@ -35,6 +35,7 @@ namespace BarcodeScanners
         public static Windows.Foundation.Rect RECT_PORTRAIT_2D = new Windows.Foundation.Rect(20, 6, 60, 88);
         public static Windows.Foundation.Rect RECT_FULL_1D = new Windows.Foundation.Rect(6, 6, 88, 88);
         public static Windows.Foundation.Rect RECT_FULL_2D = new Windows.Foundation.Rect(20, 6, 60, 88);
+        public static Windows.Foundation.Rect RECT_DOTCODE = new Windows.Foundation.Rect(30, 20, 40, 60);
 
         public static void initDecoder()
         {
@@ -91,6 +92,7 @@ namespace BarcodeScanners
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_QR, RECT_FULL_2D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_RSS, RECT_FULL_1D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_CODABAR, RECT_FULL_1D);
+                MWBsetScanningRect(Scanner.MWB_CODE_MASK_DOTCODE, RECT_DOTCODE);
 
             }
 
@@ -106,6 +108,7 @@ namespace BarcodeScanners
             // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_QR ); 
             // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_RSS ); 
             // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_CODABAR ); 
+            // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_DOTCODE ); 
            
 
             // But for better performance, set like this for PORTRAIT scanning...
@@ -122,6 +125,7 @@ namespace BarcodeScanners
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_QR,     RECT_PORTRAIT_2D);     
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_RSS,    RECT_PORTRAIT_1D);     
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_CODABAR,RECT_PORTRAIT_1D); 
+            // MWBsetScanningRect(Scanner.MWB_CODE_MASK_DOTCODE, RECT_DOTCODE);
 
             // or like this for LANDSCAPE scanning - Preferred for dense or wide codes...
             // Scanner.MWBsetDirection((uint)Scanner.MWB_SCANDIRECTION_HORIZONTAL);
@@ -137,7 +141,7 @@ namespace BarcodeScanners
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_QR,     RECT_LANDSCAPE_2D);     
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_RSS,    RECT_LANDSCAPE_1D); 
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_CODABAR,RECT_LANDSCAPE_1D); 
-
+            // MWBsetScanningRect(Scanner.MWB_CODE_MASK_DOTCODE, RECT_DOTCODE);
 
             // set decoder effort level (1 - 5)
             // for live scanning scenarios, a setting between 1 to 3 will suffice
