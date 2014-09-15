@@ -53,6 +53,10 @@ public final class CameraManager {
 	
 	public static AutoFocusCallback afCallback;
 	public static boolean refocusingActive = false;	
+	
+	public static boolean DEBUG = false; 
+	public static String TAG = "CameraManager";
+	
 
 	public static void setDesiredPreviewSize(int width, int height) {
 		mDesiredWidth = width;
@@ -107,15 +111,19 @@ public final class CameraManager {
 	public void openDriver(SurfaceHolder holder, boolean isPortrait) throws IOException {
 		
 		if (camera == null) {
+			if (DEBUG) Log.i(TAG, "Camera opening...");
 			camera = Camera.open();
 			if (camera == null) {
-				
+				if (DEBUG) Log.i(TAG, "First camera open failed");
 				camera = Camera.open(0);
 				
 				if (camera == null){
+					if (DEBUG) Log.i(TAG, "Secoond camera open failed");
 					throw new IOException();
 				}
 			}
+			
+			if (DEBUG) Log.i(TAG, "Camera open success");
 			
 			if (android.os.Build.VERSION.SDK_INT >= 9) {
 				setCameraDisplayOrientation(0, camera, isPortrait);     
@@ -127,16 +135,29 @@ public final class CameraManager {
 			if (holder != null){
 				lastHolder = holder;
 				camera.setPreviewDisplay(holder);
+				if (DEBUG) Log.i(TAG, "Set camera current holder");
 			} else {
+				
 				camera.setPreviewDisplay(lastHolder);
+				if (DEBUG) Log.i(TAG, "Set camera last holder");
+				if (lastHolder == null){
+					if (DEBUG) Log.i(TAG, "Camera last holder is NULL");
+				} else {
+					
+				}
+				
 			}
 
 			if (!initialized) {
 				initialized = true;
 				configManager.initFromCameraParameters(camera);
+				if (DEBUG) Log.i(TAG, "configManager initialized");
 			}
 			configManager.setDesiredCameraParameters(camera);
+			if (DEBUG) Log.i(TAG, "Camera set desired parameters");
 
+		} else {
+			if (DEBUG) Log.i(TAG, "Camera already opened");
 		}
 		
 		
@@ -609,11 +630,13 @@ final class CameraConfigurationManager {
 		Log.d(TAG, "Setting preview size: " + cameraResolution);
 		parameters.setPreviewSize(cameraResolution.x, cameraResolution.y);
 		
-		try {
-			parameters.getInt("anti-shake");
-			parameters.set("anti-shake", 1);
+		/*try {
+			String vs =  parameters.get("anti-shake");
+			if (vs != null) {
+				parameters.set("anti-shake", "1");
+			}
 		} catch (Exception e){
-		}
+		}*/
 		
 		try {
 			String vs = parameters.get("video-stabilization");
