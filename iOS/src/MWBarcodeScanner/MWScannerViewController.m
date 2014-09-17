@@ -462,24 +462,27 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
     self.prevLayer = [AVCaptureVideoPreviewLayer layerWithSession: self.captureSession];
     
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    float screenWidth = screenRect.size.width;
+    float screenHeight = screenRect.size.height;
     
     if (self.interfaceOrientation == UIInterfaceOrientationLandscapeLeft){
         self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-        self.prevLayer.frame = CGRectMake(0, 0, MAX(self.view.frame.size.width,self.view.frame.size.height), MIN(self.view.frame.size.width,self.view.frame.size.height));
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(screenWidth, screenHeight), MIN(screenWidth, screenHeight));
     }
     if (self.interfaceOrientation == UIInterfaceOrientationLandscapeRight){
         self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-        self.prevLayer.frame = CGRectMake(0, 0, MAX(self.view.frame.size.width,self.view.frame.size.height), MIN(self.view.frame.size.width,self.view.frame.size.height));
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(screenWidth, screenHeight), MIN(screenWidth, screenHeight));
     }
     
     
     if (self.interfaceOrientation == UIInterfaceOrientationPortrait) {
         self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortrait;
-        self.prevLayer.frame = CGRectMake(0, 0, MIN(self.view.frame.size.width,self.view.frame.size.height), MAX(self.view.frame.size.width,self.view.frame.size.height));
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(screenWidth, screenHeight), MAX(screenWidth, screenHeight));
     }
     if (self.interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown) {
         self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-        self.prevLayer.frame = CGRectMake(0, 0, MIN(self.view.frame.size.width,self.view.frame.size.height), MAX(self.view.frame.size.width,self.view.frame.size.height));
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(screenWidth, screenHeight), MAX(screenWidth, screenHeight));
     }
     
 	self.prevLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
