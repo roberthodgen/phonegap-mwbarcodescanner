@@ -295,9 +295,17 @@ Add a notification plugin (if not already present):
 &nbsp;
 ###Changes in 1.4:
 &nbsp;
-* Added support for custom init and callback functions. 
+- Added support for custom init and callback functions. All init and callback function can still be declared here, but users can now use an outside Javascript file that they can maintain during updates, so that they don't lose their changes when they update.
+    To use the custom script, they only need to include it in the index file like so:
 
-* Added *MWBsetCustomParam* function - allows user to put some custom key/value pair which can be used later from native code
+        <script type="text/javascript" src="js/MWBConfig.js"></script>
+    To call the scanner with the custom init and callback you use    
+        scanner.startScanning(MWBSInitSpace.init,MWBSInitSpace.callback);
+- Added MWBsetCustomParam: function - allows user to put some custom key/value pair which can be used later from native code
+- Added ITF-14 support
+- Added Code 11 support
+- Added MSI Plessey support
+- Added GS1 support
 
 &nbsp;
 ###Changes in 1.3:
