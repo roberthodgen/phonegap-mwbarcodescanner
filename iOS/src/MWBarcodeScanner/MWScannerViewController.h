@@ -13,7 +13,7 @@
 #define OM_IMAGE    2
 
 @protocol ScanningFinishedDelegate <NSObject>
-    - (void)scanningFinished:(NSString *)result withType: (NSString *) lastFormat andRawResult: (NSData *) rawResult;
+    - (void)scanningFinished:(NSString *)result withType: (NSString *) lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult;
 @end
 
 
@@ -69,6 +69,7 @@ typedef enum eMainScreenState {
 @property (nonatomic, retain) id <ScanningFinishedDelegate> delegate;
 @property (nonatomic, retain) UIButton *flashButton;
 @property (nonatomic, retain) UIButton *zoomButton;
+@property (nonatomic, retain) NSMutableDictionary *customParams;
 
 
 - (IBAction)doClose:(id)sender;

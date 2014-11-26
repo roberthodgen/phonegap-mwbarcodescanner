@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.3
+ Version 1.4
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -35,7 +35,19 @@ or
 	</form>
 ```
 
+###Important change in 1.4
 
+Users now can put decoder initialization and callback in separate Javascript file, so that they don't lose their changes when they update the plugin. Sample file is *js/MWBConfig.js*.
+
+To use the custom script, user need to include it in the index file like so:
+
+    <script type="text/javascript" src="js/MWBConfig.js"></script>
+
+and start the scanner with:
+
+    scanner.startScanning(MWBSInitSpace.init,MWBSInitSpace.callback);
+    
+All init and callback function can still be declared inside MWBScanner.js file, but will be overwritten on plugin update.
 
 * Upon license purchase, replace the username/key pairs for the corresponding barcode types in the file 'MWBScanner.js';
 
@@ -280,6 +292,12 @@ Add a notification plugin (if not already present):
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
 
 
+&nbsp;
+###Changes in 1.4:
+&nbsp;
+* Added support for custom init and callback functions. 
+
+* Added *MWBsetCustomParam* function - allows user to put some custom key/value pair which can be used later from native code
 
 &nbsp;
 ###Changes in 1.3:
@@ -336,4 +354,3 @@ Add a notification plugin (if not already present):
 * Flash handling (MWBenableFlash: function(enableFlash))
 
  Added option to enable or disable the flash toggle button;
-

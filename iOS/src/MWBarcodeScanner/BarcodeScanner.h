@@ -85,6 +85,25 @@ extern "C" {
 #define  MWB_CFG_CODE25_REQ_CHKSUM         0x1
 /**/
     
+/** @brief  Code11 decoder flags value: require checksum check
+ *  MWB_CFG_CODE11_REQ_SINGLE_CHKSUM is set by default
+ */
+#define  MWB_CFG_CODE11_REQ_SINGLE_CHKSUM         0x1
+#define  MWB_CFG_CODE11_REQ_DOUBLE_CHKSUM         0x2
+/**/
+    
+/** @brief  MSI Plessey decoder flags value: require checksum check
+ *  MWB_CFG_MSI_REQ_10_CHKSUM is set by default
+ */
+#define  MWB_CFG_MSI_REQ_10_CHKSUM                  0x01
+#define  MWB_CFG_MSI_REQ_1010_CHKSUM                0x02
+#define  MWB_CFG_MSI_REQ_11_IBM_CHKSUM              0x04
+#define  MWB_CFG_MSI_REQ_11_NCR_CHKSUM              0x08
+#define  MWB_CFG_MSI_REQ_1110_IBM_CHKSUM            0x10
+#define  MWB_CFG_MSI_REQ_1110_NCR_CHKSUM            0x20
+/**/
+
+    
 /** @brief  Codabar decoder flags value: include start/stop symbols in result
  */
 #define  MWB_CFG_CODABAR_INCLUDE_STARTSTOP         0x1
@@ -109,6 +128,8 @@ extern "C" {
 #define MWB_CODE_MASK_93                    0x00000200u
 #define MWB_CODE_MASK_CODABAR               0x00000400u
 #define MWB_CODE_MASK_DOTCODE               0x00000800u
+#define MWB_CODE_MASK_11                    0x00001000u
+#define MWB_CODE_MASK_MSI                   0x00002000u
 #define MWB_CODE_MASK_ALL                   0x00ffffffu
 /** @} */
 
@@ -125,6 +146,7 @@ extern "C" {
  * @{ */
 #define MWB_SUBC_MASK_C25_INTERLEAVED   0x00000001u
 #define MWB_SUBC_MASK_C25_STANDARD      0x00000002u
+#define MWB_SUBC_MASK_C25_ITF14         0x00000004u
 /** @} */
 
 /**
@@ -161,6 +183,9 @@ enum res_types {
     FOUND_CODABAR,
     FOUND_DOTCODE,
     FOUND_128_GS1,
+    FOUND_ITF14,
+    FOUND_11,
+    FOUND_MSI
 };
 /** @} */
 
@@ -319,7 +344,19 @@ extern int MWB_cleanupLib(void);
  * @retval      MWB_RT_FAIL         Library error
  */
 int MWB_getLastType(void);
-
+    
+    
+    
+/**
+ * Retrieves is result of GS1 type
+ *
+ * @retval      1      true
+ * @retval      0      false
+ * @retval      MWB_RT_FAIL         Library error
+ */
+int MWB_isLastGS1(void);
+    
+    
 /**
  * Main scan function. Invokes all activated decoders by priority.
  * For successful scan, allocates pp_data buffer and pass it to user.

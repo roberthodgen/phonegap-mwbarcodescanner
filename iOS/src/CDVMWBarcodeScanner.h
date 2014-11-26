@@ -11,7 +11,7 @@
 
 @interface CDVMWBarcodeScanner : CDVPlugin <ScanningFinishedDelegate>
 
-
+- (void)scanningFinished:(NSString *)result withType:(NSString *)lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult;
 - (void)initDecoder:(CDVInvokedUrlCommand*)command;
 - (void)startScanner:(CDVInvokedUrlCommand*)command;
 - (void)setActiveCodes:(CDVInvokedUrlCommand*)command;
@@ -21,13 +21,16 @@
 - (void)setScanningRect:(CDVInvokedUrlCommand*)command;
 - (void)setLevel:(CDVInvokedUrlCommand*)command;
 - (void)registerCode:(CDVInvokedUrlCommand*)command;
-    
+- (int)getLastType:(CDVInvokedUrlCommand*)command;
+
 - (void)setInterfaceOrientation:(CDVInvokedUrlCommand*)command;
 - (void)setOverlayMode:(CDVInvokedUrlCommand*)command;
 - (void)enableHiRes:(CDVInvokedUrlCommand*)command;
 - (void)enableFlash:(CDVInvokedUrlCommand*)command;
 - (void)enableZoom:(CDVInvokedUrlCommand*)command;
-- (void)enablesetZoomLevels:(CDVInvokedUrlCommand*)command;
+- (void)turnFlashOn:(CDVInvokedUrlCommand*)command;
+- (void)setZoomLevels:(CDVInvokedUrlCommand*)command;
+- (void)setCustomParam:(CDVInvokedUrlCommand*)command;
 
 @end
 

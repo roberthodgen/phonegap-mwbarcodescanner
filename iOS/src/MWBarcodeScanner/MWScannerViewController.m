@@ -60,6 +60,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 @synthesize focusTimer;
 @synthesize flashButton;
 @synthesize zoomButton;
+@synthesize customParams;
 
 #pragma mark -
 #pragma mark Initialization
@@ -78,6 +79,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     MWB_registerCode(MWB_CODE_MASK_PDF,     "username", "key");
     MWB_registerCode(MWB_CODE_MASK_RSS,     "username", "key");
     MWB_registerCode(MWB_CODE_MASK_CODABAR, "username", "key");
+    MWB_registerCode(MWB_CODE_MASK_11,      "username", "key");
+    MWB_registerCode(MWB_CODE_MASK_MSI,     "username", "key");
     MWB_registerCode(MWB_CODE_MASK_DOTCODE, "username", "key");*/
     
     
@@ -94,6 +97,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
                        MWB_CODE_MASK_PDF    |
                        MWB_CODE_MASK_QR     |
                        MWB_CODE_MASK_CODABAR|
+                       MWB_CODE_MASK_11     |
+                       MWB_CODE_MASK_MSI    |
                        MWB_CODE_MASK_RSS);
     
     // But for better performance, only activate the symbologies your application requires...
@@ -109,6 +114,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     // MWB_setActiveCodes( MWB_CODE_MASK_RSS );
     // MWB_setActiveCodes( MWB_CODE_MASK_CODABAR );
     // MWB_setActiveCodes( MWB_CODE_MASK_DOTCODE );
+    // MWB_setActiveCodes( MWB_CODE_MASK_11 );
+    // MWB_setActiveCodes( MWB_CODE_MASK_MSI );
     
     
     // Our sample app is configured by default to search both directions...
@@ -126,6 +133,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     MWB_setScanningRect(MWB_CODE_MASK_RSS,    RECT_FULL_1D);
     MWB_setScanningRect(MWB_CODE_MASK_CODABAR,RECT_FULL_1D);
     MWB_setScanningRect(MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
+    MWB_setScanningRect(MWB_CODE_MASK_11,     RECT_FULL_1D);
+    MWB_setScanningRect(MWB_CODE_MASK_MSI,    RECT_FULL_1D);
     
     
     // But for better performance, set like this for PORTRAIT scanning...
@@ -143,6 +152,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     // MWB_setScanningRect(MWB_CODE_MASK_RSS,    RECT_PORTRAIT_1D);
     // MWB_setScanningRect(MWB_CODE_MASK_CODABAR,RECT_PORTRAIT_1D);
     // MWB_setScanningRect(MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
+    // MWB_setScanningRect(MWB_CODE_MASK_11,     RECT_PORTRAIT_1D);
+    // MWB_setScanningRect(MWB_CODE_MASK_MSI,    RECT_PORTRAIT_1D);
     
     // or like this for LANDSCAPE scanning - Preferred for dense or wide codes...
     // MWB_setDirection(MWB_SCANDIRECTION_HORIZONTAL);
@@ -159,6 +170,8 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     // MWB_setScanningRect(MWB_CODE_MASK_RSS,    RECT_LANDSCAPE_1D);
     // MWB_setScanningRect(MWB_CODE_MASK_CODABAR,RECT_LANDSCAPE_1D);
     // MWB_setScanningRect(MWB_CODE_MASK_DOTCODE,RECT_DOTCODE);
+    // MWB_setScanningRect(MWB_CODE_MASK_11,     RECT_LANDSCAPE_1D);
+    // MWB_setScanningRect(MWB_CODE_MASK_MSI,    RECT_LANDSCAPE_1D);
     
     
     // set decoder effort level (1 - 5)
@@ -404,6 +417,14 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 	self.device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     
 	AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:self.device error:nil];
+    
+    if (captureInput == nil){
+        NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey];
+        [[[UIAlertView alloc] initWithTitle:@"Camera Unavailable" message:[NSString stringWithFormat:@"The %@ has not been given a permission to your camera. Please check the Privacy Settings: Settings -> %@ -> Privacy -> Camera", appName, appName] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil] show];
+        
+        return;
+    }
+    
 	/*We setupt the output*/
 	AVCaptureVideoDataOutput *captureOutput = [[AVCaptureVideoDataOutput alloc] init];
 	captureOutput.alwaysDiscardsLateVideoFrames = YES;
@@ -679,6 +700,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                 case FOUND_UPC_E: typeName = @"UPC E";break;
                 case FOUND_PDF: typeName = @"PDF417";break;
                 case FOUND_CODABAR: typeName = @"Codabar";break;
+                case FOUND_DOTCODE: typeName = @"DotCode";break;
+                case FOUND_ITF14: typeName = @"ITF 14";break;
+                case FOUND_11: typeName = @"Code 11";break;
+                case FOUND_MSI: typeName = @"MSI Plessey";break;
             }
             
             lastFormat = typeName;
@@ -735,8 +760,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 - (IBAction)doClose:(id)sender {
-    [self dismissModalViewControllerAnimated:YES];
-    [self.delegate scanningFinished:@"" withType:@"Cancel" andRawResult:[[NSData alloc] init]];
+    [self dismissViewControllerAnimated:YES completion:^{}];
+    [self.delegate scanningFinished:@"" withType:@"Cancel" isGS1:NO andRawResult:[[NSData alloc] init]];
     
 }
     
@@ -784,12 +809,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 - (void)stopScanning {
-	if (self.state == CAMERA_DECODING) {
-		self.state = CANCELLING;
-		return;
-	}
-	
-	[self revertToNormal];
+    [self.captureSession stopRunning];
+    self.state = NORMAL;
 }
 
 - (void)revertToNormal {
@@ -806,8 +827,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 		if (obj.succeeded)
 		{
                        
-            [self dismissModalViewControllerAnimated:YES];
-            [self.delegate scanningFinished:obj.result withType: obj.format andRawResult: obj.rawResult];
+            [self dismissViewControllerAnimated:YES completion:^{}];
+            [self.delegate scanningFinished:obj.result withType: obj.format isGS1:MWB_isLastGS1()  andRawResult: obj.rawResult];
             
             
 		}

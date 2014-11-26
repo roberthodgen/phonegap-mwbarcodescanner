@@ -16,6 +16,7 @@ namespace BarcodeScanners
         public string code { get; set; }
         public string type { get; set; }
         public byte[] bytes { get; set; }
+        public bool isGS1 { get; set; }
     }
 
     class BarcodeHelper
@@ -76,6 +77,8 @@ namespace BarcodeScanners
                                           Scanner.MWB_CODE_MASK_PDF |
                                           Scanner.MWB_CODE_MASK_QR |
                                           Scanner.MWB_CODE_MASK_CODABAR |
+                                          Scanner.MWB_CODE_MASK_11 |
+                                          Scanner.MWB_CODE_MASK_MSI |
                                           Scanner.MWB_CODE_MASK_RSS);
                 // Our sample app is configured by default to search both directions...
                 Scanner.MWBsetDirection((uint)(Scanner.MWB_SCANDIRECTION_HORIZONTAL | Scanner.MWB_SCANDIRECTION_VERTICAL));
@@ -93,6 +96,8 @@ namespace BarcodeScanners
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_RSS, RECT_FULL_1D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_CODABAR, RECT_FULL_1D);
                 MWBsetScanningRect(Scanner.MWB_CODE_MASK_DOTCODE, RECT_DOTCODE);
+                MWBsetScanningRect(Scanner.MWB_CODE_MASK_11, RECT_FULL_1D);
+                MWBsetScanningRect(Scanner.MWB_CODE_MASK_MSI, RECT_FULL_1D);
 
             }
 
@@ -109,6 +114,8 @@ namespace BarcodeScanners
             // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_RSS ); 
             // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_CODABAR ); 
             // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_DOTCODE ); 
+            // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_11 ); 
+            // Scanner.MWBsetActiveCodes( Scanner.MWB_CODE_MASK_MSI ); 
            
 
             // But for better performance, set like this for PORTRAIT scanning...
@@ -126,6 +133,8 @@ namespace BarcodeScanners
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_RSS,    RECT_PORTRAIT_1D);     
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_CODABAR,RECT_PORTRAIT_1D); 
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_DOTCODE, RECT_DOTCODE);
+            // MWBsetScanningRect(Scanner.MWB_CODE_MASK_11,    RECT_PORTRAIT_1D);
+            // MWBsetScanningRect(Scanner.MWB_CODE_MASK_MSI,    RECT_PORTRAIT_1D);
 
             // or like this for LANDSCAPE scanning - Preferred for dense or wide codes...
             // Scanner.MWBsetDirection((uint)Scanner.MWB_SCANDIRECTION_HORIZONTAL);
@@ -142,6 +151,8 @@ namespace BarcodeScanners
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_RSS,    RECT_LANDSCAPE_1D); 
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_CODABAR,RECT_LANDSCAPE_1D); 
             // MWBsetScanningRect(Scanner.MWB_CODE_MASK_DOTCODE, RECT_DOTCODE);
+            // MWBsetScanningRect(Scanner.MWB_CODE_MASK_11,    RECT_LANDSCAPE_1D);
+            // MWBsetScanningRect(Scanner.MWB_CODE_MASK_MSI,    RECT_LANDSCAPE_1D);
 
             // set decoder effort level (1 - 5)
             // for live scanning scenarios, a setting between 1 to 3 will suffice
@@ -187,6 +198,9 @@ namespace BarcodeScanners
             if (bcType == Scanner.FOUND_CODABAR) typeName = "Codabar";
             if (bcType == Scanner.FOUND_DOTCODE) typeName = "Dotcode";
             if (bcType == Scanner.FOUND_128_GS1) typeName = "Code 128 GS1";
+            if (bcType == Scanner.FOUND_ITF14) typeName = "ITF 14";
+            if (bcType == Scanner.FOUND_11) typeName = "Code 11";
+            if (bcType == Scanner.FOUND_MSI) typeName = "MSI Plessey";
 
             return typeName;
         }

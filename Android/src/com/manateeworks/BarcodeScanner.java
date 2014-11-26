@@ -55,6 +55,24 @@ public class BarcodeScanner {
   public static final int  MWB_CFG_CODE25_REQ_CHKSUM =        0x1;
  /**/
   
+  /** @brief  Code11 decoder flags value: require checksum check
+   *  MWB_CFG_CODE11_REQ_SINGLE_CHKSUM is set by default
+   */
+  public static final int  MWB_CFG_CODE11_REQ_SINGLE_CHKSUM =  0x1;
+  public static final int  MWB_CFG_CODE11_REQ_DOUBLE_CHKSUM =  0x2;
+  /**/
+  
+  /** @brief  MSI Plessey decoder flags value: require checksum check
+   *  MWB_CFG_MSI_REQ_10_CHKSUM is set by default
+   */
+  public static final int  MWB_CFG_MSI_REQ_10_CHKSUM =                 0x01;
+  public static final int  MWB_CFG_MSI_REQ_1010_CHKSUM =               0x02;
+  public static final int  MWB_CFG_MSI_REQ_11_IBM_CHKSUM =             0x04;
+  public static final int  MWB_CFG_MSI_REQ_11_NCR_CHKSUM =             0x08;
+  public static final int  MWB_CFG_MSI_REQ_1110_IBM_CHKSUM =           0x10;
+  public static final int  MWB_CFG_MSI_REQ_1110_NCR_CHKSUM =           0x20;
+  /**/
+  
   /** @brief  Codabar decoder flags value: include start/stop symbols in result
   */
   public static final int  MWB_CFG_CODABAR_INCLUDE_STARTSTOP =        0x1;
@@ -88,7 +106,9 @@ public class BarcodeScanner {
   public static final int MWB_CODE_MASK_93 =               0x00000200;
   public static final int MWB_CODE_MASK_CODABAR =          0x00000400;
   public static final int MWB_CODE_MASK_DOTCODE =          0x00000800;
-    public static final int MWB_CODE_MASK_ALL =              0xffffffff;
+  public static final int MWB_CODE_MASK_11 =       	 	   0x00001000;
+  public static final int MWB_CODE_MASK_MSI =     	 	   0x00002000;
+  public static final int MWB_CODE_MASK_ALL =              0xffffffff;
   /** @} */
   
   
@@ -105,6 +125,7 @@ public class BarcodeScanner {
    * @{ */
   public static final int MWB_SUBC_MASK_C25_INTERLEAVED =  0x00000001;
   public static final int MWB_SUBC_MASK_C25_STANDARD =     0x00000002;
+  public static final int MWB_SUBC_MASK_C25_ITF14  =       0x00000004;
   /** @} */
   
   /**
@@ -146,6 +167,9 @@ public class BarcodeScanner {
   public static final int FOUND_CODABAR =		18;
   public static final int FOUND_DOTCODE =		19;
   public static final int FOUND_128_GS1 =		20;
+  public static final int FOUND_ITF14 =			21;
+  public static final int FOUND_11 =			22;
+  public static final int FOUND_MSI =			23;
   
   
   
@@ -160,6 +184,7 @@ public class BarcodeScanner {
   public native static int MWBsetActiveSubcodes(int codeMask, int subMask);
   public native static int MWBcleanupLib ();
   public native static int MWBgetLastType ();
+  public native static int MWBisLastGS1 ();
   public native static byte[] MWBscanGrayscaleImage (byte[]gray,int width,int height);
   public native static int MWBsetFlags(int codeMask, int flags);
   public native static int MWBsetLevel(int level);

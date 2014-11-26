@@ -16,6 +16,7 @@
 
 
 NSString *callbackId;
+NSMutableDictionary *customParams = nil;
 
 - (void)initDecoder:(CDVInvokedUrlCommand*)command
 {
@@ -29,7 +30,8 @@ NSString *callbackId;
 {
     MWScannerViewController *scannerViewController = [[MWScannerViewController alloc] initWithNibName:@"MWScannerViewController" bundle:nil];
     scannerViewController.delegate = self;
-    [self.viewController presentModalViewController:scannerViewController animated:YES];
+    scannerViewController.customParams = customParams;
+    [self.viewController presentViewController:scannerViewController animated:YES completion:^{}];
 #if !__has_feature(objc_arc)
     callbackId= [command.callbackId retain];
 #else
@@ -38,7 +40,7 @@ NSString *callbackId;
 }
 
 
-- (void)scanningFinished:(NSString *)result withType:(NSString *)lastFormat andRawResult: (NSData *) rawResult
+- (void)scanningFinished:(NSString *)result withType:(NSString *)lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult
 {
     CDVPluginResult* pluginResult = nil;
     
@@ -48,7 +50,7 @@ NSString *callbackId;
         [bytesArray addObject:[NSNumber numberWithInt: bytes[i]]];
     }
     
-    NSMutableDictionary *resultDict = [[NSMutableDictionary alloc] initWithObjects:[NSArray arrayWithObjects:result, lastFormat, bytesArray, nil] forKeys:[NSArray arrayWithObjects:@"code", @"type",@"bytes", nil]];
+    NSMutableDictionary *resultDict = [[NSMutableDictionary alloc] initWithObjects:[NSArray arrayWithObjects:result, lastFormat, bytesArray, [NSNumber numberWithBool:isGS1],nil] forKeys:[NSArray arrayWithObjects:@"code", @"type",@"bytes", @"isGS1", nil]];
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultDict];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
     
@@ -73,6 +75,11 @@ NSString *callbackId;
     int codeMask = [[command.arguments objectAtIndex:0] intValue];
     int subCodeMask = [[command.arguments objectAtIndex:1] intValue];
     MWB_setActiveSubcodes(codeMask, subCodeMask);
+}
+
+- (int)getLastType:(CDVInvokedUrlCommand*)command
+{
+    return MWB_getLastType();
 }
 
 - (void)setFlags:(CDVInvokedUrlCommand*)command
@@ -104,7 +111,7 @@ NSString *callbackId;
     int level = [[command.arguments objectAtIndex:0] intValue];
     MWB_setLevel(level);
 }
-    
+
 - (void)setInterfaceOrientation:(CDVInvokedUrlCommand*)command
 {
     NSString *orientation = [command.arguments objectAtIndex:0];
@@ -123,11 +130,11 @@ NSString *callbackId;
     [MWScannerViewController setInterfaceOrientation:interfaceOrientation];
     
 }
-    
+
 - (void)setOverlayMode:(CDVInvokedUrlCommand*)command{
     [MWScannerViewController setOverlayMode:[[command.arguments objectAtIndex:0] intValue]];
 }
-    
+
 - (void)enableHiRes:(CDVInvokedUrlCommand*)command
 {
     bool hiRes = [[command.arguments objectAtIndex:0] boolValue];
@@ -139,6 +146,37 @@ NSString *callbackId;
     bool flash = [[command.arguments objectAtIndex:0] boolValue];
     [MWScannerViewController enableFlash:flash];
 }
+
+- (void)enableZoom:(CDVInvokedUrlCommand*)command
+{
+    bool zoom = [[command.arguments objectAtIndex:0] boolValue];
+    [MWScannerViewController enableZoom:zoom];
+}
+
+- (void)turnFlashOn:(CDVInvokedUrlCommand*)command
+{
+    bool flash = [[command.arguments objectAtIndex:0] boolValue];
+    [MWScannerViewController turnFlashOn:flash];
+}
+
+- (void)setZoomLevels:(CDVInvokedUrlCommand*)command
+{
+    [MWScannerViewController setZoomLevels:[[command.arguments objectAtIndex:0] intValue] zoomLevel2:[[command.arguments objectAtIndex:1] intValue] initialZoomLevel:[[command.arguments objectAtIndex:2] intValue]];
+}
+
+- (void)setCustomParam:(CDVInvokedUrlCommand*)command
+{
+    NSString *key = [command.arguments objectAtIndex:0];
+    NSObject *value = [command.arguments objectAtIndex:1];
+    
+    if (customParams == nil){
+        customParams = [[NSMutableDictionary alloc] init];
+    }
+    
+    [customParams setObject:value forKey:key];
+    
+}
+
 
 
 

@@ -404,6 +404,7 @@ namespace BarcodeScannerPage
                     BarcodeHelper.resultAvailable = true;
                     BarcodeHelper.scannerResult.code = resultString;
                     BarcodeHelper.scannerResult.type = typeName;
+                    BarcodeHelper.scannerResult.isGS1 = (Scanner.MWBisLastGS1() == 1);
 
                     Byte[] binArray = new Byte[resLen];
                     for (int i = 0; i < resLen; i++)
