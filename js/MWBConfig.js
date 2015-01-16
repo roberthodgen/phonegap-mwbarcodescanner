@@ -86,11 +86,6 @@ MWBSInitSpace.init = function(mwbs,constants,dvc){
         //mwbs['MWBsetScanningRect'](constants.MWB_CODE_MASK_39, 20,20,60,60);
         //mwbs['MWBenableZoom'](true);
         //mwbs['MWBsetZoomLevels'](200, 400, 0);
-        mwbs['MWBsetInterfaceOrientation'] (constants.OrientationPortrait);
-        mwbs['MWBsetOverlayMode'](constants.OverlayModeImage);
-        mwbs['MWBsetActiveCodes'](constants.MWB_CODE_MASK_PDF | constants.MWB_CODE_MASK_PDF);
-        mwbs['MWBsetLevel'](2);        
-        mwbs['MWBsetDirection'](constants.MWB_SCANDIRECTION_VERTICAL | constants.MWB_SCANDIRECTION_HORIZONTAL);
         //mwbs['MWBsetCustomParam']('CUSTOM_PARAM','CUSTOM_VALUE');
         //mwbs['MWBsetActiveSubcodes'](constants.MWB_CODE_MASK_25 | constants.MWB_SUBC_MASK_C25_INTERLEAVED);        
 //    }

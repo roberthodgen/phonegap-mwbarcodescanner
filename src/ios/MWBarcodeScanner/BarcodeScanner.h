@@ -14,10 +14,9 @@ extern "C" {
 #endif
 
 #ifndef uint32_t
-#define uint32_t unsigned int
-#define uint8_t unsigned char
+typedef unsigned int uint32_t;
+typedef unsigned char uint8_t;
 #endif
-
 
 /**
  * @name General configuration
@@ -137,6 +136,7 @@ extern "C" {
  * @name Bit mask identifiers for RSS decoder types
  * @{ */
 #define MWB_SUBC_MASK_RSS_14            0x00000001u
+#define MWB_SUBC_MASK_RSS_14_STACK      0x00000002u
 #define MWB_SUBC_MASK_RSS_LIM           0x00000004u
 #define MWB_SUBC_MASK_RSS_EXP           0x00000008u
 /** @} */
@@ -187,6 +187,57 @@ enum res_types {
     FOUND_11,
     FOUND_MSI
 };
+/** @} */
+    
+/**
+ * @name Result structure constants
+ * @{ */
+
+    
+    /**
+     * @name Identifiers for result types
+     * @{ */
+    
+#define MWB_RESULT_TYPE_RAW                 0x00000001u
+#define MWB_RESULT_TYPE_MW                  0x00000002u
+#define MWB_RESULT_TYPE_JSON                0x00000003u
+    
+    
+    /** @} */
+    
+    
+    /**
+     * @name Identifiers for result fields types
+     * @{ */
+#define MWB_RESULT_FT_BYTES                 0x00000001u
+#define MWB_RESULT_FT_TEXT                  0x00000002u
+#define MWB_RESULT_FT_TYPE                  0x00000003u
+#define MWB_RESULT_FT_SUBTYPE               0x00000004u
+#define MWB_RESULT_FT_SUCCESS               0x00000005u
+#define MWB_RESULT_FT_ISGS1                 0x00000006u
+#define MWB_RESULT_FT_LOCATION              0x00000007u
+#define MWB_RESULT_FT_IMAGE_WIDTH           0x00000008u
+#define MWB_RESULT_FT_IMAGE_HEIGHT          0x00000009u
+
+    /** @} */
+    
+    /**
+     * @name Descriptive names of result field types
+     * @{ */
+#define MWB_RESULT_FNAME_BYTES              "Bytes"
+#define MWB_RESULT_FNAME_TEXT               "Text"
+#define MWB_RESULT_FNAME_TYPE               "Type"
+#define MWB_RESULT_FNAME_SUBTYPE            "Subtype"
+#define MWB_RESULT_FNAME_SUCCESS            "Success"
+#define MWB_RESULT_FNAME_ISGS1              "GS1 compliance"
+#define MWB_RESULT_FNAME_LOCATION           "Location"
+#define MWB_RESULT_FNAME_IMAGE_WIDTH        "Image Width"
+#define MWB_RESULT_FNAME_IMAGE_HEIGHT       "Image Height"
+    
+    /** @} */
+    
+    
+
 /** @} */
 
 /**
@@ -452,6 +503,12 @@ extern int MWB_validateVIN(char *vin, int length);
  */
 extern int MWB_getBarcodeLocation(float *points);
     
+    
+extern int MWB_setResultType(const uint32_t resultType);
+    
+extern int MWB_getResultType(void);
+    
+    
 
 /**
  * @brief       *Debug* QR debug helper.
@@ -463,8 +520,8 @@ extern int MWB_getBarcodeLocation(float *points);
  *                                      multiplied by two
  * @retval      > 0                     Number of points in buffer
  */
-extern int MWB_getPointsQR(float *buffer, int maxLength);
-extern int MWB_getPointsAZTEC(float *buffer, int maxLength);
+//extern int MWB_getPointsQR(float *buffer, int maxLength);
+//extern int MWB_getPointsAZTEC(float *buffer, int maxLength);
     
 #ifdef __cplusplus
 }

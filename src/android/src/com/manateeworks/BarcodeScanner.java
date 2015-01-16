@@ -5,9 +5,11 @@
 
 package com.manateeworks;
 
-import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 import android.app.Activity;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
@@ -172,6 +174,38 @@ public class BarcodeScanner {
   public static final int FOUND_MSI =			23;
   
   
+  /**
+   * @name Result structure constants
+   * @{ */
+
+      
+      /**
+       * @name Identifiers for result types
+       * @{ */
+      
+  public static final int MWB_RESULT_TYPE_RAW  =               0x00000001;
+  public static final int MWB_RESULT_TYPE_MW =                 0x00000002;
+  public static final int MWB_RESULT_TYPE_JSON =               0x00000003;
+      
+      /** @} */
+      
+      /**
+       * @name Identifiers for result fields types
+       * @{ */
+  public static final int MWB_RESULT_FT_BYTES =                0x00000001;
+  public static final int MWB_RESULT_FT_TEXT =                 0x00000002;
+  public static final int MWB_RESULT_FT_TYPE =                 0x00000003;
+  public static final int MWB_RESULT_FT_SUBTYPE =              0x00000004;
+  public static final int MWB_RESULT_FT_SUCCESS =              0x00000005;
+  public static final int MWB_RESULT_FT_ISGS1 =                0x00000006;
+  public static final int MWB_RESULT_FT_LOCATION =             0x00000007;
+  public static final int MWB_RESULT_FT_IMAGE_WIDTH =          0x00000008;
+  public static final int MWB_RESULT_FT_IMAGE_HEIGHT =         0x00000009;
+
+      /** @} */
+
+  /** @} */
+  
   
   public native static int MWBinit (Activity activity);
   public native static int MWBgetLibVersion ();
@@ -192,6 +226,8 @@ public class BarcodeScanner {
   public native static int MWBgetDirection();
   public native static int MWBvalidateVIN(byte[] vin);
   public native static float[] MWBgetBarcodeLocation();
+  public native static int MWBsetResultType(int resultType);
+  public native static int MWBgetResultType();
   
   public static int MWBsetScanningRect (int codeMask, Rect rect){
 	  
@@ -205,5 +241,168 @@ public class BarcodeScanner {
 	  
   }
    
- 
+  
+  public static final class MWLocation{
+		
+		public PointF p1;
+		public PointF p2;
+		public PointF p3;
+		public PointF p4;
+		
+		public PointF points[];
+		
+		public MWLocation(float[] _points) {
+			
+			points = new PointF[4];
+			
+			for (int i = 0; i < 4; i++){
+				points[i] = new PointF();
+				points[i].x = _points[i * 2];
+				points[i].y = _points[i * 2 + 1];
+			}
+			p1 = new PointF();
+			p2 = new PointF();
+			p3 = new PointF();
+			p4 = new PointF();
+			
+			p1.x = _points[0];
+			p1.y = _points[1];
+			p2.x = _points[2];
+			p2.y = _points[3];
+			p3.x = _points[4];
+			p3.y = _points[5];
+			p4.x = _points[6];
+			p4.y = _points[7];
+			
+		}
+		
+	}
+
+	public static final class MWResult{
+		public String text;
+		public byte[] bytes;
+		public int bytesLength;
+		public int type;
+		public int subtype;
+		public int imageWidth;
+		public int imageHeight;
+		public boolean isGS1;
+		public MWLocation locationPoints;
+		
+		public MWResult(){
+			text = null;
+			bytes = null;
+			bytesLength = 0;
+			type = 0;
+			subtype = 0;
+			isGS1 = false;
+			locationPoints = null;
+			imageWidth = 0;
+			imageHeight = 0;
+		}
+		
+	}
+
+	public static final class MWResults{
+
+		public int version;
+		public ArrayList<MWResult> results;
+		public int count;
+
+		public MWResults(byte[] buffer){
+			results = new ArrayList<MWResult>();
+			count = 0;
+			version = 0;
+			
+			if (buffer[0] != 'M' || buffer[1] != 'W' || buffer[2] != 'R'){
+	            return;
+	        }
+			
+			version = buffer[3];
+	        
+	        count = buffer[4];
+	        
+	        int currentPos = 5;
+	        
+	        for (int i = 0; i < count; i++){
+	            
+	            MWResult result = new MWResult();
+	            
+	            int fieldsCount = buffer[currentPos];
+	            currentPos++;
+	            for (int f = 0; f < fieldsCount; f++){
+	                int fieldType = buffer[currentPos];
+	                int fieldNameLength = buffer[currentPos + 1];
+	                int fieldContentLength = 256 * (buffer[currentPos + 3 + fieldNameLength] & 0xFF) + (buffer[currentPos + 2 + fieldNameLength]& 0xFF);
+	                String fieldName = null;
+	                
+	                if (fieldNameLength > 0){
+	                    fieldName = new String(buffer, currentPos + 2, fieldNameLength);
+	                }
+	                
+	                int contentPos = currentPos + fieldNameLength + 4;
+	                float locations[] = new float[8];
+	                switch (fieldType) {
+	                    case MWB_RESULT_FT_TYPE:
+	                    	
+	                        result.type = java.nio.ByteBuffer.wrap(buffer, contentPos, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+	                        break;
+	                    case MWB_RESULT_FT_SUBTYPE:
+	                        result.subtype = java.nio.ByteBuffer.wrap(buffer, contentPos, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+	                        break;
+	                    case MWB_RESULT_FT_ISGS1:
+	                        result.isGS1 = (java.nio.ByteBuffer.wrap(buffer, contentPos, 4).order(ByteOrder.LITTLE_ENDIAN).getInt() == 1);
+	                        break;
+	                    case MWB_RESULT_FT_IMAGE_WIDTH:
+	                        result.imageWidth = java.nio.ByteBuffer.wrap(buffer, contentPos, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+	                        break;
+	                    case MWB_RESULT_FT_IMAGE_HEIGHT:
+	                        result.imageHeight = java.nio.ByteBuffer.wrap(buffer, contentPos, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+	                        break;
+	                    case MWB_RESULT_FT_LOCATION:
+	                        for (int l = 0; l < 8; l++){
+	                            locations[l] = java.nio.ByteBuffer.wrap(buffer, contentPos + l * 4, 4).order(ByteOrder.LITTLE_ENDIAN).getFloat(); 
+	                        }
+	                        result.locationPoints =  new MWLocation(locations);
+	                        		
+	                        break;
+	                    case MWB_RESULT_FT_TEXT:
+	                        result.text = new String(buffer, contentPos, fieldContentLength);
+	                        break;
+	                    case MWB_RESULT_FT_BYTES:
+	                        result.bytes = new byte[fieldContentLength];
+	                        result.bytesLength = fieldContentLength;
+	                        for (int c = 0; c < fieldContentLength; c++){
+	                        	result.bytes[c] = buffer[contentPos + c];
+	                        }
+
+	                        break;
+
+	                        
+	                    default:
+	                        break;
+	                }
+	                
+	                currentPos += (fieldNameLength + fieldContentLength + 4);
+	                
+	            }
+	            
+	            
+	            results.add(result);
+	            
+	        }
+			
+		}
+		
+		public MWResult getResult(int index){
+			return results.get(index);
+		}
+		
+		
+		
+	}
+  
 }
+
+
+

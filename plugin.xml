@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="com.manateeworks.barcodescanner"
-    version="1.3.0">
+    version="1.4.1">
     <name>MWBarcodeScanner</name>
     <description>Manateeworks Barcode Scanner Plugin</description>
     <license>MIT</license>
@@ -12,6 +12,7 @@
     <js-module src="www/MWBScanner.js" name="Scanner">
         <clobbers target="scanner" />
     </js-module>
+    <asset src="www/MWBScanner.js" target="js/MWBScanner.js" />
     
     
     <dependency id="org.apache.cordova.dialogs" url="https://git-wip-us.apache.org/repos/asf/cordova-plugin-dialogs.git" />
@@ -46,22 +47,22 @@
      
      
      
-     <source-file src="Android/src/com/manateeworks/BarcodeScanner.java" target-dir="src/com/manateeworks" />
-     <source-file src="Android/src/com/manateeworks/BarcodeScannerPlugin.java" target-dir="src/com/manateeworks" />
-     <source-file src="Android/src/com/manateeworks/ScannerActivity.java" target-dir="src/com/manateeworks" />
-     <source-file src="Android/src/com/manateeworks/MWOverlay.java" target-dir="src/com/manateeworks" />
-     <source-file src="Android/src/com/manateeworks/camera/CameraManager.java" target-dir="src/com/manateeworks/camera" />
+     <source-file src="src/android/src/com/manateeworks/BarcodeScanner.java" target-dir="src/com/manateeworks" />
+     <source-file src="src/android/src/com/manateeworks/BarcodeScannerPlugin.java" target-dir="src/com/manateeworks" />
+     <source-file src="src/android/src/com/manateeworks/ScannerActivity.java" target-dir="src/com/manateeworks" />
+     <source-file src="src/android/src/com/manateeworks/MWOverlay.java" target-dir="src/com/manateeworks" />
+     <source-file src="src/android/src/com/manateeworks/camera/CameraManager.java" target-dir="src/com/manateeworks/camera" />
      
-     <source-file src="Android/res/layout/scanner.xml" target-dir="res/layout" />
-     <source-file src="Android/res/drawable/overlay.png" target-dir="res/drawable" />
-     <source-file src="Android/res/drawable-hdpi/overlay.png" target-dir="res/drawable-hdpi" />
-     <source-file src="Android/res/drawable/flashbuttonoff.png" target-dir="res/drawable" />
-     <source-file src="Android/res/drawable/flashbuttonon.png" target-dir="res/drawable" />
-     <source-file src="Android/res/drawable/zoom.png" target-dir="res/drawable" />
+     <source-file src="src/android/res/layout/scanner.xml" target-dir="res/layout" />
+     <source-file src="src/android/res/drawable/overlay.png" target-dir="res/drawable" />
+     <source-file src="src/android/res/drawable-hdpi/overlay.png" target-dir="res/drawable-hdpi" />
+     <source-file src="src/android/res/drawable/flashbuttonoff.png" target-dir="res/drawable" />
+     <source-file src="src/android/res/drawable/flashbuttonon.png" target-dir="res/drawable" />
+     <source-file src="src/android/res/drawable/zoom.png" target-dir="res/drawable" />
      
-     <source-file src="Android/libs/armeabi/libBarcodeScannerLib.so" target-dir="libs/armeabi" />
-     <source-file src="Android/libs/x86/libBarcodeScannerLib.so" target-dir="libs/x86" />
-     <source-file src="Android/libs/armeabi-v7a/libBarcodeScannerLib.so" target-dir="libs/armeabi-v7a" />
+     <source-file src="src/android/libs/armeabi/libBarcodeScannerLib.so" target-dir="libs/armeabi" />
+     <source-file src="src/android/libs/x86/libBarcodeScannerLib.so" target-dir="libs/x86" />
+     <source-file src="src/android/libs/armeabi-v7a/libBarcodeScannerLib.so" target-dir="libs/armeabi-v7a" />
      
      </platform>
     
@@ -79,33 +80,32 @@
         <framework src="CoreGraphics.framework" weak="false" />
         <framework src="QuartzCore.framework" weak="false" />
                
-        <header-file src="iOS/src/CDVMWBarcodeScanner.h" target-dir="MWBarcodeScanner"/>
-        <source-file src="iOS/src/CDVMWBarcodeScanner.m" target-dir="MWBarcodeScanner"/>
-        <header-file src="iOS/src/MWBarcodeScanner/BarcodeScanner.h" target-dir="MWBarcodeScanner"/>
-        <header-file src="iOS/src/MWBarcodeScanner/MWScannerViewController.h" target-dir="MWBarcodeScanner"/>
-        <source-file src="iOS/src/MWBarcodeScanner/MWScannerViewController.m" target-dir="MWBarcodeScanner"/>
-        <header-file src="iOS/src/MWBarcodeScanner/MWOverlay.h" target-dir="MWBarcodeScanner"/>
-        <source-file src="iOS/src/MWBarcodeScanner/MWOverlay.m" target-dir="MWBarcodeScanner"/>
-        <source-file src="iOS/src/MWBarcodeScanner/MWScannerViewController.xib" target-dir="MWBarcodeScanner"/>
-        <source-file src="iOS/src/MWBarcodeScanner/libBarcodeScanner.a" target-dir="MWBarcodeScanner" framework="true"/>
+        <header-file src="src/ios/CDVMWBarcodeScanner.h" target-dir="MWBarcodeScanner"/>
+        <source-file src="src/ios/CDVMWBarcodeScanner.m" target-dir="MWBarcodeScanner"/>
+        <header-file src="src/ios/MWBarcodeScanner/BarcodeScanner.h" target-dir="MWBarcodeScanner"/>
+        <header-file src="src/ios/MWBarcodeScanner/MWScannerViewController.h" target-dir="MWBarcodeScanner"/>
+        <source-file src="src/ios/MWBarcodeScanner/MWScannerViewController.m" target-dir="MWBarcodeScanner"/>
+        <header-file src="src/ios/MWBarcodeScanner/MWOverlay.h" target-dir="MWBarcodeScanner"/>
+        <source-file src="src/ios/MWBarcodeScanner/MWOverlay.m" target-dir="MWBarcodeScanner"/>
+        <source-file src="src/ios/MWBarcodeScanner/MWScannerViewController.xib" target-dir="MWBarcodeScanner"/>
+        <source-file src="src/ios/MWBarcodeScanner/libBarcodeScanner.a" target-dir="MWBarcodeScanner" framework="true"/>
         
-        <resource-file src="iOS/src/MWBarcodeScanner/close_button.png" target-dir="MWBarcodeScanner"/>
-        <resource-file src="iOS/src/MWBarcodeScanner/flashbuttonon.png" target-dir="MWBarcodeScanner"/>
-        <resource-file src="iOS/src/MWBarcodeScanner/flashbuttonoff.png" target-dir="MWBarcodeScanner"/>
-        <resource-file src="iOS/src/MWBarcodeScanner/overlay.png" target-dir="MWBarcodeScanner"/>
-        <resource-file src="iOS/src/MWBarcodeScanner/overlay@2x.png" target-dir="MWBarcodeScanner"/>
-        <resource-file src="iOS/src/MWBarcodeScanner/zoom.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/close_button.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/flashbuttonon.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/flashbuttonoff.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/overlay.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/overlay@2x.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/zoom.png" target-dir="MWBarcodeScanner"/>
         
     </platform>
-    
-    
-    <!-- wp8 -->
+
+        <!-- wp8 -->
     <platform name="wp8">
         
         <config-file target="config.xml" parent="/*">
-    		<feature name="MWBarcodeScanner">
-        		<param name="wp-package" value="MWBarcodeScanner"/>
-    		</feature>
+            <feature name="MWBarcodeScanner">
+                <param name="wp-package" value="MWBarcodeScanner"/>
+            </feature>
         </config-file>
         
         <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
@@ -113,31 +113,30 @@
         </config-file>
         
         
-        <source-file src="wp8/MWBarcodeScanner/MWBarcodeScanner.cs"/>
-        <source-file src="wp8/MWBarcodeScanner/BarcodeHelper.cs"/>
-        <source-file src="wp8/MWBarcodeScanner/ScannerPage.xaml.cs" />
-        <source-file src="wp8/MWBarcodeScanner/ScannerPage.xaml"/>
-	<source-file src="wp8/MWBarcodeScanner/MWOverlay.cs"/>
-        <source-file src="wp8/MWBarcodeScanner/overlay.png"/>
-	<source-file src="wp8/MWBarcodeScanner/flashbuttonon.png"/>
-	<source-file src="wp8/MWBarcodeScanner/flashbuttonoff.png"/>
-    <source-file src="wp8/MWBarcodeScanner/zoom.png"/>
+        <source-file src="src/wp8/MWBarcodeScanner/MWBarcodeScanner.cs"/>
+        <source-file src="src/wp8/MWBarcodeScanner/BarcodeHelper.cs"/>
+        <source-file src="src/wp8/MWBarcodeScanner/ScannerPage.xaml.cs" />
+        <source-file src="src/wp8/MWBarcodeScanner/ScannerPage.xaml"/>
+    <source-file src="src/wp8/MWBarcodeScanner/MWOverlay.cs"/>
+        <source-file src="src/wp8/MWBarcodeScanner/overlay.png"/>
+    <source-file src="src/wp8/MWBarcodeScanner/flashbuttonon.png"/>
+    <source-file src="src/wp8/MWBarcodeScanner/flashbuttonoff.png"/>
+    <source-file src="src/wp8/MWBarcodeScanner/zoom.png"/>
 
         
-        <source-file src="wp8/BarcodeLib.winmd" framework="true"/>
-        <source-file src="wp8/BarcodeLib.dll"/>
-      <framework src ="wp8/BarcodeLib.winmd"/>
-	<source-file src="wp8/WBEx/WriteableBitmapExWinPhone.dll" framework="true"/>
-      <framework src ="wp8/WBEx/WriteableBitmapExWinPhone.dll"/>
-	<source-file src="wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.dll" framework="true"/>
-	<source-file src="wp8/WBEx/WriteableBitmapExWinPhone.pdb"/>
-	<source-file src="wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.pdb"/>
-	<source-file src="wp8/WBEx/WriteableBitmapExWinPhone.XML"/>
-	<source-file src="wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.XML"/>
+        <source-file src="src/wp8/BarcodeLib.winmd" framework="true"/>
+        <source-file src="src/wp8/BarcodeLib.dll"/>
+      <framework src ="src/wp8/BarcodeLib.winmd"/>
+    <source-file src="src/wp8/WBEx/WriteableBitmapExWinPhone.dll" framework="true"/>
+      <framework src ="src/wp8/WBEx/WriteableBitmapExWinPhone.dll"/>
+    <source-file src="src/wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.dll" framework="true"/>
+    <source-file src="src/wp8/WBEx/WriteableBitmapExWinPhone.pdb"/>
+    <source-file src="src/wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.pdb"/>
+    <source-file src="src/wp8/WBEx/WriteableBitmapExWinPhone.XML"/>
+    <source-file src="src/wp8/WBEx/WriteableBitmapExWinPhoneXnaDependant.XML"/>
 
         
     </platform>
 
-    
     
 </plugin>
