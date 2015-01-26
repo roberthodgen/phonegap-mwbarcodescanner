@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.4
+ Version 1.5
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -15,11 +15,16 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
 
 
 
+    phonegap local plugin add com.manateeworks.barcodescanner
+or   
+
     phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
 or   
 
     phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN (if you are adding from local folder)   
-
+or  install using plugman: (your platform should be already built)
+    
+    plugman install --platform ios|android --project platforms/ios|platforms/android --plugin com.manateeworks.barcodescanner --plugins_dir plugins/ --www www/ 
     
 * Perform initial build for each platform (repeat the command twice if not working after first time, seems there's a bug in phonegap 3.3)
 
@@ -34,7 +39,11 @@ or
 		<input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
 	</form>
 ```
+##Important change in 1.5
 
+This library is now thread safe and multithreading is enabled. Users have the option to set the maximum number of threads (CPUs) the scanner can use by adding this line in the decoder initialization:
+
+     mwbs['MWBsetMaxThreads'](NUM_OF_MAX_THREADS)
 ###Important change in 1.4
 
 Users now can put decoder initialization and callback in separate Javascript file, so that they don't lose their changes when they update the plugin. Sample file is *js/MWBConfig.js*.
@@ -69,13 +78,13 @@ It's seems there's a bug in Phonegap 3.0 so you have to add ```html '<script typ
 
 * Create a Phonegap Android app;
 
-* Copy the folder 'Android/src/com/manateeworks' to your project's 'src/com/' folder;
+* Copy the folder 'src/android/com/manateeworks' to your project's 'src/com/' folder;
 
-* Copy the file 'Android/res/layout/scanner.xml' to your project's 'res/layout' folder;
+* Copy the file 'src/android/res/layout/scanner.xml' to your project's 'res/layout' folder;
 
-* Copy the file 'Android/res/drawable/overlay.png' to your project's 'res/drawable' folder. Do the same for the file in 'drawable-hdpi' folder;
+* Copy the file 'src/android/res/drawable/overlay.png' to your project's 'res/drawable' folder. Do the same for the file in 'drawable-hdpi' folder;
 
-* Copy the files 'Android/libs/armeabi/libBarcodeScannerLib.so' and 'Android/libs/armeabi-v7a/libBarcodeScannerLib.so' to your project's 'libs/' folder, all the while preserving the same folder structure 
+* Copy the files 'src/android/libs/armeabi/libBarcodeScannerLib.so' and 'Android/libs/armeabi-v7a/libBarcodeScannerLib.so' to your project's 'libs/' folder, all the while preserving the same folder structure 
 
 * Copy the file 'www/MSBScanner.js' to the 'assets/www/js' folder;
  
@@ -156,7 +165,7 @@ For Phonegap 3 *
 
 * Create a Phonegap iOS app;
 
-* Copy all files from our 'iOS/src' folder to your project's 'Plugins' folder and add them to the project;
+* Copy all files from our 'src/ios' folder to your project's 'Plugins' folder and add them to the project;
 
 * Copy the file 'www/MSBScanner.js' to the folder 'www/js' . NOTE: You cannot drag & drop directly into the Xcode project... use Finder instead;
 
@@ -291,7 +300,17 @@ Add a notification plugin (if not already present):
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
 
-
+&nbsp;
+###Changes in 1.5:
+&nbsp;
+- Added support for multithreading. The user can set the maximum number of threads by adding this line in the decoder initialization:
+        mwbs['MWBsetMaxThreads'](NUM_OF_MAX_THREADS)
+       
+- Added MWBsetMinLength: function - allows user to set the minimum length of the code for weak protected code types (like: Code 25, MSI, Code 39, Codabar, Code 11...) to avoid false detection of short barcode fragments. This method can be used by adding this line in the decoder intialization:
+        mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK, MIN_LENGTH);
+- Plugin is now plugman compatible
+- Added IATA Code 25 support
+- Improved detection of Databar Expanded barcode type
 &nbsp;
 ###Changes in 1.4:
 &nbsp;
