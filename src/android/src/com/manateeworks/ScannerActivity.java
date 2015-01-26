@@ -3,6 +3,7 @@ package com.manateeworks;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import com.manateeworks.BarcodeScanner.MWResult;
 import com.manateeworks.camera.CameraManager;
 
 
@@ -56,6 +57,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     public static int zoomLevel = 0;
     private int firstZoom = 150;
     private int secondZoom = 300;
+    public static int param_maxThreads = 4;
     
     
     private ImageView overlayImage;
@@ -69,13 +71,22 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     
     public static HashMap<String, Object> customParams;
     
+    private int activeThreads = 0;
+	public static int MAX_THREADS = Runtime.getRuntime().availableProcessors();
+	
+	private enum State {
+		STOPPED, PREVIEW, DECODING
+	}
+
+	State state = State.STOPPED;
+    
     
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(param_Orientation);
-        
+        state = State.STOPPED;
         package_name = getApplication().getPackageName();
         resources = getApplication().getResources();
         
@@ -186,6 +197,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     {
         super.onPause();
         flashOn = false;
+        
         updateFlash();
         if ((param_OverlayMode & OM_MW) > 0){
             MWOverlay.removeOverlay();
@@ -196,6 +208,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
             handler = null;
         }
         CameraManager.get().closeDriver();
+        state = State.STOPPED;
         
     }
     
@@ -353,16 +366,19 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
                     
                     switch (msg.what) {
                         case MSG_AUTOFOCUS:
-                            CameraManager.get().requestAutoFocus(handler, MSG_AUTOFOCUS);
+                        	if (state == State.PREVIEW || state == State.DECODING) {
+        						CameraManager.get().requestAutoFocus(handler, MSG_AUTOFOCUS);
+        					}
                             break;
                         case MSG_DECODE:
                             decode((byte[]) msg.obj, msg.arg1, msg.arg2);
                             break;
                         case MSG_DECODE_FAILED:
-                            CameraManager.get().requestPreviewFrame(handler, MSG_DECODE);
+                            //CameraManager.get().requestPreviewFrame(handler, MSG_DECODE);
                             break;
                         case MSG_DECODE_SUCCESS:
-                            handleDecode((byte[]) msg.obj);
+                        	state = State.STOPPED;
+                            handleDecode((MWResult) msg.obj);
                             break;
                             
                         default:
@@ -399,86 +415,198 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     
     private void startScanning() {
         CameraManager.get().startPreview();
+        state = State.PREVIEW;
         CameraManager.get().requestPreviewFrame(handler, MSG_DECODE);
         CameraManager.get().requestAutoFocus(handler, MSG_AUTOFOCUS);
     }
     
     
-    private void decode(byte[] data, int width, int height) {
+    private void decode(final byte[] data, final int width, final int height) {
+    	
+    	if (param_maxThreads > MAX_THREADS){
+    		param_maxThreads = MAX_THREADS;
+    	}
+    	
+    	if (activeThreads >= param_maxThreads || state == State.STOPPED) {
+			return;
+		}
+
+		new Thread(new Runnable() {
+			public void run() {
+				activeThreads++;
+				 Log.i("Active threads", String.valueOf(activeThreads));
+				long start = System.currentTimeMillis();
+
+				// byte[] source =
+				// CameraManager.get().buildLuminanceSource(data, width,
+				// height);
+
+				byte[] rawResult = null;
+				/*
+				 * if (Global.mode_39) rawResult =
+				 * BarcodeScanner.decode39(source, w, h); else rawResult =
+				 * BarcodeScanner.decodeDM(source, w, h);
+				 */
+
+				rawResult = BarcodeScanner.MWBscanGrayscaleImage(data, width, height);
+
+				if (state == State.STOPPED) {
+					activeThreads--;
+					return;
+				}
+
+				MWResult mwResult = null;
+
+				if (rawResult != null && BarcodeScanner.MWBgetResultType() == BarcodeScanner.MWB_RESULT_TYPE_MW) {
+
+					BarcodeScanner.MWResults results = new BarcodeScanner.MWResults(rawResult);
+
+					if (results.count > 0) {
+						mwResult = results.getResult(0);
+						rawResult = mwResult.bytes;
+					}
+
+				}
+
+
+				if (rawResult != null)
+				{
+
+					state = State.STOPPED;
+
+					long end = System.currentTimeMillis();
+
+					String s = "";
+
+					for (int i = 0; i < rawResult.length; i++)
+						s = s + (char) rawResult[i];
+
+					Message message = Message.obtain(handler, MSG_DECODE_SUCCESS, mwResult);
+
+					/*
+					 * Bundle bundle = new Bundle();
+					 * bundle.putParcelable(DecodeThread.BARCODE_BITMAP,
+					 * CameraManager.get().renderCroppedGreyscaleBitmap(data, w,
+					 * h)); message.setData(bundle);
+					 */
+					message.arg1 = mwResult.type;
+
+					message.sendToTarget();
+
+				} else {
+					Message message = Message.obtain(handler, MSG_DECODE_FAILED);
+					message.sendToTarget();
+				}
+
+				activeThreads--;
+			}
+		}).start();
         
-        //Check for barcode inside buffer
-        byte[] rawResult = BarcodeScanner.MWBscanGrayscaleImage(data, width,height);
-        
-        //ignore results less than 4 characters - probably false detection
-        if (rawResult != null && rawResult.length > 4 || (rawResult != null && (rawResult.length > 0 &&
-                                                                                BarcodeScanner.MWBgetLastType() != BarcodeScanner.FOUND_39 &&
-                                                                                BarcodeScanner.MWBgetLastType() != BarcodeScanner.FOUND_25_INTERLEAVED &&
-                                                                                BarcodeScanner.MWBgetLastType() != BarcodeScanner.FOUND_25_STANDARD)))
-        {
-            if (handler != null){
-                Message message = Message.obtain(handler, MSG_DECODE_SUCCESS, rawResult);
-                message.sendToTarget();
-            }
-        }
-        else
-        {
-            if (handler != null){
-                Message message = Message.obtain(handler, MSG_DECODE_FAILED);
-                message.sendToTarget();
-            }
-        }
     }
     
     
-    public void handleDecode(byte[] rawResult)
-    {
-        
-        lastResult = rawResult;
-        String s = "";
-        
-        try {
-            s = new String(rawResult, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            
-            s = "";
-            for (int i = 0; i < rawResult.length; i++)
-                s = s + (char) rawResult[i];
-            e.printStackTrace();
-        }
-        
-        int bcType = BarcodeScanner.MWBgetLastType();
-        String typeName="";
-        switch (bcType) {
-            case BarcodeScanner.FOUND_25_INTERLEAVED: typeName = "Code 25";break;
-            case BarcodeScanner.FOUND_25_STANDARD: typeName = "Code 25 Standard";break;
-            case BarcodeScanner.FOUND_128: typeName = "Code 128";break;
-            case BarcodeScanner.FOUND_39: typeName = "Code 39";break;
-            case BarcodeScanner.FOUND_93: typeName = "Code 93";break;
-            case BarcodeScanner.FOUND_AZTEC: typeName = "AZTEC";break;
-            case BarcodeScanner.FOUND_DM: typeName = "Datamatrix";break;
-            case BarcodeScanner.FOUND_EAN_13: typeName = "EAN 13";break;
-            case BarcodeScanner.FOUND_EAN_8: typeName = "EAN 8";break;
-            case BarcodeScanner.FOUND_NONE: typeName = "None";break;
-            case BarcodeScanner.FOUND_RSS_14: typeName = "Databar 14";break;
-            case BarcodeScanner.FOUND_RSS_14_STACK: typeName = "Databar 14 Stacked";break;
-            case BarcodeScanner.FOUND_RSS_EXP: typeName = "Databar Expanded";break;
-            case BarcodeScanner.FOUND_RSS_LIM: typeName = "Databar Limited";break;
-            case BarcodeScanner.FOUND_UPC_A: typeName = "UPC A";break;
-            case BarcodeScanner.FOUND_UPC_E: typeName = "UPC E";break;
-            case BarcodeScanner.FOUND_PDF: typeName = "PDF417";break;
-            case BarcodeScanner.FOUND_QR: typeName = "QR";break;
-            case BarcodeScanner.FOUND_CODABAR: typeName = "Codabar";break;
-            case BarcodeScanner.FOUND_DOTCODE: typeName = "DotCode";break;
-            case BarcodeScanner.FOUND_128_GS1: typeName = "Code 128 GS1";break;
-            case BarcodeScanner.FOUND_ITF14: typeName = "ITF 14";break;
-            case BarcodeScanner.FOUND_11: typeName = "Code 11";break;
-            case BarcodeScanner.FOUND_MSI: typeName = "MSI Plessey";break;
-        }
+    public void handleDecode(MWResult result) {
+
+		byte[] rawResult = null;
+
+		if (result != null && result.bytes != null) {
+			rawResult = result.bytes;
+		}
+
+		String s = "";
+
+		try {
+			s = new String(rawResult, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+
+			s = "";
+			for (int i = 0; i < rawResult.length; i++)
+				s = s + (char) rawResult[i];
+			e.printStackTrace();
+		}
+
+		int bcType = result.type;
+		String typeName = "";
+		switch (bcType) {
+		case BarcodeScanner.FOUND_25_INTERLEAVED:
+			typeName = "Code 25";
+			break;
+		case BarcodeScanner.FOUND_25_STANDARD:
+			typeName = "Code 25 Standard";
+			break;
+		case BarcodeScanner.FOUND_128:
+			typeName = "Code 128";
+			break;
+		case BarcodeScanner.FOUND_39:
+			typeName = "Code 39";
+			break;
+		case BarcodeScanner.FOUND_93:
+			typeName = "Code 93";
+			break;
+		case BarcodeScanner.FOUND_AZTEC:
+			typeName = "AZTEC";
+			break;
+		case BarcodeScanner.FOUND_DM:
+			typeName = "Datamatrix";
+			break;
+		case BarcodeScanner.FOUND_EAN_13:
+			typeName = "EAN 13";
+			break;
+		case BarcodeScanner.FOUND_EAN_8:
+			typeName = "EAN 8";
+			break;
+		case BarcodeScanner.FOUND_NONE:
+			typeName = "None";
+			break;
+		case BarcodeScanner.FOUND_RSS_14:
+			typeName = "Databar 14";
+			break;
+		case BarcodeScanner.FOUND_RSS_14_STACK:
+			typeName = "Databar 14 Stacked";
+			break;
+		case BarcodeScanner.FOUND_RSS_EXP:
+			typeName = "Databar Expanded";
+			break;
+		case BarcodeScanner.FOUND_RSS_LIM:
+			typeName = "Databar Limited";
+			break;
+		case BarcodeScanner.FOUND_UPC_A:
+			typeName = "UPC A";
+			break;
+		case BarcodeScanner.FOUND_UPC_E:
+			typeName = "UPC E";
+			break;
+		case BarcodeScanner.FOUND_PDF:
+			typeName = "PDF417";
+			break;
+		case BarcodeScanner.FOUND_QR:
+			typeName = "QR";
+			break;
+		case BarcodeScanner.FOUND_CODABAR:
+			typeName = "Codabar";
+			break;
+		case BarcodeScanner.FOUND_128_GS1:
+			typeName = "Code 128 GS1";
+			break;
+		case BarcodeScanner.FOUND_ITF14:
+			typeName = "ITF 14";
+			break;
+		case BarcodeScanner.FOUND_11:
+			typeName = "Code 11";
+			break;
+		case BarcodeScanner.FOUND_MSI:
+			typeName = "MSI Plessey";
+			break;
+        case BarcodeScanner.FOUND_25_IATA:
+            typeName = "IATA Code 25";
+            break;
+		}
         
         Intent data = new Intent();
         data.putExtra("code", s);
         data.putExtra("type", typeName);
         data.putExtra("bytes", rawResult);
+        data.putExtra("isGS1", result.isGS1);
         setResult(1, data);
         finish();
         

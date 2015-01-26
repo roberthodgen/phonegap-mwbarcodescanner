@@ -6,6 +6,7 @@
 #import "MWScannerViewController.h"
 #import "BarcodeScanner.h"
 #import "MWOverlay.h"
+#import "MWResult.h"
 #include <mach/mach_host.h>
 
 // !!! Rects are in format: x, y, width, height !!!
@@ -27,6 +28,9 @@ int param_OverlayMode = OM_MW;
 int param_ZoomLevel1 = 0;
 int param_ZoomLevel2 = 0;
 int zoomLevel = 0;
+int param_maxThreads = 4;
+int activeThreads = 0;
+int availableThreads = 0;
 
 
 static NSString *DecoderResultNotification = @"DecoderResultNotification";
@@ -51,6 +55,9 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     NSTimer *focusTimer;
     
     BOOL statusBarHidden;
+    
+    
+    
 }
 
 @synthesize captureSession = _captureSession;
@@ -179,6 +186,16 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     // levels 4 and 5 are typically reserved for batch scanning
     MWB_setLevel(2);
     
+    //Set minimum result length for low-protected barcode types
+    MWB_setMinLength(MWB_CODE_MASK_25, 5);
+    MWB_setMinLength(MWB_CODE_MASK_MSI, 5);
+    MWB_setMinLength(MWB_CODE_MASK_39, 5);
+    MWB_setMinLength(MWB_CODE_MASK_CODABAR, 5);
+    MWB_setMinLength(MWB_CODE_MASK_11, 5);
+
+    //Use MWResult class instead of barcode raw byte array as result
+    MWB_setResultType(MWB_RESULT_TYPE_MW);
+    
     //get and print Library version
     int ver = MWB_getLibVersion();
     int v1 = (ver >> 16);
@@ -221,6 +238,26 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 + (void) enableZoom: (BOOL) zoom {
     
     param_EnableZoom = zoom;
+    
+}
+
++ (void) setMaxThreads: (int) maxThreads {
+    
+    if (availableThreads == 0){
+        host_basic_info_data_t hostInfo;
+        mach_msg_type_number_t infoCount;
+        infoCount = HOST_BASIC_INFO_COUNT;
+        host_info( mach_host_self(), HOST_BASIC_INFO, (host_info_t)&hostInfo, &infoCount ) ;
+        availableThreads = hostInfo.max_cpus;
+    }
+    
+    
+    param_maxThreads = maxThreads;
+    if (param_maxThreads > availableThreads){
+        param_maxThreads = availableThreads;
+    }
+    
+    
     
 }
 
@@ -479,6 +516,14 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         }
     }
     
+    if (availableThreads == 0){
+        availableThreads = hostInfo.max_cpus;
+    }
+    
+    if (param_maxThreads > availableThreads){
+        param_maxThreads = availableThreads;
+    }
+    
 	/*We add the preview layer*/
     
     self.prevLayer = [AVCaptureVideoPreviewLayer layerWithSession: self.captureSession];
@@ -588,6 +633,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
     self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:2.5 target:self selector:@selector(reFocus) userInfo:nil repeats:YES];
     
+    activeThreads = 0;
     
 }
 
@@ -621,15 +667,20 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 	   fromConnection:(AVCaptureConnection *)connection
 {
-	if (state != CAMERA) {
-		return;
-	}
-	
-	if (self.state != CAMERA_DECODING)
-	{
-		self.state = CAMERA_DECODING;
-	}
-	
+    if (state != CAMERA && state != CAMERA_DECODING) {
+        return;
+    }
+    
+    if (activeThreads >= param_maxThreads){
+        return;
+    }
+    
+    if (self.state != CAMERA_DECODING)
+    {
+        self.state = CAMERA_DECODING;
+    }
+    
+    activeThreads++;
 	
     CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     //Lock the image buffer
@@ -671,82 +722,45 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         
         int resLength = MWB_scanGrayscaleImage(frameBuffer,width,height, &pResult);
         free(frameBuffer);
-        //NSLog(@"Frame decoded");
-        
-        
-        
-        //ignore results less than 4 characters - probably false detection
-        if (resLength > 4 || ((resLength > 0 && MWB_getLastType() != FOUND_39 && MWB_getLastType() != FOUND_25_INTERLEAVED && MWB_getLastType() != FOUND_25_STANDARD)))
-        {
-            int bcType = MWB_getLastType();
-            NSString *typeName=@"";
-            switch (bcType) {
-                case FOUND_128: typeName = @"Code 128";break;
-                case FOUND_39: typeName = @"Code 39";break;
-                case FOUND_93: typeName = @"Code 93";break;
-                case FOUND_25_INTERLEAVED: typeName = @"Code 25 Interleaved";break;
-                case FOUND_25_STANDARD: typeName = @"Code 25 Standard";break;
-                case FOUND_AZTEC: typeName = @"AZTEC";break;
-                case FOUND_DM: typeName = @"Datamatrix";break;
-                case FOUND_QR: typeName = @"QR";break;
-                case FOUND_EAN_13: typeName = @"EAN 13";break;
-                case FOUND_EAN_8: typeName = @"EAN 8";break;
-                case FOUND_NONE: typeName = @"None";break;
-                case FOUND_RSS_14: typeName = @"Databar 14";break;
-                case FOUND_RSS_14_STACK: typeName = @"Databar 14 Stacked";break;
-                case FOUND_RSS_EXP: typeName = @"Databar Expanded";break;
-                case FOUND_RSS_LIM: typeName = @"Databar Limited";break;
-                case FOUND_UPC_A: typeName = @"UPC A";break;
-                case FOUND_UPC_E: typeName = @"UPC E";break;
-                case FOUND_PDF: typeName = @"PDF417";break;
-                case FOUND_CODABAR: typeName = @"Codabar";break;
-                case FOUND_DOTCODE: typeName = @"DotCode";break;
-                case FOUND_ITF14: typeName = @"ITF 14";break;
-                case FOUND_11: typeName = @"Code 11";break;
-                case FOUND_MSI: typeName = @"MSI Plessey";break;
+        NSLog(@"Frame decoded. Active threads: %d", activeThreads);
+        MWResults *mwResults = nil;
+        MWResult *mwResult = nil;
+        if (resLength > 0){
+            
+            if (self.state == NORMAL){
+                resLength = 0;
+                free(pResult);
+                
+            } else {
+                mwResults = [[MWResults alloc] initWithBuffer:pResult];
+                if (mwResults && mwResults.count > 0){
+                    mwResult = [mwResults resultAtIntex:0];
+                }
+                
+                free(pResult);
             }
+        }
+        
+        if (mwResult)
+        {
+           
             
-            lastFormat = typeName;
-            
-            
-            
-            
-            
-            int size=resLength;
-            
-            char *temp = (char *)malloc(size+1);
-            memcpy(temp, pResult, size+1);
-            NSString *resultString = [[NSString alloc] initWithBytes: temp length: size encoding: NSUTF8StringEncoding];
-            
-            NSLog(@"Detected %@: %@", lastFormat, resultString);
-             self.state = CAMERA;
+            //NSLog(@"Detected %@: %@", lastFormat, resultString);
+             self.state = NORMAL;
             
             
             
-            NSMutableString *binString = [[NSMutableString alloc] init];
-            
-            for (int i = 0; i < size; i++)
-                [binString appendString:[NSString stringWithFormat:@"%c", temp[i]]];
-            
-            if (MWB_getLastType() == FOUND_PDF || resultString == nil)
-                resultString = [binString copy];
-            else
-                resultString = [resultString copy];
+          
             
             dispatch_async(dispatch_get_main_queue(), ^(void) {
-                if (decodeImage != nil)
-                {
-                    CGImageRelease(decodeImage);
-                    decodeImage = nil;
-                }
+               
                 
                 [self.captureSession stopRunning];
                 NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-                DecoderResult *notificationResult = [DecoderResult createSuccess:resultString format:typeName rawResult:[[NSData alloc] initWithBytes:pResult length:size]];
+                DecoderResult *notificationResult = [DecoderResult createSuccess:mwResult];
                 [center postNotificationName:DecoderResultNotification object: notificationResult];
                 
-                free(temp);
-                free(pResult);
+                
             });
             
             
@@ -756,6 +770,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         {
             self.state = CAMERA;
         }
+          activeThreads --;
 	 });
 }
 
@@ -826,9 +841,15 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 		DecoderResult *obj = (DecoderResult*)notification.object;
 		if (obj.succeeded)
 		{
-                       
+            
+            NSString *typeName = obj.result.typeName;
+            if (obj.result.isGS1){
+                
+                typeName = [NSString stringWithFormat:@"%@ (GS1)", typeName];
+            }
+            
             [self dismissViewControllerAnimated:YES completion:^{}];
-            [self.delegate scanningFinished:obj.result withType: obj.format isGS1:MWB_isLastGS1()  andRawResult: obj.rawResult];
+            [self.delegate scanningFinished:obj.result.text withType: typeName isGS1:obj.result.isGS1  andRawResult: [[NSData alloc] initWithBytes: obj.result.bytes length: obj.result.bytesLength]];
             
             
 		}
@@ -867,25 +888,25 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 @implementation DecoderResult
 
 @synthesize succeeded;
-@synthesize result, format, rawResult;
+@synthesize result;
 
-+(DecoderResult *)createSuccess:(NSString *)result format: (NSString *) format rawResult:(NSData *)rawResult{
-	DecoderResult *obj = [[DecoderResult alloc] init];
-    obj.succeeded = YES;
-	obj.result = result;
-    obj.rawResult = rawResult;
-    obj.format = format;
-	return obj;
++(DecoderResult *)createSuccess:(MWResult *)result {
+    DecoderResult *obj = [[DecoderResult alloc] init];
+    if (obj != nil) {
+        obj.succeeded = YES;
+        obj.result = result;
+    }
+    return obj;
 }
 
 +(DecoderResult *)createFailure {
-	DecoderResult *obj = [[DecoderResult alloc] init];
-	if (obj != nil) {
-		obj.succeeded = NO;
-		obj.result = nil;
-        obj.rawResult = nil;
-	}
-	return obj;
+    DecoderResult *obj = [[DecoderResult alloc] init];
+    if (obj != nil) {
+        obj.succeeded = NO;
+        obj.result = nil;
+    }
+    return obj;
+    
 }
 
 - (void)dealloc {

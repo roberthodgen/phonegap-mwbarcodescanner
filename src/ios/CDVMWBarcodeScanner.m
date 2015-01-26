@@ -89,6 +89,13 @@ NSMutableDictionary *customParams = nil;
     MWB_setFlags(codeMask, flags);
 }
 
+- (void)setMinLength:(CDVInvokedUrlCommand*)command
+{
+    int codeMask = [[command.arguments objectAtIndex:0] intValue];
+    int minLength = [[command.arguments objectAtIndex:1] intValue];
+    MWB_setMinLength(codeMask, minLength);
+}
+
 - (void)setDirection:(CDVInvokedUrlCommand*)command
 {
     int direction = [[command.arguments objectAtIndex:0] intValue];
@@ -162,6 +169,11 @@ NSMutableDictionary *customParams = nil;
 - (void)setZoomLevels:(CDVInvokedUrlCommand*)command
 {
     [MWScannerViewController setZoomLevels:[[command.arguments objectAtIndex:0] intValue] zoomLevel2:[[command.arguments objectAtIndex:1] intValue] initialZoomLevel:[[command.arguments objectAtIndex:2] intValue]];
+}
+
+- (void)setMaxThreads:(CDVInvokedUrlCommand*)command
+{
+    [MWScannerViewController setMaxThreads:[[command.arguments objectAtIndex:0] intValue]];
 }
 
 - (void)setCustomParam:(CDVInvokedUrlCommand*)command

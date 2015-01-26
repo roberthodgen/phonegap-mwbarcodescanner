@@ -82,6 +82,14 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
             
         }
         
+        else if ("setMinLength".equals(action)) {
+            
+            callbackContext.success(BarcodeScanner.MWBsetMinLength(args.getInt(0), args.getInt(1)));
+            return true;
+            
+        }
+
+        
         else if ("setDirection".equals(action)) {
             
             BarcodeScanner.MWBsetDirection(args.getInt(0));
@@ -148,6 +156,12 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         
         else if ("enableZoom".equals(action)) {
             ScannerActivity.param_EnableZoom = args.getBoolean(0);
+            return true;
+            
+        }
+        
+        else if ("setMaxThreads".equals(action)) {
+            ScannerActivity.param_maxThreads = args.getInt(0);
             return true;
             
         }
@@ -341,11 +355,21 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_11,     RECT_LANDSCAPE_1D);
         // BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_MSI,    RECT_LANDSCAPE_1D);
         
+        //Set minimum result length for low-protected barcode types
+        
+        BarcodeScanner.MWBsetMinLength(BarcodeScanner.MWB_CODE_MASK_25, 5);
+        BarcodeScanner.MWBsetMinLength(BarcodeScanner.MWB_CODE_MASK_MSI, 5);
+        BarcodeScanner.MWBsetMinLength(BarcodeScanner.MWB_CODE_MASK_39, 5);
+        BarcodeScanner.MWBsetMinLength(BarcodeScanner.MWB_CODE_MASK_CODABAR, 5);
+        BarcodeScanner.MWBsetMinLength(BarcodeScanner.MWB_CODE_MASK_11, 5);
         
         // set decoder effort level (1 - 5)
         // for live scanning scenarios, a setting between 1 to 3 will suffice
         // levels 4 and 5 are typically reserved for batch scanning 
         BarcodeScanner.MWBsetLevel(2);
+        
+        
+        BarcodeScanner.MWBsetResultType(BarcodeScanner.MWB_RESULT_TYPE_MW);
         
     }
     

@@ -30,6 +30,7 @@
 - (void)enableZoom:(CDVInvokedUrlCommand*)command;
 - (void)turnFlashOn:(CDVInvokedUrlCommand*)command;
 - (void)setZoomLevels:(CDVInvokedUrlCommand*)command;
+- (void)setMaxThreads:(CDVInvokedUrlCommand*)command;
 - (void)setCustomParam:(CDVInvokedUrlCommand*)command;
 
 @end

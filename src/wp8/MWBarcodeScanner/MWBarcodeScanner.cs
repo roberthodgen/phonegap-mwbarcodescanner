@@ -69,6 +69,13 @@ namespace Cordova.Extension.Commands
 
          }
 
+		public void setMinLength(string options)
+		{
+			string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+			Scanner.MWBsetMinLength(Convert.ToInt32(paramsList[0]), Convert.ToInt32(paramsList[1]));
+
+		}
+
          public void setDirection(string options)
          {
              string[] paramsList = JsonHelper.Deserialize<string[]>(options);
@@ -138,6 +145,23 @@ namespace Cordova.Extension.Commands
         public void setZoomLevels(string options)
         {
             //not supported currently on WP8 (technical limitation)
+        }
+
+        public int getAvailableCores()
+        {
+            return BarcodeHelper.getCPUCores();
+        }
+
+        public void setMaxThreads(string options)
+        {
+            string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+            BarcodeScannerPage.ScannerPage.param_maxThreads = Convert.ToInt32(paramsList[0]);
+
+            if (BarcodeScannerPage.ScannerPage.param_maxThreads > BarcodeScannerPage.ScannerPage.CPU_CORES && BarcodeScannerPage.ScannerPage.CPU_CORES > 0 )
+            {
+                BarcodeScannerPage.ScannerPage.param_maxThreads = BarcodeScannerPage.ScannerPage.CPU_CORES;
+            }
+
         }
 
         

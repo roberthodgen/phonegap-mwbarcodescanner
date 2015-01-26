@@ -1,4 +1,12 @@
 /*
+    Version 1.5
+
+    - Added multi-threading support. By default decoder will use all available CPU cores on device. To limit the number 
+    of used threads, use new function:  MWBsetMaxThreads: function (maxThreads)
+    
+    Version 1.4.1
+
+    - Structure of plugin reorganized to fit plugman specifications
     
     Version 1.4
 
@@ -224,6 +232,7 @@
      FOUND_ITF14 :    21,
      FOUND_11 :    22,
      FOUND_MSI :    23,
+     FOUND_25_IATA :    24,
      OrientationPortrait :         'Portrait',
      OrientationLandscapeLeft :    'LandscapeLeft',
      OrientationLandscapeRight :   'LandscapeRight',
@@ -304,6 +313,16 @@
     */
  MWBsetFlags: function(codeMask, flags) {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setFlags", [codeMask, flags]);
+ },
+
+ /**
+    * MWBsetMinLength configures minimum result length for decoder type specified in codeMask.
+    *
+    * @param[in]   codeMask                Single decoder type (MWB_CODE_MASK_...)
+    * @param[in]   minLength               Minimum result length for selected decoder type 
+    */
+ MWBsetMinLength: function(codeMask, minLength) {
+    cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setMinLength", [codeMask, minLength]);
  },
  
  /**
@@ -433,6 +452,15 @@
  },
  
     /**
+ * Set maximum threads to be used for decoding. Value will be limited to maximum available CPU cores.
+    * Default is 4 (will trim to max available value). Set to 1 to disable multi-threaded decoding
+    */
+ MWBsetMaxThreads: function (maxThreads) {
+     cordova.exec(function () { }, function () { }, "MWBarcodeScanner", "setMaxThreads", [maxThreads]);
+ },
+
+ 
+    /**
      * Set custom key:value pair which is accesible from native code.
      */
  MWBsetCustomParam: function(key, value) {
@@ -537,7 +565,8 @@
                   //  mwbs['MWBsetScanningRect'](constants.MWB_CODE_MASK_39, 20,20,60,60);
                   //  mwbs['MWBenableZoom'](true);
                   //  mwbs['MWBsetZoomLevels'](200, 400, 0);
-                
+                  //  mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK_39, 4);
+                  // mwbs['MWBsetMaxThreads'](1);
                     // console.log('JS Settings ends: '+ (new Date()).getTime());                    
             //    }
             //    catch(e){

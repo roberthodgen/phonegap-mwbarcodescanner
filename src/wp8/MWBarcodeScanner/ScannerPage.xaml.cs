@@ -67,6 +67,16 @@ namespace BarcodeScannerPage
             bw.DoWork += processingHandler;
 
         }
+        
+        public static int CPU_CORES = -1;
+        public static int param_maxThreads = 4;
+
+        public static int activeThreads;
+        public static int currentWorker = 0;
+
+        public static Boolean isClosing = false;
+
+        public static Boolean resultDisplayed = false;
 
         public static OverlayMode param_OverlayMode = OverlayMode.OM_MW;
         public static bool param_EnableHiRes = true;
@@ -116,7 +126,16 @@ namespace BarcodeScannerPage
                         this.SupportedOrientations = SupportedPageOrientation.Portrait;
                     }));
                 }
-               
+
+
+            if (CPU_CORES <= 0)
+            {
+                CPU_CORES = BarcodeHelper.getCPUCores();
+            }
+            if (param_maxThreads > CPU_CORES)
+            {
+                param_maxThreads = CPU_CORES;
+            }
 
             InitializeCamera(CameraSensorLocation.Back);
 
@@ -143,6 +162,7 @@ namespace BarcodeScannerPage
 
         protected override void OnNavigatingFrom(System.Windows.Navigation.NavigatingCancelEventArgs e)
         {
+            isClosing = true;
             if (cameraDevice != null)
             {
                 try
@@ -166,7 +186,8 @@ namespace BarcodeScannerPage
 
         private async Task InitializeCamera(CameraSensorLocation sensorLocation)
         {
-
+            activeThreads = 0;
+            isClosing = false;
             Windows.Foundation.Size captureResolution = new Windows.Foundation.Size(1280, 720);
             Windows.Foundation.Size previewResolution = new Windows.Foundation.Size(1280, 720);
 
@@ -379,6 +400,31 @@ namespace BarcodeScannerPage
 
             int resLen = Scanner.MWBscanGrayscaleImage(ta.pixels, ta.width, ta.height, result);
 
+            //ignore positive result if closing is in progress
+            if (isClosing)
+            {
+                resLen = -1;
+            }
+
+            if (resLen > 0 && resultDisplayed)
+            {
+                resLen = -1;
+            }
+
+            MWResult mwResult = null;
+
+            if (resLen > 0 && Scanner.MWBgetResultType() == Scanner.MWB_RESULT_TYPE_MW)
+            {
+                MWResults results = new MWResults(result);
+
+                if (results.count > 0)
+                {
+                    mwResult = results.getResult(0);
+                    result = mwResult.bytes;
+                }
+
+            }
+
             if (lastTime != null && lastTime.Ticks > 0)
             {
                 long timePrev = lastTime.Ticks;
@@ -390,42 +436,46 @@ namespace BarcodeScannerPage
 
             lastTime = DateTime.Now;
             //ignore results shorter than 4 characters for barcodes with weak checksum
-            if (resLen > 4 || ((resLen > 0 && Scanner.MWBgetLastType() != Scanner.FOUND_39 && Scanner.MWBgetLastType() != Scanner.FOUND_25_INTERLEAVED && Scanner.MWBgetLastType() != Scanner.FOUND_25_STANDARD)))
+             if (mwResult != null && mwResult.bytesLength > 4 || (mwResult != null && mwResult.bytesLength > 0 && mwResult.type != Scanner.FOUND_39 && mwResult.type != Scanner.FOUND_25_INTERLEAVED && mwResult.type != Scanner.FOUND_25_STANDARD))
             {
-                string resultString = System.Text.Encoding.UTF8.GetString(result, 0, resLen);
-
-                int bcType = Scanner.MWBgetLastType();
-                String typeName = BarcodeHelper.getBarcodeName(bcType);
+                resultDisplayed = true;
+                String typeName = BarcodeHelper.getBarcodeName(mwResult);
 
                 Deployment.Current.Dispatcher.BeginInvoke(delegate()
                 {
+                    isClosing = true;
                     BarcodeHelper.scannerResult = new ScannerResult();
 
                     BarcodeHelper.resultAvailable = true;
-                    BarcodeHelper.scannerResult.code = resultString;
-                    BarcodeHelper.scannerResult.type = typeName;
-                    BarcodeHelper.scannerResult.isGS1 = (Scanner.MWBisLastGS1() == 1);
+                    BarcodeHelper.scannerResult.code = mwResult.text;
+                    BarcodeHelper.scannerResult.type = BarcodeHelper.getBarcodeName(mwResult);
+                    BarcodeHelper.scannerResult.isGS1 = mwResult.isGS1;
 
-                    Byte[] binArray = new Byte[resLen];
-                    for (int i = 0; i < resLen; i++)
-                        binArray[i] = result[i];
+                    Byte[] binArray = new Byte[mwResult.bytesLength];
+                    for (int i = 0; i < mwResult.bytesLength; i++)
+                        binArray[i] = mwResult.bytes[i];
 
 
                     BarcodeHelper.scannerResult.bytes = binArray;
                     stopCamera();
                     NavigationService.GoBack();
 
+                    isProcessing = false;
+                    resultDisplayed = false;
                 });
 
 
             }
+            
+           
             else
             {
                 
                 isProcessing = false;
-                cameraDevice.PreviewFrameAvailable += previewFrameHandler;
+                
               
             }
+            activeThreads--;
 
         }
 
@@ -458,12 +508,24 @@ namespace BarcodeScannerPage
         void cam_PreviewFrameAvailable(ICameraCaptureDevice device, object sender)
         {
 
-            if (isProcessing)
+            if (activeThreads >= param_maxThreads || resultDisplayed)
             {
                 return;
             }
 
-            cameraDevice.PreviewFrameAvailable -= previewFrameHandler;
+
+            if (isClosing)
+            {
+                return;
+            }
+
+            activeThreads++;
+
+            System.Diagnostics.Debug.WriteLine("ActiveThreads: " + activeThreads.ToString());
+
+           
+
+            
 
             isProcessing = true;
 
@@ -481,11 +543,11 @@ namespace BarcodeScannerPage
             ta.pixels = pixels;
 
 
-            Deployment.Current.Dispatcher.BeginInvoke(delegate()
-            {
-
-                bw.RunWorkerAsync(ta);
-            });
+            BackgroundWorker bw1 = new BackgroundWorker();
+            bw1.WorkerReportsProgress = false;
+            bw1.WorkerSupportsCancellation = false;
+            bw1.DoWork += new DoWorkEventHandler(bw_DoWork);
+            bw1.RunWorkerAsync(ta);
 
         }
 

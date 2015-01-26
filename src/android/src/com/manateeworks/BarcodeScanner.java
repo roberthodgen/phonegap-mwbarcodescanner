@@ -172,6 +172,7 @@ public class BarcodeScanner {
   public static final int FOUND_ITF14 =			21;
   public static final int FOUND_11 =			22;
   public static final int FOUND_MSI =			23;
+  public static final int FOUND_25_IATA =   	24;
   
   
   /**
@@ -185,7 +186,7 @@ public class BarcodeScanner {
       
   public static final int MWB_RESULT_TYPE_RAW  =               0x00000001;
   public static final int MWB_RESULT_TYPE_MW =                 0x00000002;
-  public static final int MWB_RESULT_TYPE_JSON =               0x00000003;
+  //public static final int MWB_RESULT_TYPE_JSON =               0x00000003; // not supported yet
       
       /** @} */
       
@@ -228,6 +229,7 @@ public class BarcodeScanner {
   public native static float[] MWBgetBarcodeLocation();
   public native static int MWBsetResultType(int resultType);
   public native static int MWBgetResultType();
+  public native static int MWBsetMinLength(int codeMask, int minLength);
   
   public static int MWBsetScanningRect (int codeMask, Rect rect){
 	  

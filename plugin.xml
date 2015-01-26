@@ -87,6 +87,8 @@
         <source-file src="src/ios/MWBarcodeScanner/MWScannerViewController.m" target-dir="MWBarcodeScanner"/>
         <header-file src="src/ios/MWBarcodeScanner/MWOverlay.h" target-dir="MWBarcodeScanner"/>
         <source-file src="src/ios/MWBarcodeScanner/MWOverlay.m" target-dir="MWBarcodeScanner"/>
+        <header-file src="src/ios/MWBarcodeScanner/MWResult.h" target-dir="MWBarcodeScanner"/>
+        <source-file src="src/ios/MWBarcodeScanner/MWResult.m" target-dir="MWBarcodeScanner"/>
         <source-file src="src/ios/MWBarcodeScanner/MWScannerViewController.xib" target-dir="MWBarcodeScanner"/>
         <source-file src="src/ios/MWBarcodeScanner/libBarcodeScanner.a" target-dir="MWBarcodeScanner" framework="true"/>
         

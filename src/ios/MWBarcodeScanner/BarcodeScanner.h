@@ -147,6 +147,7 @@ typedef unsigned char uint8_t;
 #define MWB_SUBC_MASK_C25_INTERLEAVED   0x00000001u
 #define MWB_SUBC_MASK_C25_STANDARD      0x00000002u
 #define MWB_SUBC_MASK_C25_ITF14         0x00000004u
+#define MWB_SUBC_MASK_C25_IATA          0x00000008u
 /** @} */
 
 /**
@@ -157,6 +158,7 @@ typedef unsigned char uint8_t;
 #define MWB_SCANDIRECTION_OMNI          0x00000004u
 #define MWB_SCANDIRECTION_AUTODETECT    0x00000008u
 /** @} */
+    
 
 /**
  * @name Result values for all code types
@@ -185,7 +187,8 @@ enum res_types {
     FOUND_128_GS1,
     FOUND_ITF14,
     FOUND_11,
-    FOUND_MSI
+    FOUND_MSI,
+    FOUND_25_IATA,
 };
 /** @} */
     
@@ -200,7 +203,7 @@ enum res_types {
     
 #define MWB_RESULT_TYPE_RAW                 0x00000001u
 #define MWB_RESULT_TYPE_MW                  0x00000002u
-#define MWB_RESULT_TYPE_JSON                0x00000003u
+//#define MWB_RESULT_TYPE_JSON                0x00000003u //not yet implemented
     
     
     /** @} */
@@ -320,7 +323,7 @@ extern int MWB_getScanningRect(const uint32_t codeMask, float *left, float *top,
  * @retval      MWB_RT_NOT_SUPPORTED    Selected decoder type or its registration
  *                                      is not supported
  */
-extern int MWB_registerCode(const uint32_t codeMask, char * userName, char * key);
+extern int MWB_registerCode(const uint32_t codeMask, const char * userName, const char * key);
 
 /**
  * Sets active or inactive status of decoder types and updates decoder execution priority list.
@@ -482,6 +485,23 @@ extern int MWB_setLevel(const int level);
 extern int MWB_setDirection(const uint32_t direction);
     
     
+    
+/**
+ * @brief       Set minimum result length for single barcode type.
+ * @details     MWB_setMinLength set minimum acceptable result length for decoder type specified in \a codeMask.
+ * @param[in]   codeMask                Single decoder type (MWB_CODE_MASK_...)
+ * @param[in]   minLength               Minimum length of result
+ * @n                                   Function is applicable to 1D barcode types with low or non existent error
+ * @n                                   protection like Code39, Code25, Code 11, Codabar to preven false results
+ * @n                                   from short bars fragments
+ *
+ * @retval      MWB_RT_OK               Success
+ * @retval      MWB_RT_BAD_PARAM        Invalid parameter specified
+ * @retval      MWB_RT_NOT_SUPPORTED    Function not supported for specified codeMask
+ */
+extern int MWB_setMinLength(const uint32_t codeMask, const uint32_t minLength);
+    
+    
 /**
  * Get active scanning direction
  *
@@ -493,9 +513,9 @@ extern int MWB_getDirection(void);
 extern int MWB_validateVIN(char *vin, int length);
     
 /**
- * @brief       *Beta* Barcode location points .
- * @details     *Beta* Returns quad points of detected barcode. Currently Works for PDF 417, 
- *              QR, Datamatrix and Aztec
+ * @brief       Barcode location points .
+ * @details     Returns quad points of detected barcode. Currently Works for PDF 417, 
+ *              QR, Datamatrix, Aztec and Dotcode
  * @param[out]  points                  User provided float buffer to be filled with
  *                                      coordinates in order - X1, Y1, X2, Y2, X3, Y3, X4, Y4
  * @retval      MWB_RT_OK               Barcode location points returned
@@ -504,8 +524,26 @@ extern int MWB_validateVIN(char *vin, int length);
 extern int MWB_getBarcodeLocation(float *points);
     
     
-extern int MWB_setResultType(const uint32_t resultType);
     
+/**
+ * @brief       Set result type from MWB_scanGrayscaleImage
+ * @details     Users now can choose between getting raw result bytes as a resulf of image scan, or 
+ *              byte representation of complex result structure containing all information about the
+ *              scanned barcode.
+ * @param[in]   resultType              Type of result returned:
+ *                                      MWB_RESULT_TYPE_RAW - return raw result bytes
+ *                                      MWB_RESULT_TYPE_MW  - return bytes of MWResult structure - should be 
+ *                                      converted to MWResult object.
+ *
+ * @retval      MWB_RT_OK               Result type set successfuly
+ * @retval      MWB_RT_FAIL             Invalid result type specified
+ */
+extern int MWB_setResultType(const uint32_t resultType);
+
+    
+/**
+* @brief       Get currently active result type
+*/
 extern int MWB_getResultType(void);
     
     

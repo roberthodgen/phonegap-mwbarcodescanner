@@ -29,7 +29,7 @@ import android.view.WindowManager;
 
 public final class CameraManager {
 
-	
+	public static float currentFPS = 0f;
 	public static int REFOCUSING_DELAY = 2500; 
 	public static boolean USE_SAMSUNG_FOCUS_ZOOM_PATCH = false;
 
@@ -67,6 +67,22 @@ public final class CameraManager {
 
 		if (camera != null)
 			return CameraConfigurationManager.getMaxResolution(camera.getParameters());
+		else
+			return null;
+
+	}
+	
+	public Point getCurrentResolution() {
+
+		if (camera != null){
+			
+			Parameters params = camera.getParameters();
+			
+			Point res = new Point(params.getPreviewSize().width, params.getPreviewSize().height);
+			
+			
+			return res;
+		}
 		else
 			return null;
 
@@ -202,42 +218,51 @@ public final class CameraManager {
 		
 		List<Integer> zoomRatios =  cp.getZoomRatios();
 		
-		for (int i = 0; i < zoomRatios.size(); i++){
-			int z = zoomRatios.get(i);
-			
-			if (Math.abs(z - zoom) < minDist){
-				minDist = Math.abs(z - zoom);
-				bestIndex = i;
+		if (zoomRatios != null){
+		
+			for (int i = 0; i < zoomRatios.size(); i++){
+				int z = zoomRatios.get(i);
+				
+				if (Math.abs(z - zoom) < minDist){
+					minDist = Math.abs(z - zoom);
+					bestIndex = i;
+				}
 			}
-		}
-		
-		final int fBestIndex = bestIndex;
-		
-		if (USE_SAMSUNG_FOCUS_ZOOM_PATCH){
 			
-			if (bestIndex > 10){
+			final int fBestIndex = bestIndex;
+			
+			if (USE_SAMSUNG_FOCUS_ZOOM_PATCH){
 				
-				//camera.cancelAutoFocus();
-				stopFocusing();
-	
-				cp.setZoom(fBestIndex-5); 
-				camera.setParameters(cp);
-				camera.autoFocus(null);
-				
-				new Handler().postDelayed(new Runnable() {
+				if (bestIndex > 10){
 					
-					@Override
-					public void run() {
-						if (camera != null){
-							camera.cancelAutoFocus();
-							cp.setZoom(fBestIndex); 
-							camera.setParameters(cp);
+					//camera.cancelAutoFocus();
+					stopFocusing();
+		
+					cp.setZoom(fBestIndex-5); 
+					camera.setParameters(cp);
+					camera.autoFocus(null);
+					
+					new Handler().postDelayed(new Runnable() {
+						
+						@Override
+						public void run() {
+							if (camera != null){
+								camera.cancelAutoFocus();
+								cp.setZoom(fBestIndex); 
+								camera.setParameters(cp);
+							}
+							
+							startFocusing();
+							
 						}
-						
-						startFocusing();
-						
-					}
-				}, 200);
+					}, 200);
+					
+				} else {
+					stopFocusing();
+					cp.setZoom(fBestIndex);
+					camera.setParameters(cp);
+					startFocusing();
+				}
 				
 			} else {
 				stopFocusing();
@@ -245,14 +270,7 @@ public final class CameraManager {
 				camera.setParameters(cp);
 				startFocusing();
 			}
-			
-		} else {
-			stopFocusing();
-			cp.setZoom(fBestIndex);
-			camera.setParameters(cp);
-			startFocusing();
 		}
-		
 		
 	}
 
@@ -394,7 +412,11 @@ public final class CameraManager {
 			@Override
 			public void run() {
 				if (camera != null){
-					camera.autoFocus(null);
+					try{
+						camera.autoFocus(null);
+					} catch (Exception e){
+						
+					}
 				}
 				
 			}
@@ -418,7 +440,9 @@ public final class CameraManager {
 	}
 	
 	public void startPreview() {
+		Log.i("preview", "starting preview");
 		if (camera != null && !previewing) {
+			Log.i("preview", "preview started");
 			camera.startPreview();
 			previewing = true;
 			
@@ -679,13 +703,31 @@ final class CameraConfigurationManager {
 			}
 			
 		}
+		
+		try {
+			List<int[]> supportedFPS = parameters.getSupportedPreviewFpsRange();
+			
+			int maxFps = -1;
+			int maxFpsIndex = -1;
+			for (int i = 0; i < supportedFPS.size(); i++){
+				int[] sr = supportedFPS.get(i);
+				if (sr[1] > maxFps){
+					maxFps = sr[1];
+					maxFpsIndex = i;
+				}
+			}
+			
+			parameters.setPreviewFpsRange(supportedFPS.get(maxFpsIndex)[0], supportedFPS.get(maxFpsIndex)[1]);
+			
+		} catch (Exception e){
+		}
 
 		
 		Log.d(TAG, "Camera parameters flat: " + parameters.flatten());
 		camera.setParameters(parameters);
 	}
 
-	Point getCameraResolution() {
+	public Point getCameraResolution() {
 		return cameraResolution;
 	}
 
@@ -802,7 +844,7 @@ final class CameraConfigurationManager {
 final class PreviewCallback implements Camera.PreviewCallback {
 
 	int fpscount;
-	public static float currentFPS = 0f;
+	
 	long lasttime = 0;
 
 	private final CameraConfigurationManager configManager;
@@ -877,15 +919,23 @@ final class PreviewCallback implements Camera.PreviewCallback {
 			public void onPreviewFrame(byte[] data, Camera camera) {
 				
 				updateFps();
-				// camera.addCallbackBuffer(frameBuffers[fbCounter]);
-				// fbCounter = 1 - fbCounter;
+				
+				
 
 				Point cameraResolution = configManager.getCameraResolution();
+				
+				if (CameraManager.useBufferedCallback){
+					//camera.addCallbackBuffer(frameBuffers[fbCounter]);
+					//fbCounter = 1 - fbCounter;
+					setPreviewCallback(camera, this, cameraResolution.x, cameraResolution.y);
+				}
 
 				if (previewHandler != null) {
 					Message message = previewHandler.obtainMessage(previewMessage, cameraResolution.x, cameraResolution.y, data);
 					message.sendToTarget();
-					previewHandler = null;
+					if (!CameraManager.useBufferedCallback){
+						previewHandler = null;
+					}
 				}
 			}
 		};
@@ -896,13 +946,13 @@ final class PreviewCallback implements Camera.PreviewCallback {
 		if (lasttime == 0) {
 			lasttime = System.currentTimeMillis();
 			fpscount = 0;
-			currentFPS = 0;
+			CameraManager.currentFPS = 0;
 		} else {
 			long delay = System.currentTimeMillis() - lasttime;
-			if (delay > 1000) {
+			if (delay > 2000) {
 				lasttime = System.currentTimeMillis();
-				currentFPS = fpscount * 10000 / delay;
-				currentFPS /= 10;
+				CameraManager.currentFPS = fpscount * 10000 / delay;
+				CameraManager.currentFPS /= 10;
 				fpscount = 0;
 			}
 		}

@@ -17,23 +17,21 @@
 @end
 
 
+@class MWResult;
+
 @interface DecoderResult : NSObject {
-	BOOL succeeded;
-	NSString *result;
-    NSString *format;
-    NSData *rawResult;
+    BOOL succeeded;
+    MWResult *mwResult;
 }
 
 @property (nonatomic, assign) BOOL succeeded;
-@property (nonatomic, retain) NSString *result;
-@property (nonatomic, retain) NSString *format;
-@property (nonatomic, retain) NSData *rawResult;
+@property (nonatomic, retain) MWResult *result;
 
-
-+(DecoderResult *)createSuccess:(NSString *)result format: (NSString *) format rawResult: (NSData *) rawResult;
++(DecoderResult *)createSuccess:(MWResult *)result;
 +(DecoderResult *)createFailure;
 
 @end
+
 
 
 typedef enum eMainScreenState {
@@ -80,6 +78,7 @@ typedef enum eMainScreenState {
 + (void) turnFlashOn: (BOOL) flashOn;
 + (void) setOverlayMode: (int) overlayMode;
 + (void) enableZoom: (BOOL) zoom;
++ (void) setMaxThreads: (int) maxThreads;
 + (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel;
 
 - (void)revertToNormal;
