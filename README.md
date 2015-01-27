@@ -45,7 +45,9 @@ or  install using plugman: (your platform should be already built)
 
 * Copy confing.xml from project’s dir to /www
 * Add  this line in www/confing.xml:
-	    <gap:plugin name="com.manateeworks.barcodescanner" />
+    
+        <gap:plugin name="com.manateeworks.barcodescanner" />
+
 * Add this code in www/index.html:
 
 ```html
