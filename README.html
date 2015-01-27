@@ -28,10 +28,27 @@
         <span class="hljs-tag">&lt;<span class="hljs-title">input</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"button"</span> <span class="hljs-attribute">value</span>=<span class="hljs-value">"Scan Barcode"</span> <span class="hljs-attribute">onclick</span>=<span class="hljs-value">"scanner.startScanning()"</span> <span class="hljs-attribute">style</span>=<span class="hljs-value">"font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"</span>/&gt;</span>
     <span class="hljs-tag">&lt;/<span class="hljs-title">form</span>&gt;</span>
 </code></pre>
+<h3 id="how-to-build-online-with-bulid-phonegap-com-">How to build online with bulid.phonegap.com:</h3>
+<ul>
+<li>Copy confing.xml from project’s dir to /www</li>
+<li>Add  this line in www/confing.xml:<pre><code>  &lt;gap:plugin name=&quot;com.manateeworks.barcodescanner&quot; /&gt;
+</code></pre></li>
+<li>Add this code in www/index.html:<pre><code class="lang-html">  <span class="hljs-tag">&lt;<span class="hljs-title">form</span> <span class="hljs-attribute">style</span>=<span class="hljs-value">"width: 100%; text-align: center;"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">input</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"button"</span> <span class="hljs-attribute">value</span>=<span class="hljs-value">"Scan Barcode"</span> <span class="hljs-attribute">onclick</span>=<span class="hljs-value">"scanner.startScanning()"</span> <span class="hljs-attribute">style</span>=<span class="hljs-value">"font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"</span>/&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-title">form</span>&gt;</span>
+</code></pre>
+</li>
+<li>Compress /www folder</li>
+<li>Upload www.zip to build.phonegap.com </li>
+<li>Build</li>
+</ul>
 <h2 id="important-change-in-1-5">Important change in 1.5</h2>
 <p>This library is now thread safe and multithreading is enabled. Users have the option to set the maximum number of threads (CPUs) the scanner can use by adding this line in the decoder initialization:</p>
 <pre><code> mwbs[&#39;MWBsetMaxThreads&#39;](NUM_OF_MAX_THREADS)
 </code></pre><h3 id="important-change-in-1-4">Important change in 1.4</h3>
+<ul>
+<li>Add a button to index.html which will call the scanner:</li>
+</ul>
 <p>Users now can put decoder initialization and callback in separate Javascript file, so that they don&#39;t lose their changes when they update the plugin. Sample file is <em>js/MWBConfig.js</em>.</p>
 <p>To use the custom script, user need to include it in the index file like so:</p>
 <pre><code>&lt;script type=&quot;text/javascript&quot; src=&quot;js/MWBConfig.js&quot;&gt;&lt;/script&gt;
@@ -248,9 +265,12 @@
 </code></pre></li>
 <li>Plugin is now plugman compatible</li>
 <li>Added IATA Code 25 support</li>
-<li>Improved detection of Databar Expanded barcode type
-&nbsp;<h3 id="changes-in-1-4-">Changes in 1.4:</h3>
-&nbsp;</li>
+<li>Improved detection of Databar Expanded barcode type</li>
+</ul>
+<p>&nbsp;</p>
+<h3 id="changes-in-1-4-">Changes in 1.4:</h3>
+<p>&nbsp;</p>
+<ul>
 <li><p>Added support for custom init and callback functions. All init and callback function can still be declared here, but users can now use an outside Javascript file that they can maintain during updates, so that they don&#39;t lose their changes when they update.
   To use the custom script, they only need to include it in the index file like so:</p>
 <pre><code>  &lt;script type=&quot;text/javascript&quot; src=&quot;js/MWBConfig.js&quot;&gt;&lt;/script&gt;

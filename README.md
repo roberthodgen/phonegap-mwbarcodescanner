@@ -41,12 +41,30 @@ or  install using plugman: (your platform should be already built)
 		<input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
 	</form>
 ```
+###How to build online with bulid.phonegap.com:
+
+* Copy confing.xml from project’s dir to /www
+* Add  this line in www/confing.xml:
+	    <gap:plugin name="com.manateeworks.barcodescanner" />
+* Add this code in www/index.html:
+   ```html
+	<form style="width: 100%; text-align: center;">
+		<input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
+	</form>
+```
+* Compress /www folder
+* Upload www.zip to build.phonegap.com 
+* Build
+
+
 ##Important change in 1.5
 
 This library is now thread safe and multithreading is enabled. Users have the option to set the maximum number of threads (CPUs) the scanner can use by adding this line in the decoder initialization:
 
      mwbs['MWBsetMaxThreads'](NUM_OF_MAX_THREADS)
 ###Important change in 1.4
+
+* Add a button to index.html which will call the scanner:
 
 Users now can put decoder initialization and callback in separate Javascript file, so that they don't lose their changes when they update the plugin. Sample file is *js/MWBConfig.js*.
 
