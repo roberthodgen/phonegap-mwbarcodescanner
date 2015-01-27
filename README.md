@@ -16,6 +16,8 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
 
 
     phonegap local plugin add com.manateeworks.barcodescanner
+
+
 or   
 
     phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
@@ -311,7 +313,9 @@ Add a notification plugin (if not already present):
 - Plugin is now plugman compatible
 - Added IATA Code 25 support
 - Improved detection of Databar Expanded barcode type
+
 &nbsp;
+
 ###Changes in 1.4:
 &nbsp;
 - Added support for custom init and callback functions. All init and callback function can still be declared here, but users can now use an outside Javascript file that they can maintain during updates, so that they don't lose their changes when they update.
