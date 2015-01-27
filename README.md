@@ -47,7 +47,8 @@ or  install using plugman: (your platform should be already built)
 * Add  this line in www/confing.xml:
 	    <gap:plugin name="com.manateeworks.barcodescanner" />
 * Add this code in www/index.html:
-   ```html
+
+```html
 	<form style="width: 100%; text-align: center;">
 		<input type="button" value="Scan Barcode" onclick="scanner.startScanning()" style="font-size: 40px; width: 300px; height: 50px; margin-top: 100px;"/>
 	</form>
