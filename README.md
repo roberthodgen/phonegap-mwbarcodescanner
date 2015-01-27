@@ -327,10 +327,13 @@ Add a notification plugin (if not already present):
 ###Changes in 1.5:
 &nbsp;
 - Added support for multithreading. The user can set the maximum number of threads by adding this line in the decoder initialization:
+    
         mwbs['MWBsetMaxThreads'](NUM_OF_MAX_THREADS)
-       
+  
 - Added MWBsetMinLength: function - allows user to set the minimum length of the code for weak protected code types (like: Code 25, MSI, Code 39, Codabar, Code 11...) to avoid false detection of short barcode fragments. This method can be used by adding this line in the decoder intialization:
+
         mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK, MIN_LENGTH);
+
 - Plugin is now plugman compatible
 - Added IATA Code 25 support
 - Improved detection of Databar Expanded barcode type
