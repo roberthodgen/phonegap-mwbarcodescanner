@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.5
+ Version 1.5.1
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -321,6 +321,11 @@ Add a notification plugin (if not already present):
 
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
+
+&nbsp;
+###Changes in 1.5.1:
+&nbsp;
+- Bug: Crashing on scan canceled (back button pressed) on android - fixed
 
 &nbsp;
 ###Changes in 1.5:
