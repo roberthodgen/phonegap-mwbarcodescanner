@@ -102,9 +102,9 @@ MWBSInitSpace.init = function(mwbs,constants,dvc){
 MWBSInitSpace.callback = function(result){
     console.log('MWBSInitSpace.callback Invoked at: '+ (new Date()).getTime());
     
-     result.code - string representation of barcode result
-     result.type - type of barcode detected
-     result.bytes - bytes array of raw barcode result
+     //result.code - string representation of barcode result
+     //result.type - type of barcode detected
+     //result.bytes - bytes array of raw barcode result
      
     console.log('Scan complete');
     if (result.type == 'Cancel'){
