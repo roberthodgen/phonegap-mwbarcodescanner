@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.5.1
+ Version 1.5
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -8,24 +8,32 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
 
 
 ##Install using CLI interface (Phonegap 3.0 and above)
-(supposed you have already created the app by using CLI interface and added desired platforms)
+* Pre requirements:
+ - To have already installed Phonegap 
 
+			 sudo npm install -g phonegap
+ - To have created the app by using CLI interface and added desired platforms 
+			
+			phonegap create my-mw-app 
+			cd my-mw-app
+			phonegap run android 
+		(if you are developing for android)
 
 * Add plugin to the project with:
 
 
-    phonegap local plugin add com.manateeworks.barcodescanner
+		 phonegap local plugin add com.manateeworks.barcodescanner
 
 
-or   
+	or   
 
-    phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
-or   
+	    phonegap local plugin add https://github.com/manateeworks/phonegap-mwbarcodescanner.git
+	or   
 
-    phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN (if you are adding from local folder)   
-or  install using plugman: (your platform should be already built)
+	    phonegap local plugin add LOCAL_PATH_TO_THE_FOLDER_WITH_PLUGIN (if you are adding from local folder)   
+	or  install using plugman: (your platform should be already built)
     
-    plugman install --platform ios|android --project platforms/ios|platforms/android --plugin com.manateeworks.barcodescanner --plugins_dir plugins/ --www www/ 
+	    plugman install --platform ios|android --project platforms/ios|platforms/android --plugin com.manateeworks.barcodescanner --plugins_dir plugins/ --www www/ 
     
 * Perform initial build for each platform (repeat the command twice if not working after first time, seems there's a bug in phonegap 3.3)
 
@@ -321,11 +329,6 @@ Add a notification plugin (if not already present):
 
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
-
-&nbsp;
-###Changes in 1.5.1:
-&nbsp;
-- Bug: Crashing on scan canceled (back button pressed) on android - fixed
 
 &nbsp;
 ###Changes in 1.5:
