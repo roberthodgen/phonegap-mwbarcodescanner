@@ -15,8 +15,8 @@
     <asset src="www/MWBScanner.js" target="js/MWBScanner.js" />
     
     
-    <dependency id="org.apache.cordova.dialogs" url="https://git-wip-us.apache.org/repos/asf/cordova-plugin-dialogs.git" />
-    <dependency id="org.apache.cordova.device" url="https://git-wip-us.apache.org/repos/asf/cordova-plugin-device.git" />
+    <dependency id="org.apache.cordova.dialogs" />
+    <dependency id="org.apache.cordova.device" />
     
     <!-- android -->
      <platform name="android">
