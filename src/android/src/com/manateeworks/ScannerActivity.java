@@ -468,42 +468,35 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
 
 				}
 
-				if (state != State.STOPPED) {
-					if (rawResult != null)
-					{
 
-						state = State.STOPPED;
+				if (rawResult != null)
+				{
 
-						long end = System.currentTimeMillis();
+					state = State.STOPPED;
 
-						String s = "";
+					long end = System.currentTimeMillis();
 
-						for (int i = 0; i < rawResult.length; i++)
-							s = s + (char) rawResult[i];
+					String s = "";
 
-						Message message = Message.obtain(handler, MSG_DECODE_SUCCESS, mwResult);
+					for (int i = 0; i < rawResult.length; i++)
+						s = s + (char) rawResult[i];
 
-						/*
-						 * Bundle bundle = new Bundle();
-						 * bundle.putParcelable(DecodeThread.BARCODE_BITMAP,
-						 * CameraManager.get().renderCroppedGreyscaleBitmap(data, w,
-						 * h)); message.setData(bundle);
-						 */
-						message.arg1 = mwResult.type;
+					Message message = Message.obtain(handler, MSG_DECODE_SUCCESS, mwResult);
 
-						message.sendToTarget();
+					/*
+					 * Bundle bundle = new Bundle();
+					 * bundle.putParcelable(DecodeThread.BARCODE_BITMAP,
+					 * CameraManager.get().renderCroppedGreyscaleBitmap(data, w,
+					 * h)); message.setData(bundle);
+					 */
+					message.arg1 = mwResult.type;
 
-					} else {
-						
-						if (handler != null){
-							Message message = Message.obtain(handler, MSG_DECODE_FAILED);
-							if (message != null){
-								message.sendToTarget();
-							}
-						}
-					}
+					message.sendToTarget();
+
+				} else {
+					Message message = Message.obtain(handler, MSG_DECODE_FAILED);
+					message.sendToTarget();
 				}
-				
 
 				activeThreads--;
 			}

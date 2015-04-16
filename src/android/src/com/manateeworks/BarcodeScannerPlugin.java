@@ -121,7 +121,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
             }
             if (orientation.equalsIgnoreCase("LandscapeRight")){
-                ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
             }
             
             return true;

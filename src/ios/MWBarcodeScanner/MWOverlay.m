@@ -165,27 +165,18 @@ float lastHeight = -1;
     
     //aspect ratio correction available only on ios 6+
     if ([previewLayer respondsToSelector:@selector(captureDevicePointOfInterestForPoint:)]){
-    
         CGPoint p1 = [previewLayer captureDevicePointOfInterestForPoint:CGPointMake(0,0)];
-        
-        yScale = 1.0/(1 + (p1.y - 1)*2);
+        yScale = -1.0/(1 + (p1.y - 1)*2);
         yOffset = (1.0 - yScale) / 2.0 * 100;
-        
-        xScale = 1.0/(1 + (p1.x - 1)*2);
+        xScale = -1.0/(1 + (p1.x - 1)*2);
         xOffset = (1.0 - xScale) / 2.0 * 100;
-        
-        
         if (previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortrait || previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortraitUpsideDown){
-            
-            yScale = 1.0/(1 + (p1.x - 1)*2);
+            yScale = -1.0/(1 + (p1.x - 1)*2);
             yOffset = (1.0 - yScale) / 2.0 * 100;
-            
-            xScale = 1.0/(1 + (p1.y - 1)*2);
+            xScale = -1.0/(1 + (p1.y - 1)*2);
             xOffset = (1.0 - xScale) / 2.0 * 100;
-            
         }
     }
-    
     
     viewportLayer.hidden = !isViewportVisible;
     lineLayer.hidden = !isBlinkingLineVisible;
