@@ -197,6 +197,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
     {
         super.onPause();
         flashOn = false;
+        state = State.STOPPED;
         
         updateFlash();
         if ((param_OverlayMode & OM_MW) > 0){
@@ -208,7 +209,6 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback{
             handler = null;
         }
         CameraManager.get().closeDriver();
-        state = State.STOPPED;
         
     }
     
