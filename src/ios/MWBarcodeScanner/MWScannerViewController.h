@@ -13,7 +13,7 @@
 #define OM_IMAGE    2
 
 @protocol ScanningFinishedDelegate <NSObject>
-    - (void)scanningFinished:(NSString *)result withType: (NSString *) lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult;
+- (void)scanningFinished:(NSString *)result withType: (NSString *) lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult;
 @end
 
 
@@ -35,12 +35,12 @@
 
 
 typedef enum eMainScreenState {
-	NORMAL,
-	LAUNCHING_CAMERA,
-	CAMERA,
-	CAMERA_DECODING,
-	DECODE_DISPLAY,
-	CANCELLING
+    NORMAL,
+    LAUNCHING_CAMERA,
+    CAMERA,
+    CAMERA_DECODING,
+    DECODE_DISPLAY,
+    CANCELLING
 } MainScreenState;
 
 
@@ -80,6 +80,7 @@ typedef enum eMainScreenState {
 + (void) enableZoom: (BOOL) zoom;
 + (void) setMaxThreads: (int) maxThreads;
 + (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel;
++ (void) closeScannerOnDecode: (BOOL) close;
 
 - (void)revertToNormal;
 - (void)decodeResultNotification: (NSNotification *)notification;

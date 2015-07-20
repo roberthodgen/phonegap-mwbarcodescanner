@@ -1,37 +1,10 @@
 //
 //  MWOverlay.m
 //  mobiscan_ALL
-//  version 1.0
 //
 //  Created by vladimir zivkovic on 12/12/13.
 //  Copyright (c) 2013 Manatee Works. All rights reserved.
 //
-
-/*
- 
- Version 1.0
- 
- The MWOverlay class serves to greatly simplify the addition of a dynamic viewfinder (similar to the one implemented in Manatee Works Barcode Scanners application) to your own application.
- Minimum setup assumes:
- 1. Add MWOverlay.m and MWOverlay.h files to your project and import "MWOverlay.h" into the scanning view controller;
- 2. Put [MWOverlay addToPreviewLayer:self.prevLayer]; after previewLayer is created and set;
- 3. Put [MWOverlay removeFromPreviewLayer]; after closing the scanning session;
- If all three steps are done correctly, you should be able to see a default red viewfinder with a blinking line, capable of updating itself automatically after changing any of the scanning parameters (scanning direction, scanning rectangles and active barcode symbologies).
- The appearance of the viewfinder and the blinking line can be further customized by changing colors, line width, transparencies and similar, by using the following functions:
- + (void) setViewportVisible: (BOOL) value;
- + (void) setBlinkingLineVisible: (BOOL) value;
- + (void) setViewportLineWidth: (float) value;
- + (void) setBlinkingLineWidth: (float) value;
- + (void) setViewportAlpha: (float) value;
- + (void) setViewportLineAlpha: (float) value;
- + (void) setBlinkingLineAlpha: (float) value;
- + (void) setBlinkingSpeed: (float) value;
- + (void) setViewportLineRGBColor: (int) value;
- + (void) setBlinkingLineRGBColor: (int) value;
- + (void) setViewportLineUIColor: (UIColor*) value;
- + (void) setBlinkingLineUIColor: (UIColor*) value;
-
- */
 
 #import "MWOverlay.h"
 #import <AVFoundation/AVFoundation.h>
@@ -44,6 +17,7 @@
 
 CALayer *viewportLayer;
 CALayer *lineLayer;
+CALayer *locationLayer;
 AVCaptureVideoPreviewLayer * previewLayer;
 BOOL isAttached = NO;
 BOOL isViewportVisible = YES;
@@ -54,12 +28,14 @@ MWOverlay *instance = nil;
 
 float viewportLineWidth = 3.0;
 float blinkingLineWidth = 1.0;
+float locationLineWidth = 4.0;
 float viewportAlpha = 0.5;
 float viewportLineAlpha = 0.5;
 float blinkingLineAlpha = 1.0;
 float blinkingSpeed = 0.25;
 int viewportLineColor = 0xff0000;
 int blinkingLineColor = 0xff0000;
+int locationLineColor = 0x00ff00;
 
 int lastOrientation = -1;
 int lastMask = -1;
@@ -68,7 +44,17 @@ float lastTop = -1;
 float lastWidth = -1;
 float lastHeight = -1;
 
+int imageWidth = 1;
+int imageHeight = 1;
 
+
+
++ (void) updatePreviewLayer {
+    viewportLayer.frame = CGRectMake(0, 0, previewLayer.frame.size.width, previewLayer.frame.size.height);
+    lineLayer.frame = CGRectMake(0, 0, previewLayer.frame.size.width, previewLayer.frame.size.height);
+    locationLayer.frame = CGRectMake(0, 0, previewLayer.frame.size.width, previewLayer.frame.size.height);
+    [MWOverlay updateOverlay];
+}
 
 
 + (void) addToPreviewLayer:(AVCaptureVideoPreviewLayer *) videoPreviewLayer
@@ -79,6 +65,9 @@ float lastHeight = -1;
     lineLayer = [[CALayer alloc] init];
     lineLayer.frame = CGRectMake(0, 0, videoPreviewLayer.frame.size.width, videoPreviewLayer.frame.size.height);
     
+    locationLayer = [[CALayer alloc] init];
+    locationLayer.frame = CGRectMake(0, 0, videoPreviewLayer.frame.size.width, videoPreviewLayer.frame.size.height);
+    
     [videoPreviewLayer addSublayer:viewportLayer];
     [videoPreviewLayer addSublayer:lineLayer];
     
@@ -88,10 +77,10 @@ float lastHeight = -1;
     
     instance = [[MWOverlay alloc] init];
     
-   
+    
     [instance performSelector:@selector(checkForChanges) withObject:nil afterDelay:CHANGE_TRACKING_INTERVAL];
     [MWOverlay updateOverlay];
- 
+    
 }
 
 + (void) removeFromPreviewLayer {
@@ -106,6 +95,10 @@ float lastHeight = -1;
         }
         if (viewportLayer){
             [viewportLayer removeFromSuperlayer];
+        }
+        
+        if (locationLayer){
+            [locationLayer removeFromSuperlayer];
         }
     }
     
@@ -125,13 +118,13 @@ float lastHeight = -1;
     int res = MWB_getScanningRect(0, &left, &top, &width, &height);
     
     if (res == 0){
-    
+        
         int orientation = MWB_getDirection();
         
         if (orientation != lastOrientation || left != lastLeft || top != lastTop || width != lastWidth || height != lastHeight) {
             
             [instance performSelectorOnMainThread:@selector(updateOverlayMainThread) withObject:nil waitUntilDone:NO];
-            NSLog(@"Change detected");
+            // NSLog(@"Change detected");
             
         }
         
@@ -181,7 +174,7 @@ float lastHeight = -1;
     viewportLayer.hidden = !isViewportVisible;
     lineLayer.hidden = !isBlinkingLineVisible;
     
-   
+    
     int overlayWidth = viewportLayer.frame.size.width;
     int overlayHeight = viewportLayer.frame.size.height;
     
@@ -190,7 +183,7 @@ float lastHeight = -1;
     
     UIGraphicsBeginImageContext(cgRect.size);
     CGContextRef context = UIGraphicsGetCurrentContext();
-	UIGraphicsPushContext(context);
+    UIGraphicsPushContext(context);
     
     
     
@@ -209,7 +202,31 @@ float lastHeight = -1;
         
     }
     
+    if (previewLayer.connection.videoOrientation == AVCaptureVideoOrientationLandscapeLeft){
+        left = 100 - width - left;
+        top = 100 - height - top;
+    } else
+        if (previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortrait){
+            left = 100 - width - left;
+        }
+        else
+            if (previewLayer.connection.videoOrientation == AVCaptureVideoOrientationPortraitUpsideDown){
+                top = 100 - height - top;
+            }
+
+    
     CGRect rect = CGRectMake(xOffset + left * xScale, yOffset + top * yScale, width * xScale, height * yScale);
+    
+    if (rect.size.width < 0){
+        rect.size.width = - rect.size.width;
+        rect.origin.x = 100 - rect.origin.x;
+    }
+    
+    if (rect.size.height < 0){
+        rect.size.height = - rect.size.height;
+        rect.origin.y = 100 - rect.origin.y;
+    }
+    
     
     rect.origin.x *= overlayWidth;
     rect.origin.x /= 100.0;
@@ -219,6 +236,10 @@ float lastHeight = -1;
     rect.size.width /= 100.0;
     rect.size.height *= overlayHeight;
     rect.size.height /= 100.0;
+    
+    
+   
+
     
     CGContextSetRGBFillColor(context, 0, 0, 0, viewportAlpha);
     CGContextFillRect(context, CGRectMake(0,0,overlayWidth,overlayHeight));
@@ -236,14 +257,14 @@ float lastHeight = -1;
     
     viewportLayer.contents = (id)[UIGraphicsGetImageFromCurrentImageContext() CGImage];
     
-  
+    
     
     CGContextClearRect(context, cgRect);
     
     r = (blinkingLineColor >> 16) / 255.0;
     g = ((blinkingLineColor & 0x00ff00) >> 8) / 255.0;
     b = (blinkingLineColor & 0x0000ff) / 255.0;
-
+    
     CGContextSetRGBStrokeColor(context, r, g, b, 1);
     
     int orientation = MWB_getDirection();
@@ -263,7 +284,7 @@ float lastHeight = -1;
         orientation = orientation | mask;
         
     }
-
+    
     
     if (orientation & MWB_SCANDIRECTION_HORIZONTAL || orientation & MWB_SCANDIRECTION_OMNI || orientation & MWB_SCANDIRECTION_AUTODETECT){
         CGContextSetLineWidth(context, blinkingLineWidth);
@@ -273,7 +294,7 @@ float lastHeight = -1;
     }
     
     if (orientation & MWB_SCANDIRECTION_VERTICAL || orientation & MWB_SCANDIRECTION_OMNI || orientation & MWB_SCANDIRECTION_AUTODETECT){
-       
+        
         CGContextMoveToPoint(context, rect.origin.x + rect.size.width / 2, rect.origin.y);
         CGContextAddLineToPoint(context, rect.origin.x + rect.size.width / 2, rect.origin.y + rect.size.height);
         CGContextStrokePath(context);
@@ -293,10 +314,92 @@ float lastHeight = -1;
     
     UIGraphicsEndImageContext();
     
-   [MWOverlay startLineAnimation];
+    [MWOverlay startLineAnimation];
     
     
 }
+
++ (void) showLocation: (CGPoint *) points imageWidth:(int) width imageHeight: (int) height{
+    
+    imageWidth = width;
+    imageHeight = height;
+    
+    if (points == NULL){
+        return;
+    }
+    
+    if (!isAttached || !previewLayer){
+        return;
+    }
+    
+    
+    
+//    dispatch_async(dispatch_get_main_queue(), ^(void) {
+    
+        [locationLayer removeAllAnimations];
+        
+        [previewLayer addSublayer:locationLayer];
+        
+        
+        CGRect cgRect = locationLayer.frame;
+        
+        
+        UIGraphicsBeginImageContext(cgRect.size);
+        CGContextRef context = UIGraphicsGetCurrentContext();
+        UIGraphicsPushContext(context);
+        
+        
+        CGContextClearRect(context, cgRect);
+        
+        float r = (locationLineColor >> 16) / 255.0;
+        float g = ((locationLineColor & 0x00ff00) >> 8) / 255.0;
+        float b = (locationLineColor & 0x0000ff) / 255.0;
+        
+        CGContextSetRGBStrokeColor(context, r, g, b, 1);
+        
+        CGContextSetLineWidth(context, locationLineWidth);
+        
+             
+        for (int i = 0; i < 4; i++){
+            points[i].x/= imageWidth;
+            points[i].y/= imageHeight;
+            
+            points[i] = [previewLayer pointForCaptureDevicePointOfInterest:points[i]];
+            
+        }
+        
+        
+        CGContextMoveToPoint(context, points[0].x,points[0].y);
+        for (int i = 1; i < 4; i++){
+            CGContextAddLineToPoint(context, points[i].x,points[i].y);
+        }
+        CGContextAddLineToPoint(context, points[0].x,points[0].y);
+        
+        CGContextStrokePath(context);
+        
+        UIGraphicsPopContext();
+        
+        locationLayer.contents = (id)[UIGraphicsGetImageFromCurrentImageContext() CGImage];
+        
+        UIGraphicsEndImageContext();
+        
+        CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+        [animation setFromValue:[NSNumber numberWithFloat:1]];
+        [animation setToValue:[NSNumber numberWithFloat:0.0]];
+        [animation setDuration:0.5];
+        [animation setTimingFunction:[CAMediaTimingFunction
+                                      functionWithName:kCAMediaTimingFunctionEaseOut]];
+        [animation setFillMode:kCAFillModeForwards];
+        [animation setRemovedOnCompletion:NO];
+        // [animation setAutoreverses:NO];
+        //[animation setRepeatCount:0];
+        [locationLayer addAnimation:animation forKey:@"opacity"];
+        
+        
+//    });
+    
+}
+
 
 
 + (void) startLineAnimation {
@@ -392,7 +495,7 @@ float lastHeight = -1;
         CGFloat red = components[0];
         CGFloat green = components[1];
         CGFloat blue = components[2];
-    
+        
         int intColor = (((int) (red * 255)) << 16) + (((int) (green * 255)) << 8) + ((int) (blue * 255)) ;
         
         viewportLineColor = intColor;

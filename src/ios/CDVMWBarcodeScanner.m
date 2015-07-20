@@ -17,6 +17,7 @@
 
 NSString *callbackId;
 NSMutableDictionary *customParams = nil;
+MWScannerViewController *scannerViewController;
 
 - (void)initDecoder:(CDVInvokedUrlCommand*)command
 {
@@ -28,7 +29,7 @@ NSMutableDictionary *customParams = nil;
 
 - (void)startScanner:(CDVInvokedUrlCommand*)command
 {
-    MWScannerViewController *scannerViewController = [[MWScannerViewController alloc] initWithNibName:@"MWScannerViewController" bundle:nil];
+    scannerViewController = [[MWScannerViewController alloc] initWithNibName:@"MWScannerViewController" bundle:nil];
     scannerViewController.delegate = self;
     scannerViewController.customParams = customParams;
     [self.viewController presentViewController:scannerViewController animated:YES completion:^{}];
@@ -52,6 +53,8 @@ NSMutableDictionary *customParams = nil;
     
     NSMutableDictionary *resultDict = [[NSMutableDictionary alloc] initWithObjects:[NSArray arrayWithObjects:result, lastFormat, bytesArray, [NSNumber numberWithBool:isGS1],nil] forKeys:[NSArray arrayWithObjects:@"code", @"type",@"bytes", @"isGS1", nil]];
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultDict];
+    [pluginResult setKeepCallback:[NSNumber numberWithBool:YES]];
+    
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
     
 }
@@ -160,6 +163,13 @@ NSMutableDictionary *customParams = nil;
     [MWScannerViewController enableZoom:zoom];
 }
 
+- (void)closeScannerOnDecode:(CDVInvokedUrlCommand*)command
+{
+    BOOL shouldClose =[[command.arguments objectAtIndex:0] boolValue];
+    [MWScannerViewController closeScannerOnDecode:shouldClose];
+}
+
+
 - (void)turnFlashOn:(CDVInvokedUrlCommand*)command
 {
     bool flash = [[command.arguments objectAtIndex:0] boolValue];
@@ -188,7 +198,16 @@ NSMutableDictionary *customParams = nil;
     [customParams setObject:value forKey:key];
     
 }
-
+- (void)resumeScanning:(CDVInvokedUrlCommand*)command
+{
+    scannerViewController.state = CAMERA;
+}
+- (void)closeScanner:(CDVInvokedUrlCommand*)command
+{
+    if (scannerViewController) {
+        [scannerViewController dismissViewControllerAnimated:YES completion:nil];
+    }
+}
 
 
 
