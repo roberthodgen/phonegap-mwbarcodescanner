@@ -7,7 +7,8 @@
 //
 
 //#import <Foundation/Foundation.h>
-
+#import <CoreGraphics/CoreGraphics.h>
+#import <UIKit/UIKit.h>
 @interface MWLocation : NSObject{
     
     CGPoint _points[4];
@@ -28,6 +29,7 @@
 
 @property (nonatomic, retain) NSString *text;
 @property (readwrite) uint8_t *bytes;
+@property (readwrite) uint8_t *encryptedResult;
 @property (readwrite) int bytesLength;
 @property (readwrite) int type;
 @property (nonatomic, retain) NSString *typeName;

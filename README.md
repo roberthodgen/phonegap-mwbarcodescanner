@@ -334,7 +334,6 @@ Add a notification plugin (if not already present):
 ###Changes in 1.6:
 &nbsp;
 - Added continuous scanning functionality:
-
         mwbs['MWBcloseScannerOnDecode'](false)  - to enable continuous scanning
         BarcodeScanner.MWBresumeScanning()      - for resuming after successful scan
         BarcodeScanner.MWBcloseScanner()        - to finish with continuous scanning

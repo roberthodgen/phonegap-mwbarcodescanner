@@ -484,19 +484,24 @@
                
                
     /**
-    * Enable/disable continuous scanning .
+    * Enable/disable continuous scanning. If 'shouldClose' is 'false', result callback will be performed and
+    * scanner will be paused. The User can call 'resumeScanning' to continue scanning, or 'closeScanner'
+    * for closing the scanner. Default is 'true'.
+    * Function is not available on WP8 due to the technical limitations.
     */
     MWBcloseScannerOnDecode: function(shouldClose) {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "closeScannerOnDecode", [shouldClose]);
     },
     /**
     * Resume scanning. Use this method if already using MWBcloseScannerOnDecode(false).
+    * Function is not available on WP8 due to the technical limitations.
     */
     MWBresumeScanning: function() {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "resumeScanning", []);
     },
     /**
     * Close scanner. Use this method if already using MWBcloseScannerOnDecode(false).
+    * Function is not available on WP8 due to the technical limitations.
     */
     MWBcloseScanner: function() {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "closeScanner", []);

@@ -63,7 +63,10 @@
      <source-file src="src/android/libs/armeabi/libBarcodeScannerLib.so" target-dir="libs/armeabi" />
      <source-file src="src/android/libs/x86/libBarcodeScannerLib.so" target-dir="libs/x86" />
      <source-file src="src/android/libs/armeabi-v7a/libBarcodeScannerLib.so" target-dir="libs/armeabi-v7a" />
-     
+     <source-file src="src/android/libs/arm64-v8a/libBarcodeScannerLib.so" target-dir="libs/arm64-v8a" />
+      <source-file src="src/android/libs/mips/libBarcodeScannerLib.so" target-dir="libs/mips" />
+
+
      </platform>
     
    <!-- ios -->

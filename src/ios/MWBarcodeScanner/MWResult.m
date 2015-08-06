@@ -8,7 +8,7 @@
 
 #import "MWResult.h"
 #import "BarcodeScanner.h"
-#import <CoreGraphics/CoreGraphics.h>
+//#import <CoreGraphics/CoreGraphics.h>
 
 @implementation MWResults
 
@@ -112,10 +112,16 @@
                         result.text = [[NSString alloc] initWithData: [NSData dataWithBytes:&buffer[contentPos] length:fieldContentLength] encoding:NSUTF8StringEncoding];
                         break;
                     case MWB_RESULT_FT_BYTES:
-                        result.bytes = malloc(fieldContentLength);
+                        result.bytes =     malloc(fieldContentLength);
                         result.bytesLength = fieldContentLength;
                         memcpy(result.bytes, &buffer[contentPos], fieldContentLength);
 
+                        break;
+                    case MWB_RESULT_FT_PARSER_BYTES:
+                        result.encryptedResult =     malloc(fieldContentLength + 1);
+                        result.encryptedResult[fieldContentLength] = 0;
+                        memcpy(result.encryptedResult, &buffer[contentPos], fieldContentLength);
+                        
                         break;
 
                         
@@ -151,14 +157,14 @@
 
 @implementation MWResult
 
--(id)initWithBuffer:(uint8_t *)buffer
-{
-    self = [super init];
-    if (self) {
-        
-    }
-    return self;
-}
+//-(id)initWithBuffer:(uint8_t *)buffer
+//{
+//    self = [super init];
+//    if (self) {
+//        
+//    }
+//    return self;
+//}
 
 @end
 

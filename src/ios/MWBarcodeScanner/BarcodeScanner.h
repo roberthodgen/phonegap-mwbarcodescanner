@@ -108,6 +108,25 @@ typedef unsigned char uint8_t;
 #define  MWB_CFG_CODABAR_INCLUDE_STARTSTOP         0x1
 /**/
     
+/** @brief  Barcode decoder param types
+ */
+#define  MWB_PAR_ID_ECI_MODE         0x08
+#define  MWB_PAR_ID_RESULT_PREFIX    0x10
+/**/
+
+/** @brief  Barcode param values
+ */
+    
+#define  MWB_PAR_VALUE_ECI_DISABLED    0x00 //default
+#define  MWB_PAR_VALUE_ECI_ENABLED     0x01
+
+#define  MWB_PAR_VALUE_RESULT_PREFIX_NEVER    0x00 // default
+#define  MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS   0x01
+#define  MWB_PAR_VALUE_RESULT_PREFIX_DEFAULT  0x02
+/**/
+
+    
+    
 
 /** @} */
 
@@ -221,6 +240,7 @@ enum res_types {
 #define MWB_RESULT_FT_LOCATION              0x00000007u
 #define MWB_RESULT_FT_IMAGE_WIDTH           0x00000008u
 #define MWB_RESULT_FT_IMAGE_HEIGHT          0x00000009u
+#define MWB_RESULT_FT_PARSER_BYTES          0x0000000Au
 
     /** @} */
     
@@ -236,6 +256,7 @@ enum res_types {
 #define MWB_RESULT_FNAME_LOCATION           "Location"
 #define MWB_RESULT_FNAME_IMAGE_WIDTH        "Image Width"
 #define MWB_RESULT_FNAME_IMAGE_HEIGHT       "Image Height"
+#define MWB_RESULT_FNAME_PARSER_BYTES       "Parser Input"
     
     /** @} */
     
@@ -501,6 +522,18 @@ extern int MWB_setDirection(const uint32_t direction);
  */
 extern int MWB_setMinLength(const uint32_t codeMask, const uint32_t minLength);
     
+/**
+ * @brief       Set custom decoder param.
+ * @details     MWB_setParam set custom decoder param id/value pair for decoder type specified in \a codeMask.
+ * @param[in]   codeMask                Single decoder type (MWB_CODE_MASK_...)
+ * @param[in]   paramId                 ID of param
+ * @param[in]   paramValue              Integer value of param
+ *
+ * @retval      MWB_RT_OK               Success
+ * @retval      MWB_RT_BAD_PARAM        Invalid parameter specified
+ * @retval      MWB_RT_NOT_SUPPORTED    Function not supported for specified codeMask
+ */
+extern int MWB_setParam(const uint32_t codeMask, const uint32_t paramId, const uint32_t paramValue);
     
 /**
  * Get active scanning direction
