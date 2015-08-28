@@ -202,6 +202,10 @@ MWScannerViewController *scannerViewController;
 {
     scannerViewController.state = CAMERA;
 }
+- (void)use60fps:(CDVInvokedUrlCommand*)command
+{
+    [MWScannerViewController use60fps:[[command.arguments objectAtIndex:0] boolValue]];;
+}
 - (void)closeScanner:(CDVInvokedUrlCommand*)command
 {
     if (scannerViewController) {

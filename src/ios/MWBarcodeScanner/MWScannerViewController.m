@@ -24,6 +24,7 @@ BOOL param_EnableHiRes = YES;
 BOOL param_EnableFlash = YES;
 BOOL param_EnableZoom = YES;
 BOOL param_closeOnSuccess = YES;
+static BOOL param_use60fps = NO;
 
 BOOL param_defaultFlashOn = NO;
 int param_OverlayMode = OM_MW;
@@ -78,6 +79,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 
 #pragma mark -
 #pragma mark Initialization
+
 
 + (void) initDecoder {
     //You can now register codes from MWBScanner.js!
@@ -250,7 +252,9 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 + (void) closeScannerOnDecode: (BOOL) close {
     param_closeOnSuccess = close;
 }
-
++ (void) use60fps: (BOOL) use {
+    param_use60fps = use;
+}
 + (void) setMaxThreads: (int) maxThreads {
     
     if (availableThreads == 0){
@@ -317,7 +321,6 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         }
     }
     
-    
     [self updateTorch];
     
     
@@ -334,7 +337,6 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     [self stopScanning];
     [self deinitCapture];
     flashButton.selected = NO;
-    
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -348,6 +350,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     self.prevLayer = nil;
     [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(decodeResultNotification:) name: DecoderResultNotification object: nil];
     
+
     
 }
 
@@ -496,10 +499,14 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
     
     
+    float resX = 640;
+    float resY = 480;
     
     if (param_EnableHiRes && [self.captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720])
     {
         NSLog(@"Set preview port to 1280X720");
+        resX = 1280;
+        resY = 720;
         self.captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
     } else
     //set to 640x480 if 1280x720 not supported on device
@@ -523,6 +530,29 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         } else {
             AVCaptureConnection *conn = [captureOutput connectionWithMediaType:AVMediaTypeVideo];
             [conn setVideoMinFrameDuration:CMTimeMake(1, 15)];
+        }
+    }else if (param_use60fps) {
+        for(AVCaptureDeviceFormat *vFormat in [self.device formats] )
+        {
+            CMFormatDescriptionRef description= vFormat.formatDescription;
+            float maxrate=((AVFrameRateRange*)[vFormat.videoSupportedFrameRateRanges objectAtIndex:0]).maxFrameRate;
+            float minrate=((AVFrameRateRange*)[vFormat.videoSupportedFrameRateRanges objectAtIndex:0]).minFrameRate;
+            CMVideoDimensions dimension = CMVideoFormatDescriptionGetDimensions(description);
+            
+            if(maxrate>59 && CMFormatDescriptionGetMediaSubType(description)==kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange &&
+               dimension.width == resX && dimension.height == resY)
+            {
+                if ( YES == [self.device lockForConfiguration:NULL] )
+                {
+                    self.device.activeFormat = vFormat;
+                    [self.device setActiveVideoMinFrameDuration:CMTimeMake(10,minrate * 10)];
+                    [self.device setActiveVideoMaxFrameDuration:CMTimeMake(10,600)];
+                    [self.device unlockForConfiguration];
+                    
+                    NSLog(@"formats  %@ %@ %@",vFormat.mediaType,vFormat.formatDescription,vFormat.videoSupportedFrameRateRanges);
+                    //break;
+                }
+            }
         }
     }
     

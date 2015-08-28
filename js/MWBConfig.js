@@ -75,19 +75,21 @@ MWBSInitSpace.init = function(mwbs,constants,dvc){
         //if your code doesn't work after changing a few parameters, and there is no error output, uncomment the try-catch, the error will be output in your console
 //    try{
         /*UNCOMMENT the lines you wish to include in the settings */
-        //mwbs['MWBsetInterfaceOrientation'] (constants.OrientationPortrait);
-        //mwbs['MWBsetOverlayMode'](constants.OverlayModeImage);
-        //mwbs['MWBenableHiRes'](true);
-        //mwbs['MWBenableFlash'](true);
-        //mwbs['MWBsetActiveCodes'](constants.MWB_CODE_MASK_128 | constants.MWB_CODE_MASK_39);
-        //mwbs['MWBsetLevel'](2);
-        //mwbs['MWBsetFlags'](constants.MWB_CODE_MASK_39, constants.MWB_CFG_CODE39_EXTENDED_MODE);
-        //mwbs['MWBsetDirection'](constants.MWB_SCANDIRECTION_VERTICAL | constants.MWB_SCANDIRECTION_HORIZONTAL);
-        //mwbs['MWBsetScanningRect'](constants.MWB_CODE_MASK_39, 20,20,60,60);
-        //mwbs['MWBenableZoom'](true);
-        //mwbs['MWBsetZoomLevels'](200, 400, 0);
-        //mwbs['MWBsetCustomParam']('CUSTOM_PARAM','CUSTOM_VALUE');
-        //mwbs['MWBsetActiveSubcodes'](constants.MWB_CODE_MASK_25 | constants.MWB_SUBC_MASK_C25_INTERLEAVED);        
+        //  mwbs['MWBsetInterfaceOrientation'] (constants.OrientationPortrait);
+        //  mwbs['MWBsetOverlayMode'](constants.OverlayModeImage);
+        //  mwbs['MWBenableHiRes'](true);
+        //  mwbs['MWBenableFlash'](true);
+        //  mwbs['MWBsetActiveCodes'](constants.MWB_CODE_MASK_128 | constants.MWB_CODE_MASK_39);
+        //  mwbs['MWBsetLevel'](2);
+        //  mwbs['MWBsetFlags'](constants.MWB_CODE_MASK_39, constants.MWB_CFG_CODE39_EXTENDED_MODE);
+        //  mwbs['MWBsetDirection'](constants.MWB_SCANDIRECTION_VERTICAL | constants.MWB_SCANDIRECTION_HORIZONTAL);
+        //  mwbs['MWBsetScanningRect'](constants.MWB_CODE_MASK_39, 20,20,60,60);
+        //  mwbs['MWBenableZoom'](true);
+        //  mwbs['MWBsetZoomLevels'](200, 400, 0);
+        //  mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK_39, 4);
+        //  mwbs['MWBsetMaxThreads'](1);
+        //  mwbs['MWBcloseScannerOnDecode'](false);
+        //  mwbs['MWBuse60fps'](true);      
 //    }
 //    catch(e){
 //        console.log(e);
@@ -112,6 +114,11 @@ MWBSInitSpace.callback = function(result){
     } 
     else
         if (result && result.code){
-            navigator.notification.alert(result.code, function(){}, result.type, 'Close');
-        }
+
+              // setTimeout(function(){                  //
+              //    BarcodeScanner.MWBresumeScanning();  // Use this sample when using mwbs['MWBcloseScannerOnDecode'](false);
+              // },2000);                                //
+
+             navigator.notification.alert(result.code, function(){}, result.type + (result.isGS1?" (GS1)":""), 'Close');
+          }
 }

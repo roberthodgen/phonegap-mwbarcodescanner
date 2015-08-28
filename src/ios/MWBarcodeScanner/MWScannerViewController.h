@@ -81,6 +81,7 @@ typedef enum eMainScreenState {
 + (void) setMaxThreads: (int) maxThreads;
 + (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel;
 + (void) closeScannerOnDecode: (BOOL) close;
++ (void) use60fps: (BOOL) use;
 
 - (void)revertToNormal;
 - (void)decodeResultNotification: (NSNotification *)notification;

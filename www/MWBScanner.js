@@ -505,7 +505,15 @@
     */
     MWBcloseScanner: function() {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "closeScanner", []);
-    }
+    },
+   /**
+    * Use 60 fps when available.
+    * Function is only available on iOS.
+    * Default is 'false'
+    */
+   MWBuse60fps: function(use) {
+   cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "use60fps", [use]);
+   }
  
  };
  
@@ -608,7 +616,7 @@
                   //  mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK_39, 4);
                   //  mwbs['MWBsetMaxThreads'](1);
                   //  mwbs['MWBcloseScannerOnDecode'](false);
-                        
+                  //  mwbs['MWBuse60fps'](true);      
                                   
                                   
 
