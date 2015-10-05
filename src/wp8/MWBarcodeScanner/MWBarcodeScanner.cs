@@ -146,7 +146,12 @@ namespace Cordova.Extension.Commands
         {
             //not supported currently on WP8 (technical limitation)
         }
+        public void setParam(string options)
+        {
+            string[] paramsList = JsonHelper.Deserialize<string[]>(options);
+//            Scanner.MWBsetParam(Convert.ToInt32(paramsList[0]), Convert.ToInt32(paramsList[1]),Convert.ToInt32(paramsList[1]));
 
+        }
         public int getAvailableCores()
         {
             return BarcodeHelper.getCPUCores();
@@ -175,7 +180,16 @@ namespace Cordova.Extension.Commands
              if (BarcodeHelper.resultAvailable)
              {
                 
-                 string resultString = JsonHelper.Serialize (BarcodeHelper.scannerResult);
+                // string resultString = JsonHelper.Serialize (BarcodeHelper.scannerResult);
+                 string resultString = "{\"code\":" +JsonHelper.Serialize ( BarcodeHelper.scannerResult.code) +","
+                     +"\"type\":" + JsonHelper.Serialize (BarcodeHelper.scannerResult.type) +","
+                     + "\"bytes\":" + JsonHelper.Serialize (BarcodeHelper.scannerResult.bytes) + ","
+                     + "\"isGS1\":" + JsonHelper.Serialize (BarcodeHelper.scannerResult.isGS1) + ","
+                     + "\"location\":" + BarcodeHelper.scannerResult.location + ","
+                     + "\"imageWidth\":" + BarcodeHelper.scannerResult.imageWidth + ","
+                     + "\"imageHeight\":" + BarcodeHelper.scannerResult.imageHeight
+                     +"}";
+
                  DispatchCommandResult(new PluginResult(PluginResult.Status.OK, resultString));
              }
 

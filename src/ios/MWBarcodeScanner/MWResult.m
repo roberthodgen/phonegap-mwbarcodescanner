@@ -39,6 +39,7 @@
         case FOUND_11: typeName = @"Code 11";break;
         case FOUND_MSI: typeName = @"MSI Plessey";break;
         case FOUND_25_IATA: typeName = @"IATA Code 25";break;
+        case FOUND_ITF14: typeName = @"ITF 14";break;
     }
     
     return typeName;

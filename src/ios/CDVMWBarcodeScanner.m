@@ -41,7 +41,7 @@ MWScannerViewController *scannerViewController;
 }
 
 
-- (void)scanningFinished:(NSString *)result withType:(NSString *)lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult
+- (void)scanningFinished:(NSString *)result withType:(NSString *)lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult locationPoints:(MWLocation *)locationPoints imageWidth:(int)imageWidth imageHeight:(int)imageHeight
 {
     CDVPluginResult* pluginResult = nil;
     
@@ -50,8 +50,30 @@ MWScannerViewController *scannerViewController;
     for (int i = 0; i < rawResult.length; i++){
         [bytesArray addObject:[NSNumber numberWithInt: bytes[i]]];
     }
+    NSMutableDictionary *resultDict;
+    if (locationPoints) {
+        NSArray *xyArray = [NSArray arrayWithObjects:@"x",@"y", nil];
+        
+        NSDictionary *p1 = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithFloat:locationPoints.p1.x],[NSNumber numberWithFloat:locationPoints.p1.y], nil]
+                                                       forKeys:xyArray];
+        NSDictionary *p2 = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithFloat:locationPoints.p2.x],[NSNumber numberWithFloat:locationPoints.p2.y], nil]
+                                                       forKeys:xyArray];
+        NSDictionary *p3 = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithFloat:locationPoints.p3.x],[NSNumber numberWithFloat:locationPoints.p3.y], nil]
+                                                       forKeys:xyArray];
+        NSDictionary *p4 = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithFloat:locationPoints.p4.x],[NSNumber numberWithFloat:locationPoints.p4.y], nil]
+                                                       forKeys:xyArray];
+        
+        NSDictionary *location =[NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:p1,p2,p3,p4 ,nil]
+                                                        forKeys:[NSArray arrayWithObjects:@"p1",@"p2",@"p3",@"p4",nil]];
+        resultDict = [[NSMutableDictionary alloc] initWithObjects:[NSArray arrayWithObjects:result, lastFormat, bytesArray, [NSNumber numberWithBool:isGS1], location, [NSNumber numberWithInt:imageWidth],[NSNumber numberWithInt:imageHeight],nil]
+                                                          forKeys:[NSArray arrayWithObjects:@"code", @"type",@"bytes", @"isGS1",@"location",@"imageWidth",@"imageHeight", nil]];
+
+    }else{
+        resultDict = [[NSMutableDictionary alloc] initWithObjects:[NSArray arrayWithObjects:result, lastFormat, bytesArray, [NSNumber numberWithBool:isGS1], [NSNumber numberWithBool:NO], [NSNumber numberWithInt:imageWidth],[NSNumber numberWithInt:imageHeight],nil]
+                                                          forKeys:[NSArray arrayWithObjects:@"code", @"type",@"bytes", @"isGS1",@"location",@"imageWidth",@"imageHeight", nil]];
+    }
     
-    NSMutableDictionary *resultDict = [[NSMutableDictionary alloc] initWithObjects:[NSArray arrayWithObjects:result, lastFormat, bytesArray, [NSNumber numberWithBool:isGS1],nil] forKeys:[NSArray arrayWithObjects:@"code", @"type",@"bytes", @"isGS1", nil]];
+    
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultDict];
     [pluginResult setKeepCallback:[NSNumber numberWithBool:YES]];
     
@@ -198,6 +220,10 @@ MWScannerViewController *scannerViewController;
     [customParams setObject:value forKey:key];
     
 }
+- (void)setParam:(CDVInvokedUrlCommand*)command
+{
+    MWB_setParam([[command.arguments objectAtIndex:0] intValue], [[command.arguments objectAtIndex:1] intValue], [[command.arguments objectAtIndex:2] intValue]);
+}
 - (void)resumeScanning:(CDVInvokedUrlCommand*)command
 {
     scannerViewController.state = CAMERA;
@@ -211,6 +237,105 @@ MWScannerViewController *scannerViewController;
     if (scannerViewController) {
         [scannerViewController dismissViewControllerAnimated:YES completion:nil];
     }
+}
+- (void)scanImage:(CDVInvokedUrlCommand*)command
+{
+    [MWScannerViewController initDecoder];
+    callbackId = command.callbackId;
+    
+    NSString *prefixToRemove = @"file://";
+    
+    NSString *filePath = [command.arguments objectAtIndex:0];
+    
+
+    if ([filePath hasPrefix:prefixToRemove])
+        
+        filePath = [filePath substringFromIndex:[prefixToRemove length]];
+    
+    UIImage * image = [UIImage imageWithContentsOfFile:filePath];
+    
+    if (image!=nil) {
+        
+        int newWidth;
+        int newHeight;
+        
+        uint8_t *bytes = [CDVMWBarcodeScanner UIImageToGrayscaleByteArray:image newWidth: &newWidth newHeight: &newHeight];
+        
+        unsigned char *pResult=NULL;
+        
+        if (bytes) {
+            
+            int resLength = MWB_scanGrayscaleImage(bytes, newWidth, newHeight, &pResult);
+            
+            free(bytes);
+            
+            MWResults *mwResults = nil;
+            MWResult *mwResult = nil;
+            
+            if (resLength > 0){
+                
+                mwResults = [[MWResults alloc] initWithBuffer:pResult];
+                if (mwResults && mwResults.count > 0){
+                    mwResult = [mwResults resultAtIntex:0];
+                }
+                free(pResult);
+                
+            }
+            if (mwResult)
+            {
+                [self scanningFinished:mwResult.text withType: mwResult.typeName isGS1:mwResult.isGS1  andRawResult: [[NSData alloc] initWithBytes: mwResult.bytes length: mwResult.bytesLength] locationPoints:mwResult.locationPoints imageWidth:mwResult.imageWidth imageHeight:mwResult.imageHeight];
+                
+            }else{
+                [self scanningFinished:@"" withType: @"NoResult" isGS1:NO  andRawResult: nil locationPoints:nil imageWidth:0 imageHeight:0];
+            }
+        }
+        
+    }
+    
+}
+
+
+
+#define MAX_IMAGE_SIZE 1280
+
++ (unsigned char*)UIImageToGrayscaleByteArray:(UIImage*)image newWidth: (int*)newWidth newHeight: (int*)newHeight; {
+    
+    int targetWidth = image.size.width;
+    int targetHeight = image.size.height;
+    float scale = 1.0;
+    
+    if (targetWidth > MAX_IMAGE_SIZE || targetHeight > MAX_IMAGE_SIZE){
+        targetWidth /= 2;
+        targetHeight /= 2;
+        scale *= 2;
+        
+    }
+    
+    *newWidth = targetWidth;
+    
+    *newHeight = targetHeight;
+    
+    unsigned char *imageData = (unsigned char*)(malloc( targetWidth*targetHeight));
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
+    
+    CGImageRef imageRef = [image CGImage];
+    CGContextRef bitmap = CGBitmapContextCreate( imageData,
+                                                targetWidth,
+                                                targetHeight,
+                                                8,
+                                                targetWidth,
+                                                colorSpace,
+                                                0);
+    
+    CGContextDrawImage( bitmap, CGRectMake(0, 0, targetWidth, targetHeight), imageRef);
+    
+    CGContextRelease( bitmap);
+    
+    CGColorSpaceRelease( colorSpace);
+    
+    return imageData;
+    
 }
 
 

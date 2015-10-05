@@ -8,6 +8,7 @@ using System.ComponentModel;
 using BarcodeLib;
 
 
+
 namespace BarcodeScanners
 {
     public class ScannerResult
@@ -16,7 +17,11 @@ namespace BarcodeScanners
         public string type { get; set; }
         public byte[] bytes { get; set; }
         public bool isGS1 { get; set; }
+        public Object location { get; set; }
+        public int imageWidth { get; set; }
+        public int imageHeight { get; set; }
     }
+
         class PointF
         {
             public float x;
@@ -390,11 +395,7 @@ namespace BarcodeScanners
                 if (result.type == Scanner.FOUND_MSI) typeName = "MSI Plessey";
 			    if (result.type == Scanner.FOUND_25_IATA) typeName = "IATA Code 25";
 
-                if (result.isGS1)
-                {
-                    typeName += " (GS1)";
-                }
-
+              
                 return typeName;
             }
 

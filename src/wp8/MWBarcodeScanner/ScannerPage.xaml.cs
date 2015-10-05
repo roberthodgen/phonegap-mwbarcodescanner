@@ -32,6 +32,7 @@ using System.ComponentModel;
 
 using BarcodeLib;
 using BarcodeScanners;
+using WPCordovaClassLib.Cordova.JSON;
 
 namespace BarcodeScannerPage
 {
@@ -450,6 +451,20 @@ namespace BarcodeScannerPage
                     BarcodeHelper.scannerResult.code = mwResult.text;
                     BarcodeHelper.scannerResult.type = BarcodeHelper.getBarcodeName(mwResult);
                     BarcodeHelper.scannerResult.isGS1 = mwResult.isGS1;
+                    if (mwResult.locationPoints != null) { 
+                        BarcodeHelper.scannerResult.location = "{\"p1\":{\"x\":" + mwResult.locationPoints.p1.x + ", \"y\":" + mwResult.locationPoints.p1.y + "},"
+                           + "\"p2\":{\"x\":" + mwResult.locationPoints.p2.x + ", \"y\":" + mwResult.locationPoints.p2.y + "},"
+                           + "\"p3\":{\"x\":" + mwResult.locationPoints.p3.x + ", \"y\":" + mwResult.locationPoints.p3.y + "},"
+                           + "\"p4\":{\"x\":" + mwResult.locationPoints.p4.x + ", \"y\":" + mwResult.locationPoints.p4.y + "}}";
+
+                    }
+                    else
+                    {
+                        BarcodeHelper.scannerResult.location = "false";
+                    }
+
+                    BarcodeHelper.scannerResult.imageWidth = mwResult.imageWidth;
+                    BarcodeHelper.scannerResult.imageHeight = mwResult.imageHeight;
 
                     Byte[] binArray = new Byte[mwResult.bytesLength];
                     for (int i = 0; i < mwResult.bytesLength; i++)
@@ -521,7 +536,7 @@ namespace BarcodeScannerPage
 
             activeThreads++;
 
-            System.Diagnostics.Debug.WriteLine("ActiveThreads: " + activeThreads.ToString());
+           // System.Diagnostics.Debug.WriteLine("ActiveThreads: " + activeThreads.ToString());
 
            
 

@@ -1,24 +1,43 @@
 package com.manateeworks;
 
+import java.io.File;
 import java.util.HashMap;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Environment;
 
+import com.manateeworks.BarcodeScanner.MWResult;
+import com.manateeworks.BarcodeScanner.MWResults;
 import com.manateeworks.ScannerActivity.State;
 
 public class BarcodeScannerPlugin extends CordovaPlugin {
 
+	public static class ImageInfo {
+		byte[] pixels;
+		int width;
+		int height;
+		ImageInfo(int width, int height){
+			this.width = width;
+			this.height = height;
+			pixels = new byte[width * height];
+		}
+	}
+	
 	// !!! Rects are in format: x, y, width, height !!!
 	public static final Rect RECT_LANDSCAPE_1D = new Rect(2, 20, 96, 60);
 	public static final Rect RECT_LANDSCAPE_2D = new Rect(20, 2, 60, 96);
@@ -175,16 +194,21 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 			}
 			return true;
 
-		} else if ("setCustomParam".equals(action)) {
-
-			if (ScannerActivity.customParams == null) {
-				ScannerActivity.customParams = new HashMap<String, Object>();
-			}
-
-			ScannerActivity.customParams.put((String) args.get(0), args.get(1));
-			return true;
-
-		} else if ("resumeScanning".equals(action)) {
+        } else if ("setCustomParam".equals(action)) {
+            
+            if (ScannerActivity.customParams == null) {
+                ScannerActivity.customParams = new HashMap<String, Object>();
+            }
+            
+            ScannerActivity.customParams.put((String) args.get(0), args.get(1));
+            return true;
+            
+        } else if ("setParam".equals(action)) {
+            
+            BarcodeScanner.MWBsetParam(args.getInt(0), args.getInt(1), args.getInt(2));
+            return true;
+            
+        } else if ("resumeScanning".equals(action)) {
 
 			ScannerActivity.state = State.PREVIEW;
 			return true;
@@ -199,11 +223,228 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 			}
 			return true;
 
-		}
+		}else if ("scanImage".equals(action)) {
 
+					
+			
+			String imageURI = args.getString(0);
+			if (imageURI.startsWith("file://")) {
+				imageURI = imageURI.substring(7);
+			}
+			
+			ImageInfo imageInfo = bitmapToGrayscale(imageURI);
+			
+			if (imageInfo != null){
+				//initDecoder();
+				byte[] result = BarcodeScanner.MWBscanGrayscaleImage(imageInfo.pixels, imageInfo.width, imageInfo.height);
+				
+				if (result != null){
+					MWResults mwResults = new MWResults(result);
+					if (mwResults != null && mwResults.count > 0){
+						MWResult mwResult = mwResults.getResult(0);
+						
+						String typeName = "";
+						switch (mwResult.type) {
+						case BarcodeScanner.FOUND_25_INTERLEAVED:
+							typeName = "Code 25";
+							break;
+						case BarcodeScanner.FOUND_25_STANDARD:
+							typeName = "Code 25 Standard";
+							break;
+						case BarcodeScanner.FOUND_128:
+							typeName = "Code 128";
+							break;
+						case BarcodeScanner.FOUND_39:
+							typeName = "Code 39";
+							break;
+						case BarcodeScanner.FOUND_93:
+							typeName = "Code 93";
+							break;
+						case BarcodeScanner.FOUND_AZTEC:
+							typeName = "AZTEC";
+							break;
+						case BarcodeScanner.FOUND_DM:
+							typeName = "Datamatrix";
+							break;
+						case BarcodeScanner.FOUND_EAN_13:
+							typeName = "EAN 13";
+							break;
+						case BarcodeScanner.FOUND_EAN_8:
+							typeName = "EAN 8";
+							break;
+						case BarcodeScanner.FOUND_NONE:
+							typeName = "None";
+							break;
+						case BarcodeScanner.FOUND_RSS_14:
+							typeName = "Databar 14";
+							break;
+						case BarcodeScanner.FOUND_RSS_14_STACK:
+							typeName = "Databar 14 Stacked";
+							break;
+						case BarcodeScanner.FOUND_RSS_EXP:
+							typeName = "Databar Expanded";
+							break;
+						case BarcodeScanner.FOUND_RSS_LIM:
+							typeName = "Databar Limited";
+							break;
+						case BarcodeScanner.FOUND_UPC_A:
+							typeName = "UPC A";
+							break;
+						case BarcodeScanner.FOUND_UPC_E:
+							typeName = "UPC E";
+							break;
+						case BarcodeScanner.FOUND_PDF:
+							typeName = "PDF417";
+							break;
+						case BarcodeScanner.FOUND_QR:
+							typeName = "QR";
+							break;
+						case BarcodeScanner.FOUND_CODABAR:
+							typeName = "Codabar";
+							break;
+						case BarcodeScanner.FOUND_128_GS1:
+							typeName = "Code 128 GS1";
+							break;
+						case BarcodeScanner.FOUND_ITF14:
+							typeName = "ITF 14";
+							break;
+						case BarcodeScanner.FOUND_11:
+							typeName = "Code 11";
+							break;
+						case BarcodeScanner.FOUND_MSI:
+							typeName = "MSI Plessey";
+							break;
+						case BarcodeScanner.FOUND_25_IATA:
+							typeName = "IATA Code 25";
+							break;
+						}
+						
+						JSONObject jsonResult = new JSONObject();
+						try {
+							jsonResult.put("code", mwResult.text);
+							jsonResult.put("type", typeName);
+							jsonResult.put("isGS1", mwResult.isGS1);
+							jsonResult.put("imageWidth", mwResult.imageWidth);
+							jsonResult.put("imageHeight", mwResult.imageHeight);
+
+							if (mwResult.locationPoints != null) {
+								jsonResult.put(
+										"location",
+										new JSONObject().put("p1", new JSONObject().put("x", mwResult.locationPoints.p1.x).put("y", mwResult.locationPoints.p1.y))
+												.put("p2", new JSONObject().put("x", mwResult.locationPoints.p2.x).put("y", mwResult.locationPoints.p2.y))
+												.put("p3", new JSONObject().put("x", mwResult.locationPoints.p3.x).put("y", mwResult.locationPoints.p3.y))
+												.put("p4", new JSONObject().put("x", mwResult.locationPoints.p4.x).put("y", mwResult.locationPoints.p4.y)));
+							} else {
+								jsonResult.put("location", false);
+							}
+
+							JSONArray rawArray = new JSONArray();
+							
+							for (int i = 0; i < mwResult.bytesLength; i++) {
+								rawArray.put((int) (0xff & mwResult.bytes[i]));
+							}
+						
+
+							jsonResult.put("bytes", rawArray);
+
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						PluginResult pr = new PluginResult(PluginResult.Status.OK, jsonResult);
+						
+						callbackContext.sendPluginResult(pr);
+						
+					} else {
+						callbackContext.error(-1);
+					}
+				} else {
+					callbackContext.error(-1);
+				}
+				
+			} else {
+				callbackContext.error(-1);
+			}
+			
+			return true;
+
+		}
 		return false;
 	}
 
+	public static int MAX_IMAGE_SIZE = 1280; 	
+	
+	public static ImageInfo bitmapToGrayscale(String imageUri){
+		
+		File image = new File(imageUri);
+		if (image == null){
+			return null;
+		}
+		BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+		bmOptions.inJustDecodeBounds = true;
+		Bitmap bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(),bmOptions);
+		
+		if (bmOptions.outHeight <= 0 || bmOptions.outWidth <= 0){
+			return null;
+		}
+		
+		int height = bmOptions.outHeight;
+	    int width = bmOptions.outWidth;
+	    int inSampleSize = 1;
+
+	    while  (height > MAX_IMAGE_SIZE || width > MAX_IMAGE_SIZE) {
+
+	        height = height / 2;
+	        width = width / 2;
+	        inSampleSize *= 2;
+	    }
+	    
+	    bmOptions.inJustDecodeBounds = false;
+	    bmOptions.inSampleSize = inSampleSize;
+	    bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(),bmOptions);
+	    
+	    if (bitmap == null){
+	    	return null;
+	    }
+	    //convert bitmap to ARGB8888 format for any case
+	    Bitmap argbBitmap = Bitmap.createBitmap  (width, height, Bitmap.Config.ARGB_8888);
+	    Canvas canvas = new Canvas(argbBitmap);
+	    Paint paint = new Paint();
+	    canvas.drawBitmap(bitmap, 0, 0, paint);
+	   
+	    int[] pixels = new int[width*height] ;
+	    
+	    argbBitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+	    
+	    ImageInfo imageInfo = new ImageInfo(width, height);
+	    
+	    for (int i = 0; i < width * height; i++){
+	    	int color = pixels[i];
+	    	int B = (int) (color & 0xff);
+	    	int G = (int) ((color >> 8) & 0xff);
+	    	int R = (int) ((color >> 16) & 0xff);
+	    	
+	    	int fgray = (int)(0.299 * R + 0.587 * G + 0.114 * B);
+	    	if (fgray < 0){
+	    		fgray = 0;
+	    	}
+	    	if (fgray > 255){
+	    		fgray = 255;
+	    	}
+	    	
+	    	imageInfo.pixels[i] = (byte) (fgray);
+	    }
+        argbBitmap.recycle();
+        bitmap.recycle();
+        bitmap = null;
+        argbBitmap = null;
+        canvas = null;
+        paint = null;
+        
+		
+		return imageInfo;
+	}
+	
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
 		if (requestCode == 1) {

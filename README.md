@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.6
+ Version 1.7.1
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -66,6 +66,23 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
 * Upload www.zip to build.phonegap.com 
 * Build
 
+
+##How to scan an image
+
+* Instead of scanner.startScanning() use:
+
+        scanner.scanImage(URI);
+        
+        
+    or with custom init and callback:
+    
+        scanImage(MWBSInitSpace.init,MWBSInitSpace.callback,URI);
+        
+* Params:   
+        
+        URI                     - the path to the image
+        MWBSInitSpace.init      - scanner initialisation
+        MWBSInitSpace.callback  - result callback
 
 ##Important change in 1.5
 
@@ -330,10 +347,28 @@ Add a notification plugin (if not already present):
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
 
+
+&nbsp;
+###Changes in 1.7.1:
+&nbsp;
+- Added flags for including symbology identifiers in results
+
+
+&nbsp;
+###Changes in 1.7:
+&nbsp;
+- Added scanImage(URI) which can be used for image scanning. Optionally, the method can be used with custom init and callback  - scanImage(MWBSInitSpace.init,MWBSInitSpace.callback,URI);
+
+        URI                     - the path to the image
+        MWBSInitSpace.init      - scanner initialisation
+        MWBSInitSpace.callback  - result callback
+
+
 &nbsp;
 ###Changes in 1.6:
 &nbsp;
 - Added continuous scanning functionality:
+
         mwbs['MWBcloseScannerOnDecode'](false)  - to enable continuous scanning
         BarcodeScanner.MWBresumeScanning()      - for resuming after successful scan
         BarcodeScanner.MWBcloseScanner()        - to finish with continuous scanning

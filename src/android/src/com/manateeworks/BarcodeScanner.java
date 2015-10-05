@@ -200,6 +200,23 @@ public class BarcodeScanner {
 	// supported yet
 
 	/** @} */
+	
+	/** @brief  Barcode decoder param types
+	 */
+	public static final int  MWB_PAR_ID_ECI_MODE      =   0x08;
+	public static final int  MWB_PAR_ID_RESULT_PREFIX =   0x10;
+	/**/
+
+	/** @brief  Barcode param values
+	 */
+	    
+	public static final int  MWB_PAR_VALUE_ECI_DISABLED  =  0x00; //default
+	public static final int  MWB_PAR_VALUE_ECI_ENABLED  =   0x01;
+
+	public static final int  MWB_PAR_VALUE_RESULT_PREFIX_NEVER  =  0x00; // default
+	public static final int  MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS =  0x01;
+	public static final int  MWB_PAR_VALUE_RESULT_PREFIX_DEFAULT = 0x02;
+	/**/
 
 	/**
 	 * @name Identifiers for result fields types
@@ -247,6 +264,8 @@ public class BarcodeScanner {
 	public native static byte[] MWBscanGrayscaleImage(byte[] gray, int width, int height);
 
 	public native static int MWBsetFlags(int codeMask, int flags);
+	
+	public native static int MWBsetParam(int codeMask, int paramId, int paramValue);
 
 	public native static int MWBsetLevel(int level);
 

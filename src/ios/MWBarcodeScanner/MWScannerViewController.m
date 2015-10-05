@@ -6,7 +6,6 @@
 #import "MWScannerViewController.h"
 #import "BarcodeScanner.h"
 #import "MWOverlay.h"
-#import "MWResult.h"
 #include <mach/mach_host.h>
 
 // !!! Rects are in format: x, y, width, height !!!
@@ -794,6 +793,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                 if (param_closeOnSuccess) {
                     [self.captureSession stopRunning];
                 }
+                [MWOverlay showLocation:mwResult.locationPoints.points imageWidth:mwResult.imageWidth imageHeight:mwResult.imageHeight];
+
                 [center postNotificationName:DecoderResultNotification object: notificationResult];
                 
                 
@@ -813,8 +814,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (IBAction)doClose:(id)sender {
     [self dismissViewControllerAnimated:YES completion:^{}];
-    [self.delegate scanningFinished:@"" withType:@"Cancel" isGS1:NO andRawResult:[[NSData alloc] init]];
-    
+    [self.delegate scanningFinished:@"" withType:@"Cancel" isGS1:NO andRawResult:[[NSData alloc] init] locationPoints:nil imageWidth:0 imageHeight:0];
 }
 
 - (IBAction)doFlashToggle:(id)sender {
@@ -880,14 +880,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         {
             
             NSString *typeName = obj.result.typeName;
-            if (obj.result.isGS1){
-                typeName = [NSString stringWithFormat:@"%@ (GS1)", typeName];
-            }
             
             if (param_closeOnSuccess) {
                 [self dismissViewControllerAnimated:YES completion:^{}];
             }
-            [self.delegate scanningFinished:obj.result.text withType: typeName isGS1:obj.result.isGS1  andRawResult: [[NSData alloc] initWithBytes: obj.result.bytes length: obj.result.bytesLength]];
+    
+            [self.delegate scanningFinished:obj.result.text withType: typeName isGS1:obj.result.isGS1  andRawResult: [[NSData alloc] initWithBytes: obj.result.bytes length: obj.result.bytesLength] locationPoints:obj.result.locationPoints imageWidth:obj.result.imageWidth imageHeight:obj.result.imageHeight];
             
         }
     }

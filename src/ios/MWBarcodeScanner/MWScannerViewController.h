@@ -8,12 +8,13 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreVideo/CoreVideo.h>
 #import <CoreMedia/CoreMedia.h>
+#import "MWResult.h"
 
 #define OM_MW       1
 #define OM_IMAGE    2
 
 @protocol ScanningFinishedDelegate <NSObject>
-- (void)scanningFinished:(NSString *)result withType: (NSString *) lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult;
+- (void)scanningFinished:(NSString *)result withType:(NSString *)lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult locationPoints:(MWLocation *)locationPoints imageWidth:(int)imageWidth imageHeight:(int)imageHeight;
 @end
 
 

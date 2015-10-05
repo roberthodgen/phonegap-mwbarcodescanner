@@ -28,5 +28,5 @@
 + (void) setBlinkingLineRGBColor: (int) value;
 + (void) setViewportLineUIColor: (UIColor*) value;
 + (void) setBlinkingLineUIColor: (UIColor*) value;
-
++ (void) showLocation: (CGPoint *) points imageWidth:(int) width imageHeight: (int) height;
 @end

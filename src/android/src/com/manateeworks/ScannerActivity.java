@@ -52,6 +52,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 	public static boolean param_EnableZoom = true;
 	public static boolean param_DefaultFlashOn = false;
 	public static boolean param_closeOnSuccess = true;
+	public static boolean param_showLocation = true;
 	public static int param_OverlayMode = OM_MW;
 
 	public static int param_ZoomLevel1 = 0;
@@ -311,8 +312,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 				CameraManager.setDesiredPreviewSize(800, 480);
 			}
 
-			CameraManager.get().openDriver(surfaceHolder,
-					(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT));
+			CameraManager.get().openDriver(surfaceHolder, (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT));
 
 			int maxZoom = CameraManager.get().getMaxZoom();
 			if (maxZoom <= 100) {
@@ -572,38 +572,73 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 			break;
 		}
 
+		if (result.locationPoints != null && CameraManager.get().getCurrentResolution() != null) {
+
+			MWOverlay.showLocation(result.locationPoints.points, result.imageWidth, result.imageHeight);
+		}
+
+		JSONObject jsonResult = new JSONObject();
+		try {
+			jsonResult.put("code", s);
+			jsonResult.put("type", typeName);
+			jsonResult.put("isGS1", result.isGS1);
+			jsonResult.put("imageWidth", result.imageWidth);
+			jsonResult.put("imageHeight", result.imageHeight);
+
+			if (result.locationPoints != null) {
+				jsonResult.put(
+						"location",
+						new JSONObject().put("p1", new JSONObject().put("x", result.locationPoints.p1.x).put("y", result.locationPoints.p1.y))
+								.put("p2", new JSONObject().put("x", result.locationPoints.p2.x).put("y", result.locationPoints.p2.y))
+								.put("p3", new JSONObject().put("x", result.locationPoints.p3.x).put("y", result.locationPoints.p3.y))
+								.put("p4", new JSONObject().put("x", result.locationPoints.p4.x).put("y", result.locationPoints.p4.y)));
+			} else {
+				jsonResult.put("location", false);
+			}
+
+			JSONArray rawArray = new JSONArray();
+			if (rawResult != null) {
+				for (int i = 0; i < rawResult.length; i++) {
+					rawArray.put((int) (0xff & rawResult[i]));
+				}
+			}
+
+			jsonResult.put("bytes", rawArray);
+
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		PluginResult pr = new PluginResult(PluginResult.Status.OK, jsonResult);
+
 		if (param_closeOnSuccess) {
-			Intent data = new Intent();
-			data.putExtra("code", s);
-			data.putExtra("type", typeName);
-			data.putExtra("bytes", rawResult);
-			data.putExtra("isGS1", result.isGS1);
-			setResult(1, data);
+
 			finish();
 		} else {
-			JSONObject jsonResult = new JSONObject();
-			try {
-				jsonResult.put("code", s);
-				jsonResult.put("type", typeName);
-				jsonResult.put("isGS1", result.isGS1);
-
-				JSONArray rawArray = new JSONArray();
-				if (rawResult != null) {
-					for (int i = 0; i < rawResult.length; i++) {
-						rawArray.put((int) (0xff & rawResult[i]));
-					}
-				}
-
-				jsonResult.put("bytes", rawArray);
-
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			PluginResult pr = new PluginResult(PluginResult.Status.OK, jsonResult);
 			pr.setKeepCallback(true);
-			cbc.sendPluginResult(pr);
+
 		}
+		cbc.sendPluginResult(pr);
+
+	}
+
+	@Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		super.onBackPressed();
+		JSONObject jsonResult = new JSONObject();
+		try {
+			jsonResult.put("code", "");
+			jsonResult.put("type", "Cancel");
+			jsonResult.put("bytes", "");
+
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		cbc.success(jsonResult);
+		finish();
 	}
 
 }
