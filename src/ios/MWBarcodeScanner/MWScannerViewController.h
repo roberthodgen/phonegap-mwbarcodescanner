@@ -34,7 +34,6 @@
 @end
 
 
-
 typedef enum eMainScreenState {
     NORMAL,
     LAUNCHING_CAMERA,
@@ -61,6 +60,7 @@ typedef enum eMainScreenState {
 
 
 @property (nonatomic, assign) MainScreenState state;
+
 @property (nonatomic, retain) AVCaptureSession *captureSession;
 @property (nonatomic, retain) AVCaptureVideoPreviewLayer *prevLayer;
 @property (nonatomic, retain) AVCaptureDevice *device;
@@ -72,16 +72,23 @@ typedef enum eMainScreenState {
 
 
 - (IBAction)doClose:(id)sender;
+- (IBAction)doZoomToggle:(id)sender;
 + (void) initDecoder;
+- (AVCaptureVideoPreviewLayer *)generateLayerWithRect:(CGPoint)bottomRightPoint;
+
 + (void) setInterfaceOrientation: (UIInterfaceOrientationMask) interfaceOrientation;
 + (void) enableHiRes: (BOOL) hiRes;
 + (void) enableFlash: (BOOL) flash;
 + (void) turnFlashOn: (BOOL) flashOn;
 + (void) setOverlayMode: (int) overlayMode;
++ (int) getOverlayMode;
+- (void) deinitCapture;
 + (void) enableZoom: (BOOL) zoom;
 + (void) setMaxThreads: (int) maxThreads;
 + (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel;
 + (void) closeScannerOnDecode: (BOOL) close;
++ (BOOL) getCloseScannerOnDecode;
+
 + (void) use60fps: (BOOL) use;
 
 - (void)revertToNormal;
@@ -90,6 +97,7 @@ typedef enum eMainScreenState {
 - (void) startScanning;
 - (void) stopScanning;
 - (void) toggleTorch;
++ (void) setDuplicateDelayTime: (int) delay;
 
 
 @end

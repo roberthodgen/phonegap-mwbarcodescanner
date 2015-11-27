@@ -16,6 +16,7 @@
 + (void) updateOverlay;
 
 //customization of overlay
++ (void) setPaused: (BOOL) paused;
 + (void) setViewportVisible: (BOOL) value;
 + (void) setBlinkingLineVisible: (BOOL) value;
 + (void) setViewportLineWidth: (float) value;

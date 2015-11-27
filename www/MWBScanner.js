@@ -1,4 +1,19 @@
 /*
+    Version 1.8
+
+    - Added new feature that makes possible scanning in view:
+
+        scanner.startScanning(x, y, width, height); 
+        //all parameters represent percentages relative to the screen size
+        
+    - Other methods for partial screen scanning control:
+
+        scanner.togglePauseResume() - toggle pause resume scanning
+        scanner.stopScanner()       - stop and remove scanner view
+        scanner.toggleFlash()       - toggle flash on/off
+        scanner.toggleZoom()        - toggle zoom in/out
+
+
     Version 1.7
 
     - Added scanImage(URI) which can be used for image scanning. Optionally, the method can be used with custom init and callback - scanImage(MWBSInitSpace.init,MWBSInitSpace.callback,URI);
@@ -186,7 +201,10 @@
     /**/
 
 
-        
+    /** @brief  UPC/EAN decoder disable addons detection
+     */
+     MWB_CFG_EANUPC_DISABLE_ADDON :  0x1,
+    /**/
      
      /** @brief  Global decoder flags value: apply sharpening on input image
         */
@@ -306,10 +324,19 @@
       * result.imageWidth - Width of the scanned image
       * result.imageHeight - Height of the scanned image
       */
- MWBstartScanning: function(callback) {
- cordova.exec(callback, function(err) {
-            callback('Error: ' + err);
-        }, "MWBarcodeScanner", "startScanner", []);
+ MWBstartScanning: function(callback,x,y,width,height) {
+       var args = Array.prototype.slice.call(arguments);
+       if(args.length>1){
+       cordova.exec(callback, function(err) {
+                    callback('Error: ' + err);
+                    }, "MWBarcodeScanner", "startScannerView", [x,y,width,height]);
+       
+       }else{
+       cordova.exec(callback, function(err) {
+                    callback('Error: ' + err);
+                    }, "MWBarcodeScanner", "startScanner", []);
+       
+       }
  },
  
  /**
@@ -476,6 +503,13 @@
  MWBturnFlashOn: function(flashOn) {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "turnFlashOn", [flashOn]);
  },
+/**
+* Toggle on/off flash state
+*
+*/
+MWBtoggleFlash: function() {
+    cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "toggleFlash", []);
+},
  
  /**
     * Enable or disable zoom button on scanning screen. If device doesn't support zoom,
@@ -499,6 +533,13 @@
  MWBsetZoomLevels: function(zoomLevel1, zoomLevel2, initialZoomLevel) {
     cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setZoomLevels", [zoomLevel1, zoomLevel2, initialZoomLevel]);
  },
+/**
+ * Toggle on/off zoom state
+ *
+ */
+MWBtoggleZoom: function() {
+    cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "toggleZoom", []);
+},
  
     /**
  * Set maximum threads to be used for decoding. Value will be limited to maximum available CPU cores.
@@ -564,6 +605,26 @@
     */
    MWBsetParam: function(codeMask, paramId, paramValue) {
        cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setParam", [codeMask, paramId, paramValue]);
+   },
+   /**
+    * Remove scanner view 
+    */
+   MWBstopScannerView: function() {
+       cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "stopScanner", []);
+   },
+   /**
+    * Pause scanner view
+    */
+   MWBtogglePauseResume: function() {
+       cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "togglePauseResume", []);
+   },
+   /**
+    *  Ignore result if scanned the same code in continuous scanning mode
+    *  
+    *  delay         Time interval between 2 scan results with the same result.code in milliseconds
+    */
+   MWBduplicateCodeDelay: function(delay) {
+       cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "duplicateCodeDelay", [delay]);
    }
  
  };
@@ -581,7 +642,6 @@
         'MWB_CODE_MASK_128' : {'username':'','key':''},
         'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
         'MWB_CODE_MASK_DM' : {'username':'','key':''},
-        'MWB_CODE_MASK_EANUPC' : {'username':'','key':''},
         'MWB_CODE_MASK_PDF' : {'username':'','key':''},
         'MWB_CODE_MASK_QR' : {'username':'','key':''},
         'MWB_CODE_MASK_RSS' : {'username':'','key':''},
@@ -597,7 +657,6 @@
         'MWB_CODE_MASK_128' : {'username':'','key':''},
         'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
         'MWB_CODE_MASK_DM' : {'username':'','key':''},
-        'MWB_CODE_MASK_EANUPC' : {'username':'','key':''},
         'MWB_CODE_MASK_PDF' : {'username':'','key':''},
         'MWB_CODE_MASK_QR' : {'username':'','key':''},
         'MWB_CODE_MASK_RSS' : {'username':'','key':''},
@@ -613,7 +672,6 @@
         'MWB_CODE_MASK_128' : {'username':'','key':''},
         'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
         'MWB_CODE_MASK_DM' : {'username':'','key':''},
-        'MWB_CODE_MASK_EANUPC' : {'username':'','key':''},
         'MWB_CODE_MASK_PDF' : {'username':'','key':''},
         'MWB_CODE_MASK_QR' : {'username':'','key':''},
         'MWB_CODE_MASK_RSS' : {'username':'','key':''},
@@ -629,7 +687,20 @@
 //    }
 /* END registration settings */
  scanner = {};
- 
+
+scanner.stopScanner= function(){
+    BarcodeScanner.MWBstopScannerView();
+}
+scanner.togglePauseResume= function(){
+       BarcodeScanner.MWBtogglePauseResume();
+}
+scanner.toggleFlash = function(){
+    BarcodeScanner.MWBtoggleFlash();
+}
+scanner.toggleZoom = function(){
+    BarcodeScanner.MWBtoggleZoom();
+}
+
 scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
 
 
@@ -670,7 +741,7 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
                                       //  mwbs['MWBsetDirection'](constants.MWB_SCANDIRECTION_VERTICAL | constants.MWB_SCANDIRECTION_HORIZONTAL);
                                       //  mwbs['MWBsetScanningRect'](constants.MWB_CODE_MASK_39, 20,20,60,60);
                                       //  mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK_39, 4);
-                                      
+                                      //  mwbs['MWBsetParam'](constants.MWB_CODE_MASK_DM, constants.MWB_PAR_ID_RESULT_PREFIX, constants.MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS);
                                       
                                       
                                       // console.log('JS Settings ends: '+ (new Date()).getTime());
@@ -719,8 +790,29 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
                                       
        }
 
+ var x,y,width,height;
+
  scanner.startScanning = function(initMWBS,callbackMWBS) {
- 
+    var args = Array.prototype.slice.call(arguments);
+
+
+
+    var initMWBS = (args.length == 2 || args.length == 6)?args[0]:false,
+    callbackMWBS = (args.length == 2 || args.length == 6)?args[1]:false;
+
+    x=y=width=height =false;
+
+    if(args.length == 4){
+       x = args[0],
+       y = args[1],
+       width = args[2],
+       height = args[3];
+    }else if(args.length == 6){
+       x = args[2],
+       y = args[3],
+       width = args[4],
+       height = args[5];
+    }
           
     //Initialize decoder with default params
     BarcodeScanner.MWBinitDecoder(function(){     
@@ -760,6 +852,7 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
                   //  mwbs['MWBcloseScannerOnDecode'](false);
                   //  mwbs['MWBuse60fps'](true);      
                   //  mwbs['MWBsetParam'](constants.MWB_CODE_MASK_DM, constants.MWB_PAR_ID_RESULT_PREFIX, constants.MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS);
+                  //  mwbs['MWBduplicateCodeDelay'](1000);      
 
                                   
 
@@ -796,10 +889,27 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
             } 
             else if (result && result.code){
                
+                /*
+                *  Use this sample if scanning in view 
+                */
+                /*
+                var para = document.createElement("li");
+                var node = document.createTextNode(result.code+" : "+result.type);
+                para.appendChild(node);
+                              
+                var element = document.getElementById("mwb_list");
+                element.appendChild(para);
+                */          
 
-                // setTimeout(function(){                  //
-                //    BarcodeScanner.MWBresumeScanning();  // Use this sample when using mwbs['MWBcloseScannerOnDecode'](false);
-                // },2000);                                //
+
+                /*
+                *  Use this sample when using mwbs['MWBcloseScannerOnDecode'](false);
+                */
+                /*
+                 setTimeout(function(){                  
+                    BarcodeScanner.MWBresumeScanning();  
+                 },2000);                                
+                */
 
                navigator.notification.alert(result.code, function(){}, result.type + (result.isGS1?" (GS1)":""), 'Close');
 
@@ -808,7 +918,11 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
 
         console.log('JS Starting Scanner: '+ (new Date()).getTime());
         // Call the barcode scanner screen
-        BarcodeScanner.MWBstartScanning(callFunc);
+        if(x === false){
+            BarcodeScanner.MWBstartScanning(callFunc);  // Scan using full screen
+        }else{
+            BarcodeScanner.MWBstartScanning(callFunc, x,y,width,height); // Scan using view with: x, y, width, height (percentage of screen size)
+        }
     });
  }
     module.exports = scanner;

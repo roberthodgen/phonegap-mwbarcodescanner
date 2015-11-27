@@ -1,7 +1,11 @@
 package com.manateeworks;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
@@ -11,33 +15,62 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.manateeworks.BarcodeScanner.MWResult;
+import com.manateeworks.BarcodeScanner.MWResults;
+import com.manateeworks.ScannerActivity.State;
+import com.manateeworks.camera.CameraManager;
+
+import android.R;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
-import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.view.Display;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.view.WindowManager;
+import android.webkit.WebView;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
+import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
+import android.widget.ScrollView;
 
-import com.manateeworks.BarcodeScanner.MWResult;
-import com.manateeworks.BarcodeScanner.MWResults;
-import com.manateeworks.ScannerActivity.State;
+public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder.Callback {
 
-public class BarcodeScannerPlugin extends CordovaPlugin {
+	private boolean hasSurface;
 
 	public static class ImageInfo {
 		byte[] pixels;
 		int width;
 		int height;
-		ImageInfo(int width, int height){
+
+		ImageInfo(int width, int height) {
 			this.width = width;
 			this.height = height;
 			pixels = new byte[width * height];
 		}
 	}
-	
+
+	SurfaceView surfaceView;
+	RelativeLayout rlSurfaceContainer;
+	RelativeLayout rlFullScreen;
+	ScrollView scrollView;
+	ImageView overlayImage;
+
 	// !!! Rects are in format: x, y, width, height !!!
 	public static final Rect RECT_LANDSCAPE_1D = new Rect(2, 20, 96, 60);
 	public static final Rect RECT_LANDSCAPE_2D = new Rect(20, 2, 60, 96);
@@ -48,6 +81,111 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 	public static final Rect RECT_DOTCODE = new Rect(30, 20, 40, 60);
 	private static CallbackContext cbc;
 	private static String lastType;
+
+	public static double widthP;
+	public static double heightP;
+	public static double xP;
+	public static double yP;
+
+	@Override
+	public void onPause(boolean multitasking) {
+		super.onPause(multitasking);
+		if (rlFullScreen != null) {
+			ScannerActivity.flashOn = false;
+			// updateFlash();
+			CameraManager.get().stopPreview();
+			ScannerActivity.handler = null;
+
+			CameraManager.get().closeDriver();
+			ScannerActivity.state = State.STOPPED;
+			stopScanner();
+		}
+
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+
+		super.onConfigurationChanged(newConfig);
+		if (rlFullScreen != null && CameraManager.get().camera != null) {
+
+			WindowManager wm = (WindowManager) cordova.getActivity().getSystemService(Context.WINDOW_SERVICE);
+			Display display = wm.getDefaultDisplay();
+			final Point size = new Point();
+			display.getSize(size);
+
+			final double x = xP / 100 * size.x;
+			final double y = yP / 100 * size.y;
+			final double width = widthP / 100 * size.x;
+			final double height = heightP / 100 * size.y;
+
+			LayoutParams lps = (LayoutParams) scrollView.getLayoutParams();
+
+			lps.width = (int) width;
+			lps.height = (int) height;
+
+			lps.leftMargin = (int) x;
+			lps.topMargin = (int) y;
+			int heightTmp = 0;
+			int widthTmp = 0;
+
+			final float AR = (float) size.y / (float) size.x;
+			if (width * AR >= height) {
+				heightTmp = (int) (width * AR);
+				widthTmp = (int) width;
+			} else {
+				widthTmp = (int) (height / AR);
+				heightTmp = (int) height;
+			}
+			final float heightTmpRunnable = heightTmp;
+			final float widthTmpRunnable = widthTmp;
+
+			scrollView.setLayoutParams(lps);
+
+			android.view.ViewGroup.LayoutParams surfaceLPS = rlSurfaceContainer.getLayoutParams();
+			surfaceLPS.width = widthTmp;
+			surfaceLPS.height = heightTmp;
+			rlSurfaceContainer.setLayoutParams(surfaceLPS);
+
+			android.view.ViewGroup.LayoutParams surfaceViewLPS = surfaceView.getLayoutParams();
+			surfaceViewLPS.width = widthTmp;
+			surfaceViewLPS.height = heightTmp;
+
+			surfaceView.setLayoutParams(surfaceViewLPS);
+			if (ScannerActivity.param_OverlayMode == 1) {
+				MWOverlay.removeOverlay();
+			} else if (ScannerActivity.param_OverlayMode == 2) {
+				LayoutParams overlayLps = (LayoutParams) overlayImage.getLayoutParams();
+				overlayLps.width = (int) width;
+				overlayLps.height = (int) height;
+				overlayLps.topMargin = (int) (heightTmpRunnable / 2 - height / 2);
+
+				overlayImage.setLayoutParams(overlayLps);
+
+			}
+
+			new Timer().schedule(new TimerTask() {
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					cordova.getActivity().runOnUiThread(new Runnable() {
+						public void run() {
+
+							setAutoRect();
+							if (ScannerActivity.param_OverlayMode == 1) {
+								MWOverlay.addOverlay(cordova.getActivity(), surfaceView);
+							}
+							scrollView.scrollTo((int) (widthTmpRunnable / 2 - width / 2), (int) (heightTmpRunnable / 2 - height / 2));
+						}
+					});
+				}
+			}, 300);
+			CameraManager.get().setCameraDisplayOrientation(0, CameraManager.get().camera,
+					(cordova.getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT));
+		}
+
+	}
 
 	@Override
 	public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -60,6 +198,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 
 		} else if ("startScanner".equals(action)) {
 
+			stopScanner();
 			cbc = callbackContext;
 			ScannerActivity.cbc = cbc;
 			Context context = this.cordova.getActivity().getApplicationContext();
@@ -67,9 +206,45 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 			this.cordova.startActivityForResult(this, intent, 1);
 			return true;
 
+		} else if ("stopScanner".equals(action)) {
+			stopScanner();
+			return true;
+
+		} else if ("startScannerView".equals(action)) {
+			if (rlFullScreen == null) {
+				cbc = callbackContext;
+				xP = args.getDouble(0);
+				yP = args.getDouble(1);
+				widthP = args.getDouble(2);
+				heightP = args.getDouble(3);
+
+				startScannerView();
+
+			} else {
+				setAutoRect();
+			}
+			return true;
+
 		} else if ("getLastType".equals(action)) {
 
 			callbackContext.success(lastType);
+			return true;
+		} else if ("togglePauseResume".equals(action)) {
+
+			if (rlFullScreen != null) {
+				if (ScannerActivity.state != State.STOPPED) {
+					ScannerActivity.state = State.STOPPED;
+					if (ScannerActivity.param_OverlayMode == 1) {
+						MWOverlay.setPaused(true);
+					}
+				} else {
+
+					ScannerActivity.state = State.PREVIEW;
+					if (ScannerActivity.param_OverlayMode == 1) {
+						MWOverlay.setPaused(false);
+					}
+				}
+			}
 			return true;
 
 		} else if ("setLevel".equals(action)) {
@@ -129,13 +304,19 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 		else if ("setInterfaceOrientation".equals(action)) {
 
 			String orientation = args.getString(0);
-			if (orientation.equalsIgnoreCase("Portrait")) {
+			if (orientation.equalsIgnoreCase("Portrait"))
+
+			{
 				ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 			}
-			if (orientation.equalsIgnoreCase("LandscapeLeft")) {
+			if (orientation.equalsIgnoreCase("LandscapeLeft"))
+
+			{
 				ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
 			}
-			if (orientation.equalsIgnoreCase("LandscapeRight")) {
+			if (orientation.equalsIgnoreCase("LandscapeRight"))
+
+			{
 				ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
 			}
 
@@ -169,10 +350,31 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 
 		}
 
-		else if ("enableZoom".equals(action)) {
+		else if ("toggleFlash".equals(action)) {
+			if (rlFullScreen != null && CameraManager.get().isTorchAvailable() && ScannerActivity.param_EnableFlash) {
+				ScannerActivity.flashOn = !ScannerActivity.flashOn;
+				CameraManager.get().setTorch(ScannerActivity.flashOn);
+			}
+			return true;
+
+		} else if ("enableZoom".equals(action)) {
 			ScannerActivity.param_EnableZoom = args.getBoolean(0);
 			return true;
 
+		} else if ("toggleZoom".equals(action)) {
+			if (rlFullScreen != null) {
+				int maxZoom = CameraManager.get().getMaxZoom();
+				if (maxZoom > 100) {
+					cordova.getActivity().runOnUiThread(new Runnable() {
+
+						public void run() {
+							ScannerActivity.toggleZoom();
+						}
+					});
+				}
+
+			}
+			return true;
 		}
 
 		else if ("setMaxThreads".equals(action)) {
@@ -194,23 +396,26 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 			}
 			return true;
 
-        } else if ("setCustomParam".equals(action)) {
-            
-            if (ScannerActivity.customParams == null) {
-                ScannerActivity.customParams = new HashMap<String, Object>();
-            }
-            
-            ScannerActivity.customParams.put((String) args.get(0), args.get(1));
-            return true;
-            
-        } else if ("setParam".equals(action)) {
-            
-            BarcodeScanner.MWBsetParam(args.getInt(0), args.getInt(1), args.getInt(2));
-            return true;
-            
-        } else if ("resumeScanning".equals(action)) {
+		} else if ("setCustomParam".equals(action)) {
+
+			if (ScannerActivity.customParams == null) {
+				ScannerActivity.customParams = new HashMap<String, Object>();
+			}
+
+			ScannerActivity.customParams.put((String) args.get(0), args.get(1));
+			return true;
+
+		} else if ("setParam".equals(action)) {
+
+			BarcodeScanner.MWBsetParam(args.getInt(0), args.getInt(1), args.getInt(2));
+			return true;
+
+		} else if ("resumeScanning".equals(action)) {
 
 			ScannerActivity.state = State.PREVIEW;
+			if (ScannerActivity.param_OverlayMode == 1) {
+				MWOverlay.setPaused(false);
+			}
 			return true;
 
 		} else if ("closeScannerOnDecode".equals(action)) {
@@ -223,26 +428,32 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 			}
 			return true;
 
-		}else if ("scanImage".equals(action)) {
+		} else if ("duplicateCodeDelay".equals(action)) {
+			BarcodeScanner.MWBsetDuplicatesTimeout(args.getInt(0));
+			return true;
 
-					
-			
+		} else if ("scanImage".equals(action)) {
+
 			String imageURI = args.getString(0);
-			if (imageURI.startsWith("file://")) {
+			if (imageURI.startsWith("file://"))
+
+			{
 				imageURI = imageURI.substring(7);
 			}
-			
+
 			ImageInfo imageInfo = bitmapToGrayscale(imageURI);
-			
-			if (imageInfo != null){
-				//initDecoder();
+
+			if (imageInfo != null)
+
+			{
+				// initDecoder();
 				byte[] result = BarcodeScanner.MWBscanGrayscaleImage(imageInfo.pixels, imageInfo.width, imageInfo.height);
-				
-				if (result != null){
+
+				if (result != null) {
 					MWResults mwResults = new MWResults(result);
-					if (mwResults != null && mwResults.count > 0){
+					if (mwResults != null && mwResults.count > 0) {
 						MWResult mwResult = mwResults.getResult(0);
-						
+
 						String typeName = "";
 						switch (mwResult.type) {
 						case BarcodeScanner.FOUND_25_INTERLEAVED:
@@ -318,7 +529,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 							typeName = "IATA Code 25";
 							break;
 						}
-						
+
 						JSONObject jsonResult = new JSONObject();
 						try {
 							jsonResult.put("code", mwResult.text);
@@ -328,123 +539,168 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 							jsonResult.put("imageHeight", mwResult.imageHeight);
 
 							if (mwResult.locationPoints != null) {
-								jsonResult.put(
-										"location",
-										new JSONObject().put("p1", new JSONObject().put("x", mwResult.locationPoints.p1.x).put("y", mwResult.locationPoints.p1.y))
-												.put("p2", new JSONObject().put("x", mwResult.locationPoints.p2.x).put("y", mwResult.locationPoints.p2.y))
-												.put("p3", new JSONObject().put("x", mwResult.locationPoints.p3.x).put("y", mwResult.locationPoints.p3.y))
-												.put("p4", new JSONObject().put("x", mwResult.locationPoints.p4.x).put("y", mwResult.locationPoints.p4.y)));
+								jsonResult.put("location",
+										new JSONObject()
+												.put("p1",
+														new JSONObject().put("x", mwResult.locationPoints.p1.x).put("y",
+																mwResult.locationPoints.p1.y))
+										.put("p2", new JSONObject().put("x", mwResult.locationPoints.p2.x).put("y", mwResult.locationPoints.p2.y))
+										.put("p3", new JSONObject().put("x", mwResult.locationPoints.p3.x).put("y", mwResult.locationPoints.p3.y))
+										.put("p4", new JSONObject().put("x", mwResult.locationPoints.p4.x).put("y", mwResult.locationPoints.p4.y)));
 							} else {
 								jsonResult.put("location", false);
 							}
 
 							JSONArray rawArray = new JSONArray();
-							
+
 							for (int i = 0; i < mwResult.bytesLength; i++) {
 								rawArray.put((int) (0xff & mwResult.bytes[i]));
 							}
-						
 
 							jsonResult.put("bytes", rawArray);
 
 						} catch (JSONException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						PluginResult pr = new PluginResult(PluginResult.Status.OK, jsonResult);
-						
+
 						callbackContext.sendPluginResult(pr);
-						
+
 					} else {
 						callbackContext.error(-1);
 					}
 				} else {
 					callbackContext.error(-1);
 				}
-				
-			} else {
+
+			} else
+
+			{
 				callbackContext.error(-1);
 			}
-			
+
 			return true;
 
 		}
 		return false;
 	}
 
-	public static int MAX_IMAGE_SIZE = 1280; 	
-	
-	public static ImageInfo bitmapToGrayscale(String imageUri){
-		
+	public void setAutoRect() {
+
+		float p1x;
+		float p1y;
+
+		float p2x;
+		float p2y;
+
+		p1x = (float) (surfaceView.getWidth() - scrollView.getWidth()) / 2 / surfaceView.getWidth();
+		p1y = (float) (surfaceView.getHeight() - scrollView.getHeight()) / 2 / surfaceView.getHeight();
+
+		p2x = (float) scrollView.getWidth() / surfaceView.getWidth();
+		p2y = (float) scrollView.getHeight() / surfaceView.getHeight();
+
+		if (surfaceView.getWidth() < surfaceView.getHeight()) {
+			float tmp = p1x;
+			p1x = p1y;
+			p1y = tmp;
+			tmp = p2x;
+			p2x = p2y;
+			p2y = tmp;
+		}
+
+		p1x += 0.02f;
+		p1y += 0.02f;
+		p2x -= 0.04f;
+		p2y -= 0.04f;
+
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_25, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_39, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_93, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_128, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_AZTEC, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DM, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_EANUPC, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_PDF, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_QR, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_RSS, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_CODABAR, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DOTCODE, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_11, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_MSI, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+	}
+
+	public static int MAX_IMAGE_SIZE = 1280;
+
+	public static ImageInfo bitmapToGrayscale(String imageUri) {
+
 		File image = new File(imageUri);
-		if (image == null){
+		if (image == null) {
 			return null;
 		}
 		BitmapFactory.Options bmOptions = new BitmapFactory.Options();
 		bmOptions.inJustDecodeBounds = true;
-		Bitmap bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(),bmOptions);
-		
-		if (bmOptions.outHeight <= 0 || bmOptions.outWidth <= 0){
+		Bitmap bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(), bmOptions);
+
+		if (bmOptions.outHeight <= 0 || bmOptions.outWidth <= 0) {
 			return null;
 		}
-		
+
 		int height = bmOptions.outHeight;
-	    int width = bmOptions.outWidth;
-	    int inSampleSize = 1;
+		int width = bmOptions.outWidth;
+		int inSampleSize = 1;
 
-	    while  (height > MAX_IMAGE_SIZE || width > MAX_IMAGE_SIZE) {
+		while (height > MAX_IMAGE_SIZE || width > MAX_IMAGE_SIZE) {
 
-	        height = height / 2;
-	        width = width / 2;
-	        inSampleSize *= 2;
-	    }
-	    
-	    bmOptions.inJustDecodeBounds = false;
-	    bmOptions.inSampleSize = inSampleSize;
-	    bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(),bmOptions);
-	    
-	    if (bitmap == null){
-	    	return null;
-	    }
-	    //convert bitmap to ARGB8888 format for any case
-	    Bitmap argbBitmap = Bitmap.createBitmap  (width, height, Bitmap.Config.ARGB_8888);
-	    Canvas canvas = new Canvas(argbBitmap);
-	    Paint paint = new Paint();
-	    canvas.drawBitmap(bitmap, 0, 0, paint);
-	   
-	    int[] pixels = new int[width*height] ;
-	    
-	    argbBitmap.getPixels(pixels, 0, width, 0, 0, width, height);
-	    
-	    ImageInfo imageInfo = new ImageInfo(width, height);
-	    
-	    for (int i = 0; i < width * height; i++){
-	    	int color = pixels[i];
-	    	int B = (int) (color & 0xff);
-	    	int G = (int) ((color >> 8) & 0xff);
-	    	int R = (int) ((color >> 16) & 0xff);
-	    	
-	    	int fgray = (int)(0.299 * R + 0.587 * G + 0.114 * B);
-	    	if (fgray < 0){
-	    		fgray = 0;
-	    	}
-	    	if (fgray > 255){
-	    		fgray = 255;
-	    	}
-	    	
-	    	imageInfo.pixels[i] = (byte) (fgray);
-	    }
-        argbBitmap.recycle();
-        bitmap.recycle();
-        bitmap = null;
-        argbBitmap = null;
-        canvas = null;
-        paint = null;
-        
-		
+			height = height / 2;
+			width = width / 2;
+			inSampleSize *= 2;
+		}
+
+		bmOptions.inJustDecodeBounds = false;
+		bmOptions.inSampleSize = inSampleSize;
+		bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(), bmOptions);
+
+		if (bitmap == null) {
+			return null;
+		}
+		// convert bitmap to ARGB8888 format for any case
+		Bitmap argbBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(argbBitmap);
+		Paint paint = new Paint();
+		canvas.drawBitmap(bitmap, 0, 0, paint);
+
+		int[] pixels = new int[width * height];
+
+		argbBitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+
+		ImageInfo imageInfo = new ImageInfo(width, height);
+
+		for (int i = 0; i < width * height; i++) {
+			int color = pixels[i];
+			int B = (int) (color & 0xff);
+			int G = (int) ((color >> 8) & 0xff);
+			int R = (int) ((color >> 16) & 0xff);
+
+			int fgray = (int) (0.299 * R + 0.587 * G + 0.114 * B);
+			if (fgray < 0) {
+				fgray = 0;
+			}
+			if (fgray > 255) {
+				fgray = 255;
+			}
+
+			imageInfo.pixels[i] = (byte) (fgray);
+		}
+		argbBitmap.recycle();
+		bitmap.recycle();
+		bitmap = null;
+		argbBitmap = null;
+		canvas = null;
+		paint = null;
+
 		return imageInfo;
 	}
-	
+
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
 		if (requestCode == 1) {
@@ -467,7 +723,6 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 					jsonResult.put("bytes", rawArray);
 
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				cbc.success(jsonResult);
@@ -529,11 +784,11 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 
 		// Our sample app is configured by default to search all supported
 		// barcodes...
-		BarcodeScanner.MWBsetActiveCodes(BarcodeScanner.MWB_CODE_MASK_25 | BarcodeScanner.MWB_CODE_MASK_39
-				| BarcodeScanner.MWB_CODE_MASK_93 | BarcodeScanner.MWB_CODE_MASK_128 | BarcodeScanner.MWB_CODE_MASK_AZTEC
-				| BarcodeScanner.MWB_CODE_MASK_DM | BarcodeScanner.MWB_CODE_MASK_EANUPC | BarcodeScanner.MWB_CODE_MASK_PDF
-				| BarcodeScanner.MWB_CODE_MASK_QR | BarcodeScanner.MWB_CODE_MASK_CODABAR | BarcodeScanner.MWB_CODE_MASK_11
-				| BarcodeScanner.MWB_CODE_MASK_MSI | BarcodeScanner.MWB_CODE_MASK_RSS);
+		BarcodeScanner.MWBsetActiveCodes(
+				BarcodeScanner.MWB_CODE_MASK_25 | BarcodeScanner.MWB_CODE_MASK_39 | BarcodeScanner.MWB_CODE_MASK_93 | BarcodeScanner.MWB_CODE_MASK_128
+						| BarcodeScanner.MWB_CODE_MASK_AZTEC | BarcodeScanner.MWB_CODE_MASK_DM | BarcodeScanner.MWB_CODE_MASK_EANUPC
+						| BarcodeScanner.MWB_CODE_MASK_PDF | BarcodeScanner.MWB_CODE_MASK_QR | BarcodeScanner.MWB_CODE_MASK_CODABAR
+						| BarcodeScanner.MWB_CODE_MASK_11 | BarcodeScanner.MWB_CODE_MASK_MSI | BarcodeScanner.MWB_CODE_MASK_RSS);
 
 		// But for better performance, only activate the symbologies your
 		// application requires...
@@ -653,6 +908,398 @@ public class BarcodeScannerPlugin extends CordovaPlugin {
 
 		BarcodeScanner.MWBsetResultType(BarcodeScanner.MWB_RESULT_TYPE_MW);
 
+	}
+
+	private ViewGroup getMainViewGroup() {
+		if (webView instanceof WebView) {
+			return (ViewGroup) webView;
+		} else {
+			try {
+				java.lang.reflect.Method getView = webView.getClass().getMethod("getView");
+				Object viewObject = getView.invoke(webView);
+				if (viewObject instanceof View) {
+					View view = (View) viewObject;
+					ViewParent parentView = view.getParent();
+					if (parentView instanceof ViewGroup) {
+						return (ViewGroup) parentView;
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public void surfaceCreated(SurfaceHolder holder) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		if (!hasSurface) {
+
+			hasSurface = true;
+			initCamera(holder);
+		}
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		hasSurface = false;
+
+	}
+
+	public void initCamera(SurfaceHolder surfaceHolder) {
+
+		try {
+			// Select desired camera resoloution. Not all devices supports all
+			// resolutions, closest available will be chosen
+			// If not selected, closest match to screen resolution will be
+			// chosen
+			// High resolutions will slow down scanning proccess on slower
+			// devices
+
+			CameraManager.setDesiredPreviewSize(1280, 720);
+
+			CameraManager.get().openDriver(surfaceHolder,
+					(cordova.getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT));
+			// int maxZoom = CameraManager.get().getMaxZoom();
+			// if (maxZoom <= 100) {
+			// if (buttonZoom != null) {
+			// buttonZoom.setVisibility(View.GONE);
+			// }
+			// } else {
+			// if (param_EnableZoom) {
+			// if (buttonZoom != null) {
+			// buttonZoom.setVisibility(View.VISIBLE);
+			// }
+			// }
+			// updateZoom();
+			// }
+		} catch (IOException ioe) {
+			// displayFrameworkBugMessageAndExit();
+			return;
+		} catch (RuntimeException e) {
+			// Barcode Scanner has seen crashes in the wild of this variety:
+			// java.?lang.?RuntimeException: Fail to connect to camera service
+			// displayFrameworkBugMessageAndExit();
+			return;
+		}
+		if (ScannerActivity.handler == null) {
+			ScannerActivity.handler = new Handler(new Handler.Callback() {
+
+				@Override
+				public boolean handleMessage(Message msg) {
+
+					switch (msg.what) {
+					case ScannerActivity.MSG_AUTOFOCUS:
+						if (ScannerActivity.state == State.PREVIEW || ScannerActivity.state == State.DECODING) {
+							CameraManager.get().requestAutoFocus(ScannerActivity.handler, ScannerActivity.MSG_AUTOFOCUS);
+						}
+						break;
+					case ScannerActivity.MSG_DECODE:
+						ScannerActivity.decode((byte[]) msg.obj, msg.arg1, msg.arg2);
+						break;
+					case ScannerActivity.MSG_DECODE_FAILED:
+						// CameraManager.get().requestPreviewFrame(handler,
+						// MSG_DECODE);
+						break;
+					case ScannerActivity.MSG_DECODE_SUCCESS:
+						ScannerActivity.state = State.STOPPED;
+						handleDecode((MWResult) msg.obj);
+						break;
+
+					default:
+						break;
+					}
+
+					return false;
+				}
+			});
+		}
+
+		CameraManager.get().startPreview();
+		ScannerActivity.state = State.PREVIEW;
+		CameraManager.get().requestPreviewFrame(ScannerActivity.handler, ScannerActivity.MSG_DECODE);
+		CameraManager.get().requestAutoFocus(ScannerActivity.handler, ScannerActivity.MSG_AUTOFOCUS);
+
+		// flashOn = false;
+		// updateFlash();
+
+	}
+
+	public void handleDecode(MWResult result) {
+
+		byte[] rawResult = null;
+
+		if (result != null && result.bytes != null) {
+			rawResult = result.bytes;
+		}
+
+		String s = "";
+
+		try {
+			s = new String(rawResult, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+
+			s = "";
+			for (int i = 0; i < rawResult.length; i++)
+				s = s + (char) rawResult[i];
+			e.printStackTrace();
+		}
+
+		int bcType = result.type;
+		String typeName = "";
+		switch (bcType) {
+		case BarcodeScanner.FOUND_25_INTERLEAVED:
+			typeName = "Code 25";
+			break;
+		case BarcodeScanner.FOUND_25_STANDARD:
+			typeName = "Code 25 Standard";
+			break;
+		case BarcodeScanner.FOUND_128:
+			typeName = "Code 128";
+			break;
+		case BarcodeScanner.FOUND_39:
+			typeName = "Code 39";
+			break;
+		case BarcodeScanner.FOUND_93:
+			typeName = "Code 93";
+			break;
+		case BarcodeScanner.FOUND_AZTEC:
+			typeName = "AZTEC";
+			break;
+		case BarcodeScanner.FOUND_DM:
+			typeName = "Datamatrix";
+			break;
+		case BarcodeScanner.FOUND_EAN_13:
+			typeName = "EAN 13";
+			break;
+		case BarcodeScanner.FOUND_EAN_8:
+			typeName = "EAN 8";
+			break;
+		case BarcodeScanner.FOUND_NONE:
+			typeName = "None";
+			break;
+		case BarcodeScanner.FOUND_RSS_14:
+			typeName = "Databar 14";
+			break;
+		case BarcodeScanner.FOUND_RSS_14_STACK:
+			typeName = "Databar 14 Stacked";
+			break;
+		case BarcodeScanner.FOUND_RSS_EXP:
+			typeName = "Databar Expanded";
+			break;
+		case BarcodeScanner.FOUND_RSS_LIM:
+			typeName = "Databar Limited";
+			break;
+		case BarcodeScanner.FOUND_UPC_A:
+			typeName = "UPC A";
+			break;
+		case BarcodeScanner.FOUND_UPC_E:
+			typeName = "UPC E";
+			break;
+		case BarcodeScanner.FOUND_PDF:
+			typeName = "PDF417";
+			break;
+		case BarcodeScanner.FOUND_QR:
+			typeName = "QR";
+			break;
+		case BarcodeScanner.FOUND_CODABAR:
+			typeName = "Codabar";
+			break;
+		case BarcodeScanner.FOUND_128_GS1:
+			typeName = "Code 128 GS1";
+			break;
+		case BarcodeScanner.FOUND_ITF14:
+			typeName = "ITF 14";
+			break;
+		case BarcodeScanner.FOUND_11:
+			typeName = "Code 11";
+			break;
+		case BarcodeScanner.FOUND_MSI:
+			typeName = "MSI Plessey";
+			break;
+		case BarcodeScanner.FOUND_25_IATA:
+			typeName = "IATA Code 25";
+			break;
+		}
+
+		if (result.locationPoints != null && CameraManager.get().getCurrentResolution() != null && ScannerActivity.param_OverlayMode == 1) {
+			MWOverlay.showLocation(result.locationPoints.points, result.imageWidth, result.imageHeight);
+		}
+
+		JSONObject jsonResult = new JSONObject();
+		try {
+			jsonResult.put("code", s);
+			jsonResult.put("type", typeName);
+			jsonResult.put("isGS1", result.isGS1);
+			jsonResult.put("imageWidth", result.imageWidth);
+			jsonResult.put("imageHeight", result.imageHeight);
+
+			if (result.locationPoints != null) {
+				jsonResult.put("location",
+						new JSONObject().put("p1", new JSONObject().put("x", result.locationPoints.p1.x).put("y", result.locationPoints.p1.y))
+								.put("p2", new JSONObject().put("x", result.locationPoints.p2.x).put("y", result.locationPoints.p2.y))
+								.put("p3", new JSONObject().put("x", result.locationPoints.p3.x).put("y", result.locationPoints.p3.y))
+								.put("p4", new JSONObject().put("x", result.locationPoints.p4.x).put("y", result.locationPoints.p4.y)));
+			} else {
+				jsonResult.put("location", false);
+			}
+
+			JSONArray rawArray = new JSONArray();
+			if (rawResult != null) {
+				for (int i = 0; i < rawResult.length; i++) {
+					rawArray.put((int) (0xff & rawResult[i]));
+				}
+			}
+
+			jsonResult.put("bytes", rawArray);
+
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		PluginResult pr = new PluginResult(PluginResult.Status.OK, jsonResult);
+
+		if (!ScannerActivity.param_closeOnSuccess) {
+
+			pr.setKeepCallback(true);
+
+		}
+		cbc.sendPluginResult(pr);
+		if (ScannerActivity.param_closeOnSuccess) {
+			stopScanner();
+		}
+	}
+
+	private void stopScanner() {
+		if (rlFullScreen != null) {
+			cordova.getActivity().runOnUiThread(new Runnable() {
+
+				public void run() {
+					if (ScannerActivity.param_OverlayMode == 1) {
+						MWOverlay.removeOverlay();
+					} else if (ScannerActivity.param_OverlayMode == 2) {
+						rlSurfaceContainer.removeView(overlayImage);
+					}
+					CameraManager.get().stopPreview();
+					CameraManager.get().closeDriver();
+					getMainViewGroup().removeView(rlFullScreen);
+					rlFullScreen = null;
+					rlSurfaceContainer = null;
+					surfaceView = null;
+					scrollView = null;
+				}
+			});
+
+		}
+	}
+
+	private void startScannerView() {
+		if (rlFullScreen == null) {
+
+			WindowManager wm = (WindowManager) cordova.getActivity().getSystemService(Context.WINDOW_SERVICE);
+			Display display = wm.getDefaultDisplay();
+			final Point size = new Point();
+			display.getSize(size);
+
+			final double x = xP / 100 * size.x;
+			final double y = yP / 100 * size.y;
+			final double width = widthP / 100 * size.x;
+			final double height = heightP / 100 * size.y;
+
+			final ViewGroup viewGroupToAddTo = getMainViewGroup();
+			cordova.getActivity().runOnUiThread(new Runnable() {
+
+				public void run() {
+					CameraManager.init(cordova.getActivity());
+
+					rlFullScreen = new RelativeLayout(cordova.getActivity());
+					rlSurfaceContainer = new RelativeLayout(cordova.getActivity());
+
+					scrollView = new ScrollView(cordova.getActivity());
+
+					scrollView.setVerticalScrollBarEnabled(false);
+					scrollView.setOnTouchListener(new OnTouchListener() {
+
+						@Override
+						public boolean onTouch(View v, MotionEvent event) {
+							return true;
+						}
+					});
+
+					surfaceView = new SurfaceView(cordova.getActivity());
+					rlFullScreen.setLayoutParams(
+							new LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+					LayoutParams lps = new LayoutParams((int) width, (int) height);
+					lps.leftMargin = (int) x;
+					lps.topMargin = (int) y;
+					int heightTmp = 0;
+					int widthTmp = 0;
+
+					final float AR = (float) size.y / (float) size.x;
+					if (width * AR >= height) {
+						heightTmp = (int) (width * AR);
+						widthTmp = (int) width;
+					} else {
+						widthTmp = (int) (height / AR);
+						heightTmp = (int) height;
+					}
+					final float heightTmpRunnable = heightTmp;
+					rlSurfaceContainer.setLayoutParams(new LayoutParams((int) widthTmp, (int) heightTmp));
+					surfaceView.setLayoutParams(new LayoutParams((int) widthTmp, (int) heightTmp));
+
+					rlSurfaceContainer.addView(surfaceView);
+
+					scrollView.addView(rlSurfaceContainer);
+					scrollView.setPadding(1, 1, 1, 1);
+
+					scrollView.setClipToPadding(true);
+					scrollView.setLayoutParams(lps);
+					rlFullScreen.addView(scrollView);
+					viewGroupToAddTo.addView(rlFullScreen);
+
+					new Timer().schedule(new TimerTask() {
+
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							cordova.getActivity().runOnUiThread(new Runnable() {
+								public void run() {
+									setAutoRect();
+									scrollView.scrollTo(0, (int) (heightTmpRunnable / 2 - height / 2));
+
+									if (ScannerActivity.param_OverlayMode == 1) {
+										MWOverlay.addOverlay(cordova.getActivity(), surfaceView);
+									} else if (ScannerActivity.param_OverlayMode == 2) {
+										overlayImage = new ImageView(cordova.getActivity());
+										overlayImage.setScaleType(ScaleType.FIT_XY);
+										overlayImage.setImageResource(cordova.getActivity().getResources().getIdentifier("overlay", "drawable",
+												cordova.getActivity().getPackageName()));
+										LayoutParams lps = new LayoutParams((int) width, (int) height);
+										lps.topMargin = (int) (heightTmpRunnable / 2 - height / 2);
+										rlSurfaceContainer.addView(overlayImage, lps);
+									}
+
+								}
+							});
+						}
+					}, 500);
+
+					SurfaceHolder surfaceHolder = surfaceView.getHolder();
+
+					surfaceHolder.addCallback(BarcodeScannerPlugin.this);
+					surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+				}
+			});
+
+		}
 	}
 
 }

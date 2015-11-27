@@ -17,47 +17,50 @@ MWBSInitSpace.init = function(mwbs,constants,dvc){
 //    try{
         var mwregister = {
            'Android' : {
-               'MWB_CODE_MASK_25' : {'username' : '', 'key' : ''},
-               'MWB_CODE_MASK_39' : {'username':'','key':''},
-               'MWB_CODE_MASK_93' : {'username':'','key':''},
-               'MWB_CODE_MASK_128' : {'username':'','key':''},
-               'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
-               'MWB_CODE_MASK_DM' : {'username':'','key':''},
-               'MWB_CODE_MASK_EANUPC' : {'username':'','key':''},
-               'MWB_CODE_MASK_PDF' : {'username':'','key':''},
-               'MWB_CODE_MASK_QR' : {'username':'','key':''},
-               'MWB_CODE_MASK_RSS' : {'username':'','key':''},
-               'MWB_CODE_MASK_CODABAR' : {'username':'','key':''},
-               'MWB_CODE_MASK_DOTCODE' : {'username':'','key':''}
-           },
-           'iOS' :{
-               'MWB_CODE_MASK_25' : {'username' : '', 'key' : ''},
-               'MWB_CODE_MASK_39' : {'username':'','key':''},
-               'MWB_CODE_MASK_93' : {'username':'','key':''},
-               'MWB_CODE_MASK_128' : {'username':'','key':''},
-               'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
-               'MWB_CODE_MASK_DM' : {'username':'','key':''},
-               'MWB_CODE_MASK_EANUPC' : {'username':'','key':''},
-               'MWB_CODE_MASK_PDF' : {'username':'','key':''},
-               'MWB_CODE_MASK_QR' : {'username':'','key':''},
-               'MWB_CODE_MASK_RSS' : {'username':'','key':''},
-               'MWB_CODE_MASK_CODABAR' : {'username':'','key':''},
-               'MWB_CODE_MASK_DOTCODE' : {'username':'','key':''}
-           },
-           'Win32NT' : {
-               'MWB_CODE_MASK_25' : {'username' : '', 'key' : ''},
-               'MWB_CODE_MASK_39' : {'username':'','key':''},
-               'MWB_CODE_MASK_93' : {'username':'','key':''},
-               'MWB_CODE_MASK_128' : {'username':'','key':''},
-               'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
-               'MWB_CODE_MASK_DM' : {'username':'','key':''},
-               'MWB_CODE_MASK_EANUPC' : {'username':'','key':''},
-               'MWB_CODE_MASK_PDF' : {'username':'','key':''},
-               'MWB_CODE_MASK_QR' : {'username':'','key':''},
-               'MWB_CODE_MASK_RSS' : {'username':'','key':''},
-               'MWB_CODE_MASK_CODABAR' : {'username':'','key':''},
-               'MWB_CODE_MASK_DOTCODE' : {'username':'','key':''}
-           }
+                'MWB_CODE_MASK_25' : {'username' : '', 'key' : ''},
+                'MWB_CODE_MASK_39' : {'username':'','key':''},
+                'MWB_CODE_MASK_93' : {'username':'','key':''},
+                'MWB_CODE_MASK_128' : {'username':'','key':''},
+                'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
+                'MWB_CODE_MASK_DM' : {'username':'','key':''},
+                'MWB_CODE_MASK_PDF' : {'username':'','key':''},
+                'MWB_CODE_MASK_QR' : {'username':'','key':''},
+                'MWB_CODE_MASK_RSS' : {'username':'','key':''},
+                'MWB_CODE_MASK_CODABAR' : {'username':'','key':''},
+                'MWB_CODE_MASK_11' : {'username':'','key':''},
+                'MWB_CODE_MASK_MSI' : {'username':'','key':''},
+                'MWB_CODE_MASK_DOTCODE' : {'username':'','key':''}
+                },
+            'iOS' :{
+                'MWB_CODE_MASK_25' : {'username' : '', 'key' : ''},
+                'MWB_CODE_MASK_39' : {'username':'','key':''},
+                'MWB_CODE_MASK_93' : {'username':'','key':''},
+                'MWB_CODE_MASK_128' : {'username':'','key':''},
+                'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
+                'MWB_CODE_MASK_DM' : {'username':'','key':''},
+                'MWB_CODE_MASK_PDF' : {'username':'','key':''},
+                'MWB_CODE_MASK_QR' : {'username':'','key':''},
+                'MWB_CODE_MASK_RSS' : {'username':'','key':''},
+                'MWB_CODE_MASK_CODABAR' : {'username':'','key':''},
+                'MWB_CODE_MASK_11' : {'username':'','key':''},
+                'MWB_CODE_MASK_MSI' : {'username':'','key':''},
+                'MWB_CODE_MASK_DOTCODE' : {'username':'','key':''}
+                },
+            'Win32NT' : {
+                'MWB_CODE_MASK_25' : {'username' : '', 'key' : ''},
+                'MWB_CODE_MASK_39' : {'username':'','key':''},
+                'MWB_CODE_MASK_93' : {'username':'','key':''},
+                'MWB_CODE_MASK_128' : {'username':'','key':''},
+                'MWB_CODE_MASK_AZTEC' : {'username':'','key':''},
+                'MWB_CODE_MASK_DM' : {'username':'','key':''},
+                'MWB_CODE_MASK_PDF' : {'username':'','key':''},
+                'MWB_CODE_MASK_QR' : {'username':'','key':''},
+                'MWB_CODE_MASK_RSS' : {'username':'','key':''},
+                'MWB_CODE_MASK_CODABAR' : {'username':'','key':''},
+                'MWB_CODE_MASK_11' : {'username':'','key':''},
+                'MWB_CODE_MASK_MSI' : {'username':'','key':''},
+                'MWB_CODE_MASK_DOTCODE' : {'username':'','key':''}
+                }
         }
 //    }
 //    catch(e){
@@ -104,21 +107,45 @@ MWBSInitSpace.init = function(mwbs,constants,dvc){
 MWBSInitSpace.callback = function(result){
     console.log('MWBSInitSpace.callback Invoked at: '+ (new Date()).getTime());
     
-     //result.code - string representation of barcode result
-     //result.type - type of barcode detected
-     //result.bytes - bytes array of raw barcode result
+     /**
+       * result.code - string representation of barcode result
+       * result.type - type of barcode detected or 'Cancel' if scanning is canceled
+       * result.bytes - bytes array of raw barcode result
+       * result.isGS1 - (boolean) barcode is GS1 compliant
+       * result.location - contains rectangle points p1,p2,p3,p4 with the corresponding x,y
+       * result.imageWidth - Width of the scanned image
+       * result.imageHeight - Height of the scanned image
+       */
      
     console.log('Scan complete');
-    if (result.type == 'Cancel'){
-        //Perform some action on scanning canceled if needed
-    } 
-    else
-        if (result && result.code){
+   if (result.type == 'Cancel'){
+            //Perform some action on scanning canceled if needed
+            } 
+            else if (result && result.code){
+               
+                /*
+                *  Use this sample if scanning in view 
+                */
+                /*
+                var para = document.createElement("li");
+                var node = document.createTextNode(result.code+" : "+result.type);
+                para.appendChild(node);
+                              
+                var element = document.getElementById("mwb_list");
+                element.appendChild(para);
+                */          
 
-              // setTimeout(function(){                  //
-              //    BarcodeScanner.MWBresumeScanning();  // Use this sample when using mwbs['MWBcloseScannerOnDecode'](false);
-              // },2000);                                //
 
-             navigator.notification.alert(result.code, function(){}, result.type + (result.isGS1?" (GS1)":""), 'Close');
-          }
+                /*
+                *  Use this sample when using mwbs['MWBcloseScannerOnDecode'](false);
+                */
+                /*
+                 setTimeout(function(){                  
+                    BarcodeScanner.MWBresumeScanning();  
+                 },2000);                                
+                */
+
+               navigator.notification.alert(result.code, function(){}, result.type + (result.isGS1?" (GS1)":""), 'Close');
+
+            }
 }

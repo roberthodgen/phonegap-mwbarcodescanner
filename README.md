@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.7.1
+ Version 1.8
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -83,6 +83,41 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
         URI                     - the path to the image
         MWBSInitSpace.init      - scanner initialisation
         MWBSInitSpace.callback  - result callback
+
+##How to scan in partial screen view
+
+* Instead of scanner.startScanning() use:
+
+        scanner.scanImage(x, y, width, height);
+        
+        
+    or with custom init and callback:
+    
+        scanImage(MWBSInitSpace.init, MWBSInitSpace.callback, x, y, width, height);
+        
+
+        
+* Params:   
+        
+        x, y, width, height     - rectangle of the view in percentages relative to the screen size
+        MWBSInitSpace.init      - scanner initialisation
+        MWBSInitSpace.callback  - result callback
+
+* Example:   
+
+        <form style="width: 100%; text-align: center;">
+                <input type="button" value="Scan fullscreen" onclick="scanner.startScanning()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
+                <input type="button" value="Scan in view" onclick="scanner.startScanning(0,4,100,50)" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
+                <input type="button" value="Pause/Resume" onclick="scanner.togglePauseResume()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
+                <input type="button" value="Close" onclick="scanner.stopScanner()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
+                <input type="button" value="Flash" onclick="scanner.toggleFlash()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
+                <input type="button" value="Zoom" onclick="scanner.toggleZoom()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
+            </form>
+            <ul id="mwb_list">
+                
+            </ul>
+	   </br>
+        
 
 ##Important change in 1.5
 
@@ -346,6 +381,22 @@ Add a notification plugin (if not already present):
 
 
 * (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
+
+
+&nbsp;
+###Changes in 1.8:
+&nbsp;
+- Added new feature that makes possible scanning in view:
+
+        scanner.startScanning(x, y, width, height); 
+        //all parameters represent percentages relative to the screen size
+        
+- Other methods for partial screen scanning control:
+
+        scanner.togglePauseResume() - toggle pause resume scanning
+        scanner.stopScanner()       - stop and remove scanner view
+        scanner.toggleFlash()       - toggle flash on/off
+        scanner.toggleZoom()        - toggle zoom in/out
 
 
 &nbsp;

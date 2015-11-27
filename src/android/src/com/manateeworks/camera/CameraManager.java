@@ -1,19 +1,15 @@
 package com.manateeworks.camera;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import java.util.List;
 
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Parameters;
@@ -30,7 +26,7 @@ import android.view.WindowManager;
 public final class CameraManager {
 
 	public static float currentFPS = 0f;
-	public static int REFOCUSING_DELAY = 2500; 
+	public static int REFOCUSING_DELAY = 2500;
 	public static boolean USE_SAMSUNG_FOCUS_ZOOM_PATCH = false;
 
 	private static CameraManager cameraManager;
@@ -46,23 +42,22 @@ public final class CameraManager {
 
 	public static int mDesiredWidth = 1280;
 	public static int mDesiredHeight = 720;
-	
+
 	public SurfaceHolder lastHolder;
-	
+
 	public Timer focusTimer;
-	
+
 	public static AutoFocusCallback afCallback;
-	public static boolean refocusingActive = false;	
-	
-	public static boolean DEBUG = false; 
+	public static boolean refocusingActive = false;
+
+	public static boolean DEBUG = true;
 	public static String TAG = "CameraManager";
-	
 
 	public static void setDesiredPreviewSize(int width, int height) {
 		mDesiredWidth = width;
 		mDesiredHeight = height;
 	}
-	
+
 	public Point getMaxResolution() {
 
 		if (camera != null)
@@ -71,23 +66,21 @@ public final class CameraManager {
 			return null;
 
 	}
-	
+
 	public Point getCurrentResolution() {
 
-		if (camera != null){
-			
+		if (camera != null) {
+
 			Parameters params = camera.getParameters();
-			
+
 			Point res = new Point(params.getPreviewSize().width, params.getPreviewSize().height);
-			
-			
+
 			return res;
-		}
-		else
+		} else
 			return null;
 
 	}
-	
+
 	public Point getNormalResolution(Point normalRes) {
 
 		if (camera != null)
@@ -96,18 +89,16 @@ public final class CameraManager {
 			return null;
 
 	}
-	
+
 	public final PreviewCallback previewCallback;
-	
 
 	public static void init(Context context) {
 		if (cameraManager == null) {
 			cameraManager = new CameraManager(context);
-			
+
 		}
 	}
 
-	
 	public static CameraManager get() {
 		return cameraManager;
 	}
@@ -121,149 +112,156 @@ public final class CameraManager {
 		useBufferedCallback = true;
 
 		previewCallback = new PreviewCallback(configManager, useOneShotPreviewCallback);
-		
+
 	}
 
 	public void openDriver(SurfaceHolder holder, boolean isPortrait) throws IOException {
-		
+
 		if (camera == null) {
-			if (DEBUG) Log.i(TAG, "Camera opening...");
+			if (DEBUG)
+				Log.i(TAG, "Camera opening...");
 			camera = Camera.open();
 			if (camera == null) {
-				if (DEBUG) Log.i(TAG, "First camera open failed");
+				if (DEBUG)
+					Log.i(TAG, "First camera open failed");
 				camera = Camera.open(0);
-				
-				if (camera == null){
-					if (DEBUG) Log.i(TAG, "Secoond camera open failed");
+
+				if (camera == null) {
+					if (DEBUG)
+						Log.i(TAG, "Secoond camera open failed");
 					throw new IOException();
 				}
 			}
-			
-			if (DEBUG) Log.i(TAG, "Camera open success");
-			
+
+			if (DEBUG)
+				Log.i(TAG, "Camera open success");
+
 			if (android.os.Build.VERSION.SDK_INT >= 9) {
-				setCameraDisplayOrientation(0, camera, isPortrait);     
+				setCameraDisplayOrientation(0, camera, isPortrait);
 			} else {
 				if (isPortrait)
-	            	camera.setDisplayOrientation(90);	
+					camera.setDisplayOrientation(90);
 			}
-			
-			if (holder != null){
+
+			if (holder != null) {
 				lastHolder = holder;
 				camera.setPreviewDisplay(holder);
-				if (DEBUG) Log.i(TAG, "Set camera current holder");
+				if (DEBUG)
+					Log.i(TAG, "Set camera current holder");
 			} else {
-				
+
 				camera.setPreviewDisplay(lastHolder);
-				if (DEBUG) Log.i(TAG, "Set camera last holder");
-				if (lastHolder == null){
-					if (DEBUG) Log.i(TAG, "Camera last holder is NULL");
+				if (DEBUG)
+					Log.i(TAG, "Set camera last holder");
+				if (lastHolder == null) {
+					if (DEBUG)
+						Log.i(TAG, "Camera last holder is NULL");
 				} else {
-					
+
 				}
-				
+
 			}
 
 			if (!initialized) {
 				initialized = true;
 				configManager.initFromCameraParameters(camera);
-				if (DEBUG) Log.i(TAG, "configManager initialized");
+				if (DEBUG)
+					Log.i(TAG, "configManager initialized");
 			}
 			configManager.setDesiredCameraParameters(camera);
-			if (DEBUG) Log.i(TAG, "Camera set desired parameters");
+			if (DEBUG)
+				Log.i(TAG, "Camera set desired parameters");
 
 		} else {
-			if (DEBUG) Log.i(TAG, "Camera already opened");
+			if (DEBUG)
+				Log.i(TAG, "Camera already opened");
 		}
-		
-		
-		
+
 	}
-	
-	
+
 	public int getMaxZoom() {
 
 		if (camera == null)
 			return -1;
 
 		Parameters cp = camera.getParameters();
-		if (!cp.isZoomSupported()){
+		if (!cp.isZoomSupported()) {
 			return -1;
 		}
-		
-		List<Integer> zoomRatios =  cp.getZoomRatios();
-		
-		return zoomRatios.get(zoomRatios.size()-1);
+
+		List<Integer> zoomRatios = cp.getZoomRatios();
+
+		return zoomRatios.get(zoomRatios.size() - 1);
 
 	}
-	
-	public void setZoom(int zoom){
-		
+
+	public void setZoom(int zoom) {
+
 		if (camera == null)
 			return;
 
 		final Parameters cp = camera.getParameters();
-		
+
 		int minDist = 100000;
 		int bestIndex = 0;
-		
+
 		if (zoom == -1) {
 			int zoomIndex = cp.getZoom() - 1;
-			
-			if (zoomIndex >= 0){
+
+			if (zoomIndex >= 0) {
 				zoom = cp.getZoomRatios().get(zoomIndex);
 			}
-		
+
 		}
-		
-		List<Integer> zoomRatios =  cp.getZoomRatios();
-		
-		if (zoomRatios != null){
-		
-			for (int i = 0; i < zoomRatios.size(); i++){
+
+		List<Integer> zoomRatios = cp.getZoomRatios();
+
+		if (zoomRatios != null) {
+
+			for (int i = 0; i < zoomRatios.size(); i++) {
 				int z = zoomRatios.get(i);
-				
-				if (Math.abs(z - zoom) < minDist){
+
+				if (Math.abs(z - zoom) < minDist) {
 					minDist = Math.abs(z - zoom);
 					bestIndex = i;
 				}
 			}
-			
+
 			final int fBestIndex = bestIndex;
-			
-			if (USE_SAMSUNG_FOCUS_ZOOM_PATCH){
-				
-				if (bestIndex > 10){
-					
-					//camera.cancelAutoFocus();
+
+			if (USE_SAMSUNG_FOCUS_ZOOM_PATCH) {
+
+				if (bestIndex > 10) {
+
+					// camera.cancelAutoFocus();
 					stopFocusing();
-		
-					cp.setZoom(fBestIndex-5); 
+
+					cp.setZoom(fBestIndex - 5);
 					camera.setParameters(cp);
 					camera.autoFocus(null);
-					
+
 					new Handler().postDelayed(new Runnable() {
-						
+
 						@Override
 						public void run() {
-							if (camera != null){
+							if (camera != null) {
 								camera.cancelAutoFocus();
-								cp.setZoom(fBestIndex); 
+								cp.setZoom(fBestIndex);
 								camera.setParameters(cp);
 							}
-							
+
 							startFocusing();
-							
+
 						}
 					}, 200);
-					
+
 				} else {
 					stopFocusing();
 					cp.setZoom(fBestIndex);
 					camera.setParameters(cp);
 					startFocusing();
 				}
-				
+
 			} else {
 				stopFocusing();
 				cp.setZoom(fBestIndex);
@@ -271,7 +269,7 @@ public final class CameraManager {
 				startFocusing();
 			}
 		}
-		
+
 	}
 
 	public boolean isTorchAvailable() {
@@ -300,26 +298,21 @@ public final class CameraManager {
 
 			if (flashModes != null && flashModes.contains(Parameters.FLASH_MODE_TORCH)) {
 				camera.cancelAutoFocus();
-				
-				
+
 				new Handler().postDelayed(new Runnable() {
-					
+
 					@Override
 					public void run() {
-						if (camera != null){
+						if (camera != null) {
 							if (enabled)
 								cp.setFlashMode(Parameters.FLASH_MODE_TORCH);
 							else
 								cp.setFlashMode(Parameters.FLASH_MODE_OFF);
 							camera.setParameters(cp);
 						}
-						
+
 					}
 				}, 300);
-				
-				
-
-				
 
 			}
 		} catch (Exception e) {
@@ -327,65 +320,64 @@ public final class CameraManager {
 		}
 
 	}
-	
-	public float[] getExposureCompensationRange(){
-		
+
+	public float[] getExposureCompensationRange() {
+
 		if (camera == null)
 			return null;
 
-		try{
-		
+		try {
+
 			Parameters cp = camera.getParameters();
-			
+
 			float ecStep = cp.getExposureCompensationStep();
 			float minEC = cp.getMinExposureCompensation();
 			float maxEC = cp.getMaxExposureCompensation();
-			
+
 			float[] res = new float[3];
 			res[0] = minEC;
 			res[1] = maxEC;
 			res[2] = ecStep;
-			
+
 			return res;
-			
+
 		} catch (Exception e) {
-			
+
 			return null;
 		}
-		
+
 	}
-	
+
 	public void setExposureCompensation(float value) {
 
 		if (camera == null)
 			return;
 
-		try{
-		
+		try {
+
 			Parameters cp = camera.getParameters();
-			//int currentEC = cp.getExposureCompensation();
+			// int currentEC = cp.getExposureCompensation();
 			float ecStep = cp.getExposureCompensationStep();
 			float minEC = cp.getMinExposureCompensation();
 			float maxEC = cp.getMaxExposureCompensation();
-			
+
 			if (value > maxEC)
 				value = maxEC;
 			if (value < minEC)
 				value = minEC;
-			
+
 			cp.setExposureCompensation((int) value);
-			
+
 			camera.setParameters(cp);
-			
-			//Log.d("exposure compensation", String.valueOf(value));
-			
+
+			// Log.d("exposure compensation", String.valueOf(value));
+
 		} catch (Exception e) {
-			//Log.d("exposure compensation", "failed to set");
+			// Log.d("exposure compensation", "failed to set");
 		}
 
 	}
 
-	
 	public void closeDriver() {
 
 		if (camera != null) {
@@ -399,59 +391,58 @@ public final class CameraManager {
 		}
 	}
 
-	public void startFocusing(){
-		
-		if (refocusingActive){
+	public void startFocusing() {
+
+		if (refocusingActive) {
 			return;
 		}
 		refocusingActive = true;
-		
+
 		focusTimer = new Timer();
 		focusTimer.schedule(new TimerTask() {
-			
+
 			@Override
 			public void run() {
-				if (camera != null){
-					try{
+				if (camera != null) {
+					try {
 						camera.autoFocus(null);
-					} catch (Exception e){
-						
+					} catch (Exception e) {
+
 					}
 				}
-				
+
 			}
 		}, 500, REFOCUSING_DELAY);
 	}
-	
-	public void stopFocusing(){
-		
+
+	public void stopFocusing() {
+
 		camera.cancelAutoFocus();
-		if (!refocusingActive){
+		if (!refocusingActive) {
 			return;
 		}
-		
-		if (focusTimer != null){
+
+		if (focusTimer != null) {
 			focusTimer.cancel();
 			focusTimer.purge();
 		}
-		
+
 		refocusingActive = false;
-		
+
 	}
-	
+
 	public void startPreview() {
 		Log.i("preview", "starting preview");
 		if (camera != null && !previewing) {
 			Log.i("preview", "preview started");
 			camera.startPreview();
 			previewing = true;
-			
+
 			startFocusing();
-			
+
 		}
 	}
 
-	
 	public void stopPreview() {
 		if (camera != null && previewing) {
 
@@ -468,16 +459,15 @@ public final class CameraManager {
 		}
 	}
 
-	
 	public void requestPreviewFrame(Handler handler, int message) {
-		
+
 		if (camera != null && previewing) {
 			previewCallback.setHandler(handler, message);
 			if (useBufferedCallback) {
-				//if (cb == null) {
+				// if (cb == null) {
 
-					cb = previewCallback.getCallback();
-				//}
+				cb = previewCallback.getCallback();
+				// }
 				previewCallback.setPreviewCallback(camera, cb, configManager.cameraResolution.x, configManager.cameraResolution.y);
 			} else if (useOneShotPreviewCallback) {
 				camera.setOneShotPreviewCallback(previewCallback);
@@ -487,44 +477,43 @@ public final class CameraManager {
 		}
 	}
 
-	
 	public void requestAutoFocus(Handler handler, int message) {
-		/*if (camera != null && previewing) {
-			autoFocusCallback.setHandler(handler, message);
-			 Log.d(TAG, "Requesting auto-focus callback");
-			camera.autoFocus(autoFocusCallback);
-			
-		}*/
+		/*
+		 * if (camera != null && previewing) {
+		 * autoFocusCallback.setHandler(handler, message); Log.d(TAG,
+		 * "Requesting auto-focus callback");
+		 * camera.autoFocus(autoFocusCallback);
+		 * 
+		 * }
+		 */
 	}
 
 	public int getDeviceDefaultOrientation() {
 
-	    WindowManager windowManager =  (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 
-	    Configuration config = context.getResources().getConfiguration();
+		Configuration config = context.getResources().getConfiguration();
 
-	    int rotation = windowManager.getDefaultDisplay().getRotation();
+		int rotation = windowManager.getDefaultDisplay().getRotation();
 
-	    if ( ((rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) &&
-	            config.orientation == Configuration.ORIENTATION_LANDSCAPE)
-	        || ((rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) &&    
-	            config.orientation == Configuration.ORIENTATION_PORTRAIT)) {
-	      return Configuration.ORIENTATION_LANDSCAPE;
-	    }
-	    else{ 
-	      return Configuration.ORIENTATION_PORTRAIT;
-	    }
+		if (((rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) && config.orientation == Configuration.ORIENTATION_LANDSCAPE)
+				|| ((rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270)
+						&& config.orientation == Configuration.ORIENTATION_PORTRAIT)) {
+			return Configuration.ORIENTATION_LANDSCAPE;
+		} else {
+			return Configuration.ORIENTATION_PORTRAIT;
+		}
 	}
-	
-	public void updateCameraOrientation(int rotation){
-		
+
+	public void updateCameraOrientation(int rotation) {
+
 		if (camera == null) {
 			return;
 		}
-		
+
 		int deviceOrientation = getDeviceDefaultOrientation();
-		
-		if (deviceOrientation == Configuration.ORIENTATION_PORTRAIT){
+
+		if (deviceOrientation == Configuration.ORIENTATION_PORTRAIT) {
 			switch (rotation) {
 			case Surface.ROTATION_0:
 				camera.setDisplayOrientation(90);
@@ -538,64 +527,68 @@ public final class CameraManager {
 			case Surface.ROTATION_90:
 				camera.setDisplayOrientation(0);
 				break;
-			
+
 			default:
 				break;
-			} 
-		}else {
-				
-			switch (rotation) {
-			case Surface.ROTATION_0:
-				camera.setDisplayOrientation(0);
-				break;
-			case Surface.ROTATION_180:
-				camera.setDisplayOrientation(180);
-				break;
-			case Surface.ROTATION_270:
-				camera.setDisplayOrientation(90);
-				break;
-			case Surface.ROTATION_90:
-				camera.setDisplayOrientation(270);
-				break;
-			
-			default:
-				break;	
 			}
-				
+		} else {
+
+			switch (rotation) {
+			case Surface.ROTATION_0:
+				camera.setDisplayOrientation(0);
+				break;
+			case Surface.ROTATION_180:
+				camera.setDisplayOrientation(180);
+				break;
+			case Surface.ROTATION_270:
+				camera.setDisplayOrientation(90);
+				break;
+			case Surface.ROTATION_90:
+				camera.setDisplayOrientation(270);
+				break;
+
+			default:
+				break;
+			}
+
 		}
-		
+
 	}
-	
+
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	public void setCameraDisplayOrientation(int cameraId, android.hardware.Camera camera, boolean isPortrait) {
-	     android.hardware.Camera.CameraInfo info =
-	             new android.hardware.Camera.CameraInfo();
-	     android.hardware.Camera.getCameraInfo(cameraId, info);
-	     
-	    
-	     
-	     Display d = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+		android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
+		android.hardware.Camera.getCameraInfo(cameraId, info);
 
-	     
-	     int rotation =d.getRotation();
-	     
-	     int degrees = 0;
-	     switch (rotation) {
-	         case Surface.ROTATION_0: degrees = 0; break;
-	         case Surface.ROTATION_90: degrees = 90; break;
-	         case Surface.ROTATION_180: degrees = 180; break;
-	         case Surface.ROTATION_270: degrees = 270; break;
-	     }
+		Display d = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-	     int result;
-	     if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-	         result = (info.orientation + degrees) % 360;
-	         result = (360 - result) % 360;  // compensate the mirror
-	     } else {  // back-facing
-	         result = (info.orientation - degrees + 360) % 360;
-	     }
-	     camera.setDisplayOrientation(result);
-	 }
+		int rotation = d.getRotation();
+
+		int degrees = 0;
+		switch (rotation) {
+		case Surface.ROTATION_0:
+			degrees = 0;
+			break;
+		case Surface.ROTATION_90:
+			degrees = 90;
+			break;
+		case Surface.ROTATION_180:
+			degrees = 180;
+			break;
+		case Surface.ROTATION_270:
+			degrees = 270;
+			break;
+		}
+
+		int result;
+		if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+			result = (info.orientation + degrees) % 360;
+			result = (360 - result) % 360; // compensate the mirror
+		} else { // back-facing
+			result = (info.orientation - degrees + 360) % 360;
+		}
+		camera.setDisplayOrientation(result);
+	}
 
 	public Bitmap renderCroppedGreyscaleBitmap(byte[] data, int width, int height) {
 		int[] pixels = new int[width * height];
@@ -614,7 +607,6 @@ public final class CameraManager {
 		return bitmap;
 	}
 
-	
 }
 
 final class CameraConfigurationManager {
@@ -647,82 +639,76 @@ final class CameraConfigurationManager {
 		Log.d(TAG, "Camera resolution: " + cameraResolution);
 	}
 
-	
 	void setDesiredCameraParameters(Camera camera) {
 		Camera.Parameters parameters = camera.getParameters();
 		cameraResolution = getCameraResolution(parameters, new Point(CameraManager.mDesiredWidth, CameraManager.mDesiredHeight));
 		Log.d(TAG, "Setting preview size: " + cameraResolution);
 		parameters.setPreviewSize(cameraResolution.x, cameraResolution.y);
-		
-		/*try {
-			String vs =  parameters.get("anti-shake");
-			if (vs != null) {
-				parameters.set("anti-shake", "1");
-			}
-		} catch (Exception e){
-		}*/
-		
+
+		/*
+		 * try { String vs = parameters.get("anti-shake"); if (vs != null) {
+		 * parameters.set("anti-shake", "1"); } } catch (Exception e){ }
+		 */
+
 		try {
 			String vs = parameters.get("video-stabilization");
 			if (vs != null) {
 				parameters.set("video-stabilization", "true");
 			}
-		} catch (Exception e){
+		} catch (Exception e) {
 		}
-		
+
 		try {
 			String vs = parameters.get("video-stabilization-ocr");
 			if (vs != null) {
 				parameters.set("video-stabilization-ocr", "true");
 			}
-		} catch (Exception e){
+		} catch (Exception e) {
 		}
-		
 
 		try {
 			String vs = parameters.get("touch-af-aec-values");
 			if (vs != null) {
 				parameters.set("touch-af-aec-values", "touch-on");
 			}
-		} catch (Exception e){
+		} catch (Exception e) {
 		}
-		
+
 		String focusMode = parameters.getFocusMode();
-		
-		try{
+
+		try {
 			parameters.setFocusMode(Parameters.FOCUS_MODE_AUTO);
-			//parameters.setFocusMode("macro");
+			// parameters.setFocusMode("macro");
 			camera.setParameters(parameters);
-		} catch (Exception e){
-			
-			try{
+		} catch (Exception e) {
+
+			try {
 				parameters.setFocusMode(Parameters.FOCUS_MODE_AUTO);
 				camera.setParameters(parameters);
-			} catch (Exception e2){
-				parameters.setFocusMode(focusMode);			
+			} catch (Exception e2) {
+				parameters.setFocusMode(focusMode);
 			}
-			
+
 		}
-		
+
 		try {
 			List<int[]> supportedFPS = parameters.getSupportedPreviewFpsRange();
-			
+
 			int maxFps = -1;
 			int maxFpsIndex = -1;
-			for (int i = 0; i < supportedFPS.size(); i++){
+			for (int i = 0; i < supportedFPS.size(); i++) {
 				int[] sr = supportedFPS.get(i);
-				if (sr[1] > maxFps){
+				if (sr[1] > maxFps) {
 					maxFps = sr[1];
 					maxFpsIndex = i;
 				}
 			}
-			
+
 			parameters.setPreviewFpsRange(supportedFPS.get(maxFpsIndex)[0], supportedFPS.get(maxFpsIndex)[1]);
-			
-		} catch (Exception e){
+
+		} catch (Exception e) {
 		}
 
-		
 		Log.d(TAG, "Camera parameters flat: " + parameters.flatten());
 		camera.setParameters(parameters);
 	}
@@ -742,7 +728,7 @@ final class CameraConfigurationManager {
 	String getPreviewFormatString() {
 		return previewFormatString;
 	}
-	
+
 	public static Point getMaxResolution(Camera.Parameters parameters) {
 
 		List<Size> sizes = parameters.getSupportedPreviewSizes();
@@ -751,7 +737,7 @@ final class CameraConfigurationManager {
 		int maxSize = 0;
 
 		for (int i = 0; i < sizes.size(); i++) {
-			int size = sizes.get(i).width * sizes.get(i).height; 
+			int size = sizes.get(i).width * sizes.get(i).height;
 			if (size > maxSize) {
 				maxSize = size;
 				maxIndex = i;
@@ -764,74 +750,71 @@ final class CameraConfigurationManager {
 	public static Point getCameraResolution(Camera.Parameters parameters, Point desiredResolution) {
 
 		String previewSizeValueString = parameters.get("preview-size-values");
-		
+
 		if (previewSizeValueString == null) {
 			previewSizeValueString = parameters.get("preview-size-value");
 		}
 
 		Point cameraResolution = null;
 
-		/*if (CameraManager.mDesiredWidth == 0)
-			CameraManager.mDesiredWidth = desiredResolution.x;
-		if (CameraManager.mDesiredHeight == 0)
-			CameraManager.mDesiredHeight = desiredResolution.y;*/
+		/*
+		 * if (CameraManager.mDesiredWidth == 0) CameraManager.mDesiredWidth =
+		 * desiredResolution.x; if (CameraManager.mDesiredHeight == 0)
+		 * CameraManager.mDesiredHeight = desiredResolution.y;
+		 */
 
 		List<Size> sizes = parameters.getSupportedPreviewSizes();
 
 		int minDif = 99999;
 		int minIndex = -1;
-		
-		float screenAR = ((float)CameraConfigurationManager.screenResolution.x) / CameraConfigurationManager.screenResolution.y;
 
+		float screenAR = ((float) Math.max(CameraConfigurationManager.screenResolution.x, CameraConfigurationManager.screenResolution.y)
+				/ Math.min(CameraConfigurationManager.screenResolution.x, CameraConfigurationManager.screenResolution.y));
 		for (int i = 0; i < sizes.size(); i++) {
-			
-			float resAR = ((float)sizes.get(i).width) / sizes.get(i).height;
-			
+
+			float resAR = ((float) sizes.get(i).width) / sizes.get(i).height;
+
 			int dif = Math.abs(sizes.get(i).width - desiredResolution.x) + Math.abs(sizes.get(i).height - desiredResolution.y);
-			
-			//int dif = Math.abs((sizes.get(i).width * sizes.get(i).height) - (CameraManager.mDesiredWidth * CameraManager.mDesiredHeight));
-			
+
+			// int dif = Math.abs((sizes.get(i).width * sizes.get(i).height) -
+			// (CameraManager.mDesiredWidth * CameraManager.mDesiredHeight));
+
 			if (dif < minDif) {
 				minDif = dif;
 				minIndex = i;
 			}
 		}
-		
+
 		float desiredTotalSize = desiredResolution.x * desiredResolution.y;
 		float bestARdifference = 100;
-		
-		
+
 		for (int i = 0; i < sizes.size(); i++) {
-			
-			float resAR = ((float)sizes.get(i).width) / sizes.get(i).height;
-			
+
+			float resAR = ((float) sizes.get(i).width) / sizes.get(i).height;
+
 			float totalSize = sizes.get(i).width * sizes.get(i).height;
-			
+
 			float difference;
-			
-			if (totalSize >= desiredTotalSize){
+
+			if (totalSize >= desiredTotalSize) {
 				difference = totalSize / desiredTotalSize;
 			} else {
 				difference = desiredTotalSize / totalSize;
 			}
-			
-			
+
 			float ARdifference;
-			
-			if (resAR >= screenAR){
+
+			if (resAR >= screenAR) {
 				ARdifference = resAR / screenAR;
 			} else {
 				ARdifference = screenAR / resAR;
 			}
-			
-			if (difference < 1.1 && ARdifference < bestARdifference){
+
+			if (difference < 1.1 && ARdifference < bestARdifference) {
 				bestARdifference = ARdifference;
-				minIndex = i;		
+				minIndex = i;
 			}
-			
-			
-		
-		
+
 		}
 
 		cameraResolution = new Point(sizes.get(minIndex).width, sizes.get(minIndex).height);
@@ -844,7 +827,7 @@ final class CameraConfigurationManager {
 final class PreviewCallback implements Camera.PreviewCallback {
 
 	int fpscount;
-	
+
 	long lasttime = 0;
 
 	private final CameraConfigurationManager configManager;
@@ -867,7 +850,7 @@ final class PreviewCallback implements Camera.PreviewCallback {
 	}
 
 	public void onPreviewFrame(byte[] data, Camera camera) {
-		
+
 		updateFps();
 
 		Point cameraResolution = configManager.getCameraResolution();
@@ -880,7 +863,6 @@ final class PreviewCallback implements Camera.PreviewCallback {
 			previewHandler = null;
 		}
 	}
-
 
 	public int setPreviewCallback(Camera camera, Camera.PreviewCallback callback, int width, int height) {
 
@@ -917,23 +899,21 @@ final class PreviewCallback implements Camera.PreviewCallback {
 		return new Camera.PreviewCallback() {
 			@Override
 			public void onPreviewFrame(byte[] data, Camera camera) {
-				
+
 				updateFps();
-				
-				
 
 				Point cameraResolution = configManager.getCameraResolution();
-				
-				if (CameraManager.useBufferedCallback){
-					//camera.addCallbackBuffer(frameBuffers[fbCounter]);
-					//fbCounter = 1 - fbCounter;
+
+				if (CameraManager.useBufferedCallback) {
+					// camera.addCallbackBuffer(frameBuffers[fbCounter]);
+					// fbCounter = 1 - fbCounter;
 					setPreviewCallback(camera, this, cameraResolution.x, cameraResolution.y);
 				}
 
 				if (previewHandler != null) {
 					Message message = previewHandler.obtainMessage(previewMessage, cameraResolution.x, cameraResolution.y, data);
 					message.sendToTarget();
-					if (!CameraManager.useBufferedCallback){
+					if (!CameraManager.useBufferedCallback) {
 						previewHandler = null;
 					}
 				}
@@ -960,6 +940,3 @@ final class PreviewCallback implements Camera.PreviewCallback {
 	}
 
 }
- 
- 
- 

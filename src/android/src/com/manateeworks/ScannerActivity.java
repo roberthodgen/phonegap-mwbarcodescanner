@@ -10,10 +10,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.manateeworks.BarcodeScanner.MWResult;
+import com.manateeworks.camera.CameraManager;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -28,21 +30,19 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
-import com.manateeworks.BarcodeScanner.MWResult;
-import com.manateeworks.camera.CameraManager;
-
 public class ScannerActivity extends Activity implements SurfaceHolder.Callback {
 
 	public static final int OM_MW = 1;
 	public static final int OM_IMAGE = 2;
 
-	private static Handler handler;
+	public static Handler handler;
 	public static final int MSG_DECODE = 1;
 	public static final int MSG_AUTOFOCUS = 2;
 	public static final int MSG_DECODE_SUCCESS = 3;
 	public static final int MSG_DECODE_FAILED = 4;
+	public static int param_delayOnDuplicateScan = 0;
 
-	private byte[] lastResult;
+	// private byte[] lastResult;
 	private boolean hasSurface;
 	public static CallbackContext cbc;
 
@@ -58,8 +58,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 	public static int param_ZoomLevel1 = 0;
 	public static int param_ZoomLevel2 = 0;
 	public static int zoomLevel = 0;
-	private int firstZoom = 150;
-	private int secondZoom = 300;
+	private static int firstZoom = 150;
+	private static int secondZoom = 300;
 	public static int param_maxThreads = 4;
 
 	private ImageView overlayImage;
@@ -69,11 +69,11 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 	private String package_name;
 	private Resources resources;
 
-	boolean flashOn = false;
+	static boolean flashOn = false;
 
 	public static HashMap<String, Object> customParams;
 
-	private int activeThreads = 0;
+	private static int activeThreads = 0;
 	public static int MAX_THREADS = Runtime.getRuntime().availableProcessors();
 	public static Activity activity = null;
 
@@ -206,7 +206,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 		updateFlash();
 	}
 
-	private void toggleZoom() {
+	public static void toggleZoom() {
 
 		zoomLevel++;
 		if (zoomLevel > 2) {
@@ -216,7 +216,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 		updateZoom();
 	}
 
-	public void updateZoom() {
+	public static void updateZoom() {
 
 		if (param_ZoomLevel1 == 0 || param_ZoomLevel2 == 0) {
 			firstZoom = 150;
@@ -297,7 +297,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
 	}
 
-	private void initCamera(SurfaceHolder surfaceHolder) {
+	public void initCamera(SurfaceHolder surfaceHolder) {
+
 		try {
 			// Select desired camera resoloution. Not all devices supports all
 			// resolutions, closest available will be chosen
@@ -395,7 +396,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 		CameraManager.get().requestAutoFocus(handler, MSG_AUTOFOCUS);
 	}
 
-	private void decode(final byte[] data, final int width, final int height) {
+	public static void decode(final byte[] data, final int width, final int height) {
 		if (param_maxThreads > MAX_THREADS) {
 			param_maxThreads = MAX_THREADS;
 		}
@@ -407,7 +408,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 		new Thread(new Runnable() {
 			public void run() {
 				activeThreads++;
-				Log.i("Active threads", String.valueOf(activeThreads));
+				// Log.i("Active threads", String.valueOf(activeThreads));
 				long start = System.currentTimeMillis();
 
 				// byte[] source =
@@ -444,6 +445,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 				if (rawResult != null) {
 
 					state = State.STOPPED;
+					MWOverlay.setPaused(true);
 
 					long end = System.currentTimeMillis();
 
@@ -586,8 +588,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 			jsonResult.put("imageHeight", result.imageHeight);
 
 			if (result.locationPoints != null) {
-				jsonResult.put(
-						"location",
+				jsonResult.put("location",
 						new JSONObject().put("p1", new JSONObject().put("x", result.locationPoints.p1.x).put("y", result.locationPoints.p1.y))
 								.put("p2", new JSONObject().put("x", result.locationPoints.p2.x).put("y", result.locationPoints.p2.y))
 								.put("p3", new JSONObject().put("x", result.locationPoints.p3.x).put("y", result.locationPoints.p3.y))
@@ -613,12 +614,12 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
 		if (param_closeOnSuccess) {
 
-			finish();
+			activity.finish();
 		} else {
 			pr.setKeepCallback(true);
 
 		}
-		cbc.sendPluginResult(pr);
+		ScannerActivity.cbc.sendPluginResult(pr);
 
 	}
 

@@ -5,6 +5,7 @@
 
 package com.manateeworks;
 
+import java.net.Inet6Address;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
@@ -52,6 +53,11 @@ public class BarcodeScanner {
 	 * @brief Code93 decoder flags value: decode full ASCII
 	 */
 	public static final int MWB_CFG_CODE93_EXTENDED_MODE = 0x8;
+	/**/
+	
+	/** @brief  UPC/EAN decoder disable addons detection
+	 */
+	public static final int  MWB_CFG_EANUPC_DISABLE_ADDON =  0x1;
 	/**/
 
 	/**
@@ -282,6 +288,10 @@ public class BarcodeScanner {
 	public native static int MWBgetResultType();
 
 	public native static int MWBsetMinLength(int codeMask, int minLength);
+	
+	public native static int MWBsetDuplicatesTimeout(int timeout);
+	
+	public native static void MWBsetDuplicate(byte[] barcode, int length);
 
 	public static int MWBsetScanningRect(int codeMask, Rect rect) {
 

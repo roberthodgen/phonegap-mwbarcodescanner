@@ -23,10 +23,11 @@ BOOL param_EnableHiRes = YES;
 BOOL param_EnableFlash = YES;
 BOOL param_EnableZoom = YES;
 BOOL param_closeOnSuccess = YES;
+
 static BOOL param_use60fps = NO;
 
 BOOL param_defaultFlashOn = NO;
-int param_OverlayMode = OM_MW;
+static int param_OverlayMode = OM_MW;
 int param_ZoomLevel1 = 0;
 int param_ZoomLevel2 = 0;
 int zoomLevel = 0;
@@ -34,11 +35,6 @@ int param_maxThreads = 4;
 int activeThreads = 0;
 int availableThreads = 0;
 
-#ifdef __LP64__
-static long lastResult = 0;
-#else
-static long long lastResult = 0;
-#endif
 
 static NSString *DecoderResultNotification = @"DecoderResultNotification";
 
@@ -242,6 +238,13 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     param_OverlayMode = overlayMode;
     
 }
++ (int) getOverlayMode
+{
+    
+   return param_OverlayMode;
+    
+}
+
 
 + (void) enableZoom: (BOOL) zoom {
     
@@ -250,6 +253,9 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 }
 + (void) closeScannerOnDecode: (BOOL) close {
     param_closeOnSuccess = close;
+}
++ (BOOL) getCloseScannerOnDecode {
+    return param_closeOnSuccess;
 }
 + (void) use60fps: (BOOL) use {
     param_use60fps = use;
@@ -459,7 +465,6 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     }
 }
 
-
 - (void)initCapture
 {
     /*We setup the input*/
@@ -472,6 +477,224 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
         [[[UIAlertView alloc] initWithTitle:@"Camera Unavailable" message:[NSString stringWithFormat:@"The %@ has not been given a permission to your camera. Please check the Privacy Settings: Settings -> %@ -> Privacy -> Camera", appName, appName] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil] show];
         
         return;
+    }
+    
+    /*We setupt the output*/
+    AVCaptureVideoDataOutput *captureOutput = [[AVCaptureVideoDataOutput alloc] init];
+    captureOutput.alwaysDiscardsLateVideoFrames = YES;
+    //captureOutput.minFrameDuration = CMTimeMake(1, 10); Uncomment it to specify a minimum duration for each video frame
+    [captureOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
+    // Set the video output to store frame in BGRA (It is supposed to be faster)
+    
+    NSString* key = (NSString*)kCVPixelBufferPixelFormatTypeKey;
+    // Set the video output to store frame in 422YpCbCr8(It is supposed to be faster)
+    
+    //************************Note this line
+    NSNumber* value = [NSNumber numberWithUnsignedInt:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange];
+    
+    NSDictionary* videoSettings = [NSDictionary dictionaryWithObject:value forKey:key];
+    [captureOutput setVideoSettings:videoSettings];
+    
+    //And we create a capture session
+    self.captureSession = [[AVCaptureSession alloc] init];
+    //We add input and output
+    [self.captureSession addInput:captureInput];
+    [self.captureSession addOutput:captureOutput];
+    
+    
+    
+    float resX = 640;
+    float resY = 480;
+    
+    if (param_EnableHiRes && [self.captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720])
+    {
+        NSLog(@"Set preview port to 1280X720");
+        resX = 1280;
+        resY = 720;
+        self.captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
+    } else
+        //set to 640x480 if 1280x720 not supported on device
+        if ([self.captureSession canSetSessionPreset:AVCaptureSessionPreset640x480])
+        {
+            NSLog(@"Set preview port to 640X480");
+            self.captureSession.sessionPreset = AVCaptureSessionPreset640x480;
+        }
+    
+    // Limit camera FPS to 15 for single core devices (iPhone 4 and older) so more CPU power is available for decoder
+    host_basic_info_data_t hostInfo;
+    mach_msg_type_number_t infoCount;
+    infoCount = HOST_BASIC_INFO_COUNT;
+    host_info( mach_host_self(), HOST_BASIC_INFO, (host_info_t)&hostInfo, &infoCount ) ;
+    
+    if (hostInfo.max_cpus < 2){
+        if ([self.device respondsToSelector:@selector(setActiveVideoMinFrameDuration:)]){
+            [self.device lockForConfiguration:nil];
+            [self.device setActiveVideoMinFrameDuration:CMTimeMake(1, 15)];
+            [self.device unlockForConfiguration];
+        } else {
+            AVCaptureConnection *conn = [captureOutput connectionWithMediaType:AVMediaTypeVideo];
+            [conn setVideoMinFrameDuration:CMTimeMake(1, 15)];
+        }
+    }else if (param_use60fps) {
+        for(AVCaptureDeviceFormat *vFormat in [self.device formats] )
+        {
+            CMFormatDescriptionRef description= vFormat.formatDescription;
+            float maxrate=((AVFrameRateRange*)[vFormat.videoSupportedFrameRateRanges objectAtIndex:0]).maxFrameRate;
+            float minrate=((AVFrameRateRange*)[vFormat.videoSupportedFrameRateRanges objectAtIndex:0]).minFrameRate;
+            CMVideoDimensions dimension = CMVideoFormatDescriptionGetDimensions(description);
+            
+            if(maxrate>59 && CMFormatDescriptionGetMediaSubType(description)==kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange &&
+               dimension.width == resX && dimension.height == resY)
+            {
+                if ( YES == [self.device lockForConfiguration:NULL] )
+                {
+                    self.device.activeFormat = vFormat;
+                    [self.device setActiveVideoMinFrameDuration:CMTimeMake(10,minrate * 10)];
+                    [self.device setActiveVideoMaxFrameDuration:CMTimeMake(10,600)];
+                    [self.device unlockForConfiguration];
+                    
+                    NSLog(@"formats  %@ %@ %@",vFormat.mediaType,vFormat.formatDescription,vFormat.videoSupportedFrameRateRanges);
+                    //break;
+                }
+            }
+        }
+    }
+    
+    if (availableThreads == 0){
+        availableThreads = hostInfo.max_cpus;
+    }
+    
+    if (param_maxThreads > availableThreads){
+        param_maxThreads = availableThreads;
+    }
+    
+    /*We add the preview layer*/
+    
+    self.prevLayer = [AVCaptureVideoPreviewLayer layerWithSession: self.captureSession];
+    
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    float screenWidth = screenRect.size.width;
+    float screenHeight = screenRect.size.height;
+    
+    if (self.interfaceOrientation == UIInterfaceOrientationLandscapeLeft){
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(screenWidth, screenHeight), MIN(screenWidth, screenHeight));
+    }
+    if (self.interfaceOrientation == UIInterfaceOrientationLandscapeRight){
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(screenWidth, screenHeight), MIN(screenWidth, screenHeight));
+    }
+    
+    
+    if (self.interfaceOrientation == UIInterfaceOrientationPortrait) {
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortrait;
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(screenWidth, screenHeight), MAX(screenWidth, screenHeight));
+    }
+    if (self.interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(screenWidth, screenHeight), MAX(screenWidth, screenHeight));
+    }
+    
+    self.prevLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    
+    [self.view.layer addSublayer: self.prevLayer];
+    
+    if (![self.device isTorchModeSupported:AVCaptureTorchModeOn]) {
+        flashButton.hidden = YES;
+        
+    }
+    
+    videoZoomSupported = false;
+    
+    if ([self.device respondsToSelector:@selector(setActiveFormat:)] &&
+        [self.device.activeFormat respondsToSelector:@selector(videoMaxZoomFactor)] &&
+        [self.device respondsToSelector:@selector(setVideoZoomFactor:)]){
+        
+        float maxZoom = 0;
+        if ([self.device.activeFormat respondsToSelector:@selector(videoZoomFactorUpscaleThreshold)]){
+            maxZoom = self.device.activeFormat.videoZoomFactorUpscaleThreshold;
+        } else {
+            maxZoom = self.device.activeFormat.videoMaxZoomFactor;
+        }
+        
+        float maxZoomTotal = self.device.activeFormat.videoMaxZoomFactor;
+        
+        if ([self.device respondsToSelector:@selector(setVideoZoomFactor:)] && maxZoomTotal > 1.1){
+            videoZoomSupported = true;
+            
+            
+            
+            if (param_ZoomLevel1 != 0 && param_ZoomLevel2 != 0){
+                
+                if (param_ZoomLevel1 > maxZoomTotal * 100){
+                    param_ZoomLevel1 = (int)(maxZoomTotal * 100);
+                }
+                if (param_ZoomLevel2 > maxZoomTotal * 100){
+                    param_ZoomLevel2 = (int)(maxZoomTotal * 100);
+                }
+                
+                firstZoom = 0.01 * param_ZoomLevel1;
+                secondZoom = 0.01 * param_ZoomLevel2;
+                
+                
+            } else {
+                
+                if (maxZoomTotal > 2){
+                    
+                    if (maxZoom > 1.0 && maxZoom <= 2.0){
+                        firstZoom = maxZoom;
+                        secondZoom = maxZoom * 2;
+                    } else
+                        if (maxZoom > 2.0){
+                            firstZoom = 2.0;
+                            secondZoom = 4.0;
+                        }
+                    
+                }
+            }
+            
+            
+        } else {
+            
+        }
+        
+        
+        
+        
+    }
+    
+    if (!videoZoomSupported){
+        zoomButton.hidden = true;
+    } else {
+        [self updateDigitalZoom];
+    }
+    
+    [self.view bringSubviewToFront:cameraOverlay];
+    [self.view bringSubviewToFront:closeButton];
+    [self.view bringSubviewToFront:flashButton];
+    [self.view bringSubviewToFront:zoomButton];
+    
+    
+    
+    self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:2.5 target:self selector:@selector(reFocus) userInfo:nil repeats:YES];
+    
+    activeThreads = 0;
+    
+}
+
+
+- (AVCaptureVideoPreviewLayer *)generateLayerWithRect:(CGPoint)bottomRightPoint
+{
+    /*We setup the input*/
+    self.device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    
+    AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:self.device error:nil];
+    
+    if (captureInput == nil){
+        NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey];
+        [[[UIAlertView alloc] initWithTitle:@"Camera Unavailable" message:[NSString stringWithFormat:@"The %@ has not been given a permission to your camera. Please check the Privacy Settings: Settings -> %@ -> Privacy -> Camera", appName, appName] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil] show];
+        
+        return nil;
     }
     
     /*We setupt the output*/
@@ -564,41 +787,27 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     }
     
     /*We add the preview layer*/
-    
-    self.prevLayer = [AVCaptureVideoPreviewLayer layerWithSession: self.captureSession];
-    
-    CGRect screenRect = [[UIScreen mainScreen] bounds];
-    float screenWidth = screenRect.size.width;
-    float screenHeight = screenRect.size.height;
-    
+    AVCaptureVideoPreviewLayer *theLayer = [AVCaptureVideoPreviewLayer layerWithSession: self.captureSession];
+
     if (self.interfaceOrientation == UIInterfaceOrientationLandscapeLeft){
-        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-        self.prevLayer.frame = CGRectMake(0, 0, MAX(screenWidth, screenHeight), MIN(screenWidth, screenHeight));
+        theLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
     }
     if (self.interfaceOrientation == UIInterfaceOrientationLandscapeRight){
-        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-        self.prevLayer.frame = CGRectMake(0, 0, MAX(screenWidth, screenHeight), MIN(screenWidth, screenHeight));
+        theLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
     }
     
     
     if (self.interfaceOrientation == UIInterfaceOrientationPortrait) {
-        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortrait;
-        self.prevLayer.frame = CGRectMake(0, 0, MIN(screenWidth, screenHeight), MAX(screenWidth, screenHeight));
+        theLayer.connection.videoOrientation = AVCaptureVideoOrientationPortrait;
     }
     if (self.interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown) {
-        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-        self.prevLayer.frame = CGRectMake(0, 0, MIN(screenWidth, screenHeight), MAX(screenWidth, screenHeight));
+        theLayer.connection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
     }
+    [theLayer setFrame:CGRectMake(0, 0, bottomRightPoint.x, bottomRightPoint.y)];
+    theLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
     
-    self.prevLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-    
-    [self.view.layer addSublayer: self.prevLayer];
-    
-    if (![self.device isTorchModeSupported:AVCaptureTorchModeOn]) {
-        flashButton.hidden = YES;
-    }
-    
-    videoZoomSupported = false;
+    self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:2.5 target:self selector:@selector(reFocus) userInfo:nil repeats:YES];
+    activeThreads = 0;
     
     if ([self.device respondsToSelector:@selector(setActiveFormat:)] &&
         [self.device.activeFormat respondsToSelector:@selector(videoMaxZoomFactor)] &&
@@ -639,40 +848,19 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
                         firstZoom = maxZoom;
                         secondZoom = maxZoom * 2;
                     } else
-                    if (maxZoom > 2.0){
-                        firstZoom = 2.0;
-                        secondZoom = 4.0;
-                    }
+                        if (maxZoom > 2.0){
+                            firstZoom = 2.0;
+                            secondZoom = 4.0;
+                        }
                     
                 }
             }
             
             
-        } else {
-            
         }
         
-        
-        
-        
     }
-    
-    if (!videoZoomSupported){
-        zoomButton.hidden = true;
-    } else {
-        [self updateDigitalZoom];
-    }
-    
-    [self.view bringSubviewToFront:cameraOverlay];
-    [self.view bringSubviewToFront:closeButton];
-    [self.view bringSubviewToFront:flashButton];
-    [self.view bringSubviewToFront:zoomButton];
-    
-    
-    
-    self.focusTimer = [NSTimer scheduledTimerWithTimeInterval:2.5 target:self selector:@selector(reFocus) userInfo:nil repeats:YES];
-    
-    activeThreads = 0;
+    return theLayer;
     
 }
 
@@ -762,7 +950,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         
         int resLength = MWB_scanGrayscaleImage(frameBuffer,width,height, &pResult);
         free(frameBuffer);
-        NSLog(@"Frame decoded. Active threads: %d", activeThreads);
+//        NSLog(@"Frame decoded. Active threads: %d", activeThreads);
         MWResults *mwResults = nil;
         MWResult *mwResult = nil;
         if (resLength > 0){
@@ -783,7 +971,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         
         if (mwResult)
         {
+            MWB_setDuplicate(mwResult.bytes, mwResult.bytesLength);
+
             self.state = NORMAL;
+            [MWOverlay setPaused:YES];
             
             NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
             DecoderResult *notificationResult = [DecoderResult createSuccess:mwResult];
@@ -793,10 +984,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                 if (param_closeOnSuccess) {
                     [self.captureSession stopRunning];
                 }
-                [MWOverlay showLocation:mwResult.locationPoints.points imageWidth:mwResult.imageWidth imageHeight:mwResult.imageHeight];
+                if (mwResult.locationPoints) {
+                    [MWOverlay showLocation:mwResult.locationPoints.points imageWidth:mwResult.imageWidth imageHeight:mwResult.imageHeight];
+                }
 
                 [center postNotificationName:DecoderResultNotification object: notificationResult];
-                
+                NSLog(@"SCANNED RESULT: %@",mwResult.text);
                 
             });
             
@@ -807,10 +1000,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         {
             
             self.state = CAMERA;
+            [MWOverlay setPaused:NO];
         }
         activeThreads --;
     });
 }
+
 
 - (IBAction)doClose:(id)sender {
     [self dismissViewControllerAnimated:YES completion:^{}];
@@ -858,17 +1053,20 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [self.captureSession startRunning];
     self.prevLayer.hidden = NO;
     self.state = CAMERA;
+    [MWOverlay setPaused:NO];
 }
 
 - (void)stopScanning {
     [self.captureSession stopRunning];
     self.state = NORMAL;
+    [MWOverlay setPaused:YES];
 }
 
 - (void)revertToNormal {
     
     [self.captureSession stopRunning];
     self.state = NORMAL;
+    [MWOverlay setPaused:YES];
 }
 
 - (void)decodeResultNotification: (NSNotification *)notification {

@@ -8,7 +8,8 @@
  - Make sure you are using latest BarcodeHelper.cs in your app
  - Add WriteableBitmapEx class to the priject (http://writeablebitmapex.codeplex.com/)
  1. Add MWOverlay.cs files to your project;
- 2. Put MWOverlay.addOverlay(canvas); after initializing the camera; Assumes that VideoBrush is child of Canvas named 'canvas'
+ 2. Put MWOverlay.
+ * (canvas); after initializing the camera; Assumes that VideoBrush is child of Canvas named 'canvas'
  3. Put MWOverlay.removeOverlay(); on leaving the scanning page;
  
  If all steps are done correctly, you should be able to see a default red viewfinder with a blinking line, capable
@@ -43,6 +44,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Microsoft.Phone.Controls;
+using System.Windows;
+using com.phonegap.helloworld;
 
 namespace BarcodeScanners
 {
@@ -78,7 +82,6 @@ namespace BarcodeScanners
             if (viewportLayer != null)
             {
                 removeOverlay();
-
             }
 
             viewportLayer = new Image();
@@ -141,8 +144,6 @@ namespace BarcodeScanners
             blinkingAnimation.To = 1;
 
 
-
-
             blinkingStoryboard = new Storyboard();
             blinkingStoryboard.Duration = new System.Windows.Duration(TimeSpan.FromDays(10));
             blinkingStoryboard.Children.Add(blinkingAnimation);
@@ -201,7 +202,20 @@ namespace BarcodeScanners
                 return;
             }
 
-            
+
+           
+            PageOrientation currentOrientation = (((App)Application.Current).RootFrame.Content as PhoneApplicationPage).Orientation;
+
+          if ((currentOrientation & PageOrientation.LandscapeRight) == (PageOrientation.LandscapeRight))
+            {
+                unionRect = new Windows.Foundation.Rect(100 - unionRect.Right, 100 -unionRect.Bottom, unionRect.Width, unionRect.Height);
+            }
+            else if ((currentOrientation & PageOrientation.PortraitUp) == (PageOrientation.PortraitUp))
+            {
+                unionRect = new Windows.Foundation.Rect(100 - unionRect.Top - unionRect.Height, unionRect.Left, unionRect.Height,unionRect.Width);
+            }
+
+           
 
             int rectLeft = (int)((float)unionRect.Left * width / 100.0);
             int rectTop = (int)((float)unionRect.Top * height / 100.0);
@@ -209,6 +223,12 @@ namespace BarcodeScanners
             int rectHeight = (int)((float)unionRect.Height * height / 100.0);
             int rectRight = (int)((float)unionRect.Right * width / 100.0);
             int rectBottom = (int)((float)unionRect.Bottom * height / 100.0);
+
+
+
+
+      
+
 
             if (isViewportVisible)
             {

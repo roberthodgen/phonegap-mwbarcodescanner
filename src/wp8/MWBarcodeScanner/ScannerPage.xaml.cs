@@ -33,11 +33,15 @@ using System.ComponentModel;
 using BarcodeLib;
 using BarcodeScanners;
 using WPCordovaClassLib.Cordova.JSON;
+using WPCordovaClassLib.Cordova;
+using Cordova.Extension.Commands;
 
 namespace BarcodeScannerPage
 {
-    public partial class ScannerPage : PhoneApplicationPage
+    public partial class ScannerPage : PhoneApplicationPage   
     {
+
+        public static bool isPage = false;
 
         public enum OverlayMode
          {
@@ -45,6 +49,10 @@ namespace BarcodeScannerPage
              OM_IMAGE = 2
          };
 
+        public static String floatToStrDot(float value)
+        {
+            return ((int)(value)).ToString() + "." + ((int)(value * 100) % 100).ToString();
+        }
         public ScannerPage()
         {
 
@@ -59,6 +67,7 @@ namespace BarcodeScannerPage
 
             System.Diagnostics.Debug.WriteLine("Lib version: " + libVersion);
 
+
             processingHandler = new DoWorkEventHandler(bw_DoWork);
             previewFrameHandler = new TypedEventHandler<ICameraCaptureDevice, Object>(cam_PreviewFrameAvailable);
 
@@ -71,11 +80,11 @@ namespace BarcodeScannerPage
         
         public static int CPU_CORES = -1;
         public static int param_maxThreads = 4;
-
         public static int activeThreads;
         public static int currentWorker = 0;
 
         public static Boolean isClosing = false;
+        public static Boolean closeScanner = false;
 
         public static Boolean resultDisplayed = false;
 
@@ -83,6 +92,9 @@ namespace BarcodeScannerPage
         public static bool param_EnableHiRes = true;
         public static bool param_EnableFlash = true;
         public static bool param_DefaultFlashOn = false;
+        public static bool param_CloseScannerOnDecode = true;
+
+
         public static SupportedPageOrientation param_Orientation = SupportedPageOrientation.Landscape;
 
         public int MAX_RESOLUTION = 1280 * 768;
@@ -93,16 +105,16 @@ namespace BarcodeScannerPage
         private byte[] pixels = null;
         private DateTime lastTime;
         private BackgroundWorker bw = new BackgroundWorker();
-        private DoWorkEventHandler processingHandler;
+        public static DoWorkEventHandler processingHandler;
         private String libVersion;
         private bool flashAvailable;
         private bool flashActive = false;
         DispatcherTimer focusTimer;
 
-        private TypedEventHandler<ICameraCaptureDevice, Object> previewFrameHandler;
+        public static TypedEventHandler<ICameraCaptureDevice, Object> previewFrameHandler;
 
 
-        private void stopCamera()
+        public void stopCamera()
         {
             focusTimer.Stop();
         }
@@ -110,7 +122,8 @@ namespace BarcodeScannerPage
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-
+            closeScanner = false;
+            isPage = true;
             if (param_Orientation == SupportedPageOrientation.Landscape)
             {
 
@@ -141,7 +154,8 @@ namespace BarcodeScannerPage
             InitializeCamera(CameraSensorLocation.Back);
 
             isProcessing = false;
-
+            resultDisplayed = false;
+            isClosing = false;
             fixOrientation(Orientation);
             if ((param_OverlayMode & OverlayMode.OM_MW) > 0)
             {
@@ -160,6 +174,7 @@ namespace BarcodeScannerPage
             }
 
         }
+       
 
         protected override void OnNavigatingFrom(System.Windows.Navigation.NavigatingCancelEventArgs e)
         {
@@ -184,8 +199,9 @@ namespace BarcodeScannerPage
             }
             base.OnNavigatingFrom(e);
         }
+        
 
-        private async Task InitializeCamera(CameraSensorLocation sensorLocation)
+        public async Task InitializeCamera(CameraSensorLocation sensorLocation)
         {
             activeThreads = 0;
             isClosing = false;
@@ -431,7 +447,7 @@ namespace BarcodeScannerPage
                 long timePrev = lastTime.Ticks;
                 long timeNow = DateTime.Now.Ticks;
                 long timeDifference = (timeNow - timePrev) / 10000;
-                System.Diagnostics.Debug.WriteLine("frame time: {0}", timeDifference);
+                //System.Diagnostics.Debug.WriteLine("frame time: {0}", timeDifference);
 
             }
 
@@ -439,23 +455,24 @@ namespace BarcodeScannerPage
             //ignore results shorter than 4 characters for barcodes with weak checksum
              if (mwResult != null && mwResult.bytesLength > 4 || (mwResult != null && mwResult.bytesLength > 0 && mwResult.type != Scanner.FOUND_39 && mwResult.type != Scanner.FOUND_25_INTERLEAVED && mwResult.type != Scanner.FOUND_25_STANDARD))
             {
-                resultDisplayed = true;
+
+                Scanner.MWBsetDuplicate(mwResult.bytes, mwResult.bytesLength);
+				resultDisplayed = true;
                 String typeName = BarcodeHelper.getBarcodeName(mwResult);
 
                 Deployment.Current.Dispatcher.BeginInvoke(delegate()
                 {
-                    isClosing = true;
                     BarcodeHelper.scannerResult = new ScannerResult();
 
                     BarcodeHelper.resultAvailable = true;
                     BarcodeHelper.scannerResult.code = mwResult.text;
                     BarcodeHelper.scannerResult.type = BarcodeHelper.getBarcodeName(mwResult);
                     BarcodeHelper.scannerResult.isGS1 = mwResult.isGS1;
-                    if (mwResult.locationPoints != null) { 
-                        BarcodeHelper.scannerResult.location = "{\"p1\":{\"x\":" + mwResult.locationPoints.p1.x + ", \"y\":" + mwResult.locationPoints.p1.y + "},"
-                           + "\"p2\":{\"x\":" + mwResult.locationPoints.p2.x + ", \"y\":" + mwResult.locationPoints.p2.y + "},"
-                           + "\"p3\":{\"x\":" + mwResult.locationPoints.p3.x + ", \"y\":" + mwResult.locationPoints.p3.y + "},"
-                           + "\"p4\":{\"x\":" + mwResult.locationPoints.p4.x + ", \"y\":" + mwResult.locationPoints.p4.y + "}}";
+                    if (mwResult.locationPoints != null) {
+                        BarcodeHelper.scannerResult.location = "{\"p1\":{\"x\":" + floatToStrDot(mwResult.locationPoints.p1.x) + ", \"y\":" + floatToStrDot(mwResult.locationPoints.p1.y) + "},"
+                          + "\"p2\":{\"x\":" + floatToStrDot(mwResult.locationPoints.p2.x) + ", \"y\":" + floatToStrDot(mwResult.locationPoints.p2.y) + "},"
+                          + "\"p3\":{\"x\":" + floatToStrDot(mwResult.locationPoints.p3.x) + ", \"y\":" + floatToStrDot(mwResult.locationPoints.p3.y) + "},"
+                          + "\"p4\":{\"x\":" + floatToStrDot(mwResult.locationPoints.p4.x) + ", \"y\":" + floatToStrDot(mwResult.locationPoints.p4.y) + "}}";
 
                     }
                     else
@@ -472,29 +489,49 @@ namespace BarcodeScannerPage
 
 
                     BarcodeHelper.scannerResult.bytes = binArray;
+
                     stopCamera();
-                    NavigationService.GoBack();
+                    
+                    string resultString = "{\"code\":" + JsonHelper.Serialize(BarcodeHelper.scannerResult.code) + ","
+                    + "\"type\":" + JsonHelper.Serialize(BarcodeHelper.scannerResult.type) + ","
+                    + "\"bytes\":" + JsonHelper.Serialize(BarcodeHelper.scannerResult.bytes) + ","
+                    + "\"isGS1\":" + JsonHelper.Serialize(BarcodeHelper.scannerResult.isGS1) + ","
+                    + "\"location\":" + BarcodeHelper.scannerResult.location + ","
+                    + "\"imageWidth\":" + BarcodeHelper.scannerResult.imageWidth + ","
+                    + "\"imageHeight\":" + BarcodeHelper.scannerResult.imageHeight
+                    + "}";
+                    PluginResult pResult = new PluginResult(PluginResult.Status.OK, resultString);
+                    pResult.KeepCallback = true;
+                    MWBarcodeScanner.mwbScanner.DispatchCommandResult(pResult, MWBarcodeScanner.kallbackID);
+                     if (param_CloseScannerOnDecode)
+                     {
+                         isClosing = true;
+                         if (isPage) { 
+                            NavigationService.GoBack();
+                         }
+                         else
+                         {
+                             MWBarcodeScanner.mwbScanner.stopScanner("");
+                         }
+                         resultDisplayed = false;
+
+                     }
 
                     isProcessing = false;
-                    resultDisplayed = false;
                 });
 
 
             }
-            
-           
             else
             {
-                
                 isProcessing = false;
-                
-              
             }
             activeThreads--;
 
         }
+  
 
-        private void flashButton_Click(object sender, RoutedEventArgs e)
+        public void flashButton_Click(object sender, RoutedEventArgs e)
         {
             if (flashAvailable)
             {
@@ -503,12 +540,18 @@ namespace BarcodeScannerPage
                 if (flashActive)
                 {
                     cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.On);
-                    flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonon.png", UriKind.Relative));
+                    if (isPage)
+                    {
+                        flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonon.png", UriKind.Relative));
+                    }
                 }
                 else
                 {
                     cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.Off);
-                    flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png", UriKind.Relative));
+                    if (isPage)
+                    {
+                        flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png", UriKind.Relative));
+                    }
                 }
             }
         }
@@ -522,6 +565,22 @@ namespace BarcodeScannerPage
 
         void cam_PreviewFrameAvailable(ICameraCaptureDevice device, object sender)
         {
+
+            if (closeScanner) {
+                closeScanner = false;
+                Deployment.Current.Dispatcher.BeginInvoke(delegate()
+                {
+                   
+                    string resultString = "{\"type\":" + JsonHelper.Serialize("Cancel") + "}";
+                    PluginResult pResult = new PluginResult(PluginResult.Status.OK, resultString);
+                    pResult.KeepCallback = true;
+                    MWBarcodeScanner.mwbScanner.DispatchCommandResult(pResult, MWBarcodeScanner.kallbackID);
+                    if (this.NavigationService.CanGoBack) { 
+                        this.NavigationService.GoBack();
+                    }
+                   return;
+               });
+            }
 
             if (activeThreads >= param_maxThreads || resultDisplayed)
             {
@@ -537,10 +596,6 @@ namespace BarcodeScannerPage
             activeThreads++;
 
            // System.Diagnostics.Debug.WriteLine("ActiveThreads: " + activeThreads.ToString());
-
-           
-
-            
 
             isProcessing = true;
 
@@ -565,8 +620,15 @@ namespace BarcodeScannerPage
             bw1.RunWorkerAsync(ta);
 
         }
-
-        private void fixOrientation(PageOrientation orientation)
+        protected override void OnBackKeyPress(System.ComponentModel.CancelEventArgs e)
+        {
+            string resultString = "{\"type\":" + JsonHelper.Serialize("Cancel") +  "}";
+            PluginResult pResult = new PluginResult(PluginResult.Status.OK, resultString);
+            pResult.KeepCallback = true;
+            MWBarcodeScanner.mwbScanner.DispatchCommandResult(pResult, MWBarcodeScanner.kallbackID);
+            base.OnBackKeyPress(e);
+        }
+        public void fixOrientation(PageOrientation orientation)
         {
             if ((orientation & PageOrientation.LandscapeLeft) == (PageOrientation.LandscapeLeft))
             {
@@ -575,7 +637,7 @@ namespace BarcodeScannerPage
                 {
                     CenterX = 0.5,
                     CenterY = 0.5,
-                    Rotation = 0
+                    Rotation = 360
                 };
 
 
@@ -629,7 +691,8 @@ namespace BarcodeScannerPage
 
             if (videoBrush == null)
                 return;
-
+            MWOverlay.removeOverlay();
+            MWOverlay.addOverlay(canvas);
             fixOrientation(e.Orientation);
 
         }

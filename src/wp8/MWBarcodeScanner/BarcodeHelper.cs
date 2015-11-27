@@ -424,6 +424,7 @@ namespace BarcodeScanners
 
             private static void bw_DoWork(object sender, DoWorkEventArgs e)
             {
+
                 BackgroundWorker worker = sender as BackgroundWorker;
 
                 while (1 == 1)

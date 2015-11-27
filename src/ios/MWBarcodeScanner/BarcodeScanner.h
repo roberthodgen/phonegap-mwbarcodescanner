@@ -78,6 +78,11 @@ typedef unsigned char uint8_t;
 #define  MWB_CFG_CODE93_EXTENDED_MODE       0x8
 /**/
     
+/** @brief  UPC/EAN decoder disable addons detection
+ */
+#define  MWB_CFG_EANUPC_DISABLE_ADDON       0x1
+/**/
+    
     
 /** @brief  Code25 decoder flags value: require checksum check
  */
@@ -579,6 +584,17 @@ extern int MWB_setResultType(const uint32_t resultType);
 */
 extern int MWB_getResultType(void);
     
+    
+    
+/*
+ * Set time in seconds in which decoder will ignore same barcode detected
+ */
+extern int MWB_setDuplicatesTimeout(uint32_t timeout);
+    
+/*
+ * Set code which would be check for a duplicate
+ */
+extern void MWB_setDuplicate(uint8_t* barcode, int length);
     
 
 /**
