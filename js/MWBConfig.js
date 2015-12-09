@@ -74,30 +74,34 @@ MWBSInitSpace.init = function(mwbs,constants,dvc){
 
     //settings portion, disable those that are not needed
 
-    /* BEGIN settings CALLS */
-        //if your code doesn't work after changing a few parameters, and there is no error output, uncomment the try-catch, the error will be output in your console
-//    try{
-        /*UNCOMMENT the lines you wish to include in the settings */
-        //  mwbs['MWBsetInterfaceOrientation'] (constants.OrientationPortrait);
-        //  mwbs['MWBsetOverlayMode'](constants.OverlayModeImage);
-        //  mwbs['MWBenableHiRes'](true);
-        //  mwbs['MWBenableFlash'](true);
-        //  mwbs['MWBsetActiveCodes'](constants.MWB_CODE_MASK_128 | constants.MWB_CODE_MASK_39);
-        //  mwbs['MWBsetLevel'](2);
-        //  mwbs['MWBsetFlags'](constants.MWB_CODE_MASK_39, constants.MWB_CFG_CODE39_EXTENDED_MODE);
-        //  mwbs['MWBsetDirection'](constants.MWB_SCANDIRECTION_VERTICAL | constants.MWB_SCANDIRECTION_HORIZONTAL);
-        //  mwbs['MWBsetScanningRect'](constants.MWB_CODE_MASK_39, 20,20,60,60);
-        //  mwbs['MWBenableZoom'](true);
-        //  mwbs['MWBsetZoomLevels'](200, 400, 0);
-        //  mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK_39, 4);
-        //  mwbs['MWBsetMaxThreads'](1);
-        //  mwbs['MWBcloseScannerOnDecode'](false);
-        //  mwbs['MWBuse60fps'](true);      
-//    }
-//    catch(e){
-//        console.log(e);
-//    }
+          /* BEGIN settings CALLS */
+                    //if your code doesn't work after changing a few parameters, and there is no error output, uncomment the try-catch, the error will be output in your console
+            //    try{
+                  //  mwbs['MWBsetInterfaceOrientation'] (constants.OrientationPortrait);
+                  //  mwbs['MWBsetOverlayMode'](constants.OverlayModeImage);
+                  //  mwbs['MWBenableHiRes'](true);
+                  //  mwbs['MWBenableFlash'](true);
+                  //  mwbs['MWBsetActiveCodes'](constants.MWB_CODE_MASK_128 | constants.MWB_CODE_MASK_39);
+                  //  mwbs['MWBsetLevel'](2);
+                  //  mwbs['MWBsetFlags'](constants.MWB_CODE_MASK_39, constants.MWB_CFG_CODE39_EXTENDED_MODE);
+                  //  mwbs['MWBsetDirection'](constants.MWB_SCANDIRECTION_VERTICAL | constants.MWB_SCANDIRECTION_HORIZONTAL);
+                  //  mwbs['MWBsetScanningRect'](constants.MWB_CODE_MASK_39, 20,20,60,60);
+                  //  mwbs['MWBenableZoom'](true);
+                  //  mwbs['MWBsetZoomLevels'](200, 400, 0);
+                  //  mwbs['MWBsetMinLength'](constants.MWB_CODE_MASK_39, 4);
+                  //  mwbs['MWBsetMaxThreads'](1);
+                  //  mwbs['MWBcloseScannerOnDecode'](false);
+                  //  mwbs['MWBuse60fps'](true);      
+                  //  mwbs['MWBsetParam'](constants.MWB_CODE_MASK_DM, constants.MWB_PAR_ID_RESULT_PREFIX, constants.MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS);
+                  //  mwbs['MWBduplicateCodeDelay'](1000);      
 
+                                  
+
+                    // console.log('JS Settings ends: '+ (new Date()).getTime());
+            //    }
+            //    catch(e){
+            //        console.log(e);
+            //    }
     /* END settings CALLS */
     
     /* CUSTOM JAVASCRIPT CALLS */

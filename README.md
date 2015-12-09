@@ -164,7 +164,7 @@ It's seems there's a bug in Phonegap 3.0 so you have to add ```html '<script typ
 
 * Copy the file 'src/android/res/layout/scanner.xml' to your project's 'res/layout' folder;
 
-* Copy the file 'src/android/res/drawable/overlay.png' to your project's 'res/drawable' folder. Do the same for the file in 'drawable-hdpi' folder;
+* Copy the file 'src/android/res/drawable/overlay_mw.png' to your project's 'res/drawable' folder. Do the same for the file in 'drawable-hdpi' folder;
 
 * Copy the files 'src/android/libs/armeabi/libBarcodeScannerLib.so' and 'Android/libs/armeabi-v7a/libBarcodeScannerLib.so' to your project's 'libs/' folder, all the while preserving the same folder structure 
 
@@ -214,7 +214,7 @@ For Phonegap 3 *
 
 * Run the app and test the scanner by pressing the previously added button;
 
-* (Optional): You can also replace our default overlay.png for the camera screen with your own customized image;
+* (Optional): You can also replace our default overlay_mw.png for the camera screen with your own customized image;
 
 * (For Phonegap 3) If notification plugin is not present in project, add it by following instructions from this url:
 
@@ -291,7 +291,7 @@ For Phonegap 3
 * Run the app and test the scanner by pressing the previously added button;
 
 
-* (Optional): You can replace our default overlay.png and close_button.png for the camera screen with your own customized image;
+* (Optional): You can replace our default overlay_mw.png and close_button.png for the camera screen with your own customized image;
 
 
 
@@ -380,7 +380,7 @@ Add a notification plugin (if not already present):
 * Run the app and test the scanner by pressing the previously added button;
 
 
-* (Optional): You can replace our default overlay.png for the camera screen with your own customized image;
+* (Optional): You can replace our default overlay_mw.png for the camera screen with your own customized image;
 
 
 &nbsp;

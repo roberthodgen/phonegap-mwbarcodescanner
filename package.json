@@ -1,6 +1,6 @@
 {
   "name": "com.manateeworks.barcodescanner",
-  "version": "1.8",
+  "version": "1.8.0",
   "description": "Manatee Works Barcode Scanner Plugin",
   "cordova": {
     "id": "com.manateeworks.barcodescanner",

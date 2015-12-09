@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="com.manateeworks.barcodescanner"
-    version="1.8">
+    version="1.8.0">
     <name>MWBarcodeScanner</name>
     <description>Manatee Works Barcode Scanner Plugin</description>
     <license>MIT</license>
@@ -54,8 +54,8 @@
      <source-file src="src/android/src/com/manateeworks/camera/CameraManager.java" target-dir="src/com/manateeworks/camera" />
      
      <source-file src="src/android/res/layout/scanner.xml" target-dir="res/layout" />
-     <source-file src="src/android/res/drawable/overlay.png" target-dir="res/drawable" />
-     <source-file src="src/android/res/drawable-hdpi/overlay.png" target-dir="res/drawable-hdpi" />
+     <source-file src="src/android/res/drawable/overlay_mw.png" target-dir="res/drawable" />
+     <source-file src="src/android/res/drawable-hdpi/overlay_mw.png" target-dir="res/drawable-hdpi" />
      <source-file src="src/android/res/drawable/flashbuttonoff.png" target-dir="res/drawable" />
      <source-file src="src/android/res/drawable/flashbuttonon.png" target-dir="res/drawable" />
      <source-file src="src/android/res/drawable/zoom.png" target-dir="res/drawable" />
@@ -98,8 +98,8 @@
         <resource-file src="src/ios/MWBarcodeScanner/close_button.png" target-dir="MWBarcodeScanner"/>
         <resource-file src="src/ios/MWBarcodeScanner/flashbuttonon.png" target-dir="MWBarcodeScanner"/>
         <resource-file src="src/ios/MWBarcodeScanner/flashbuttonoff.png" target-dir="MWBarcodeScanner"/>
-        <resource-file src="src/ios/MWBarcodeScanner/overlay.png" target-dir="MWBarcodeScanner"/>
-        <resource-file src="src/ios/MWBarcodeScanner/overlay@2x.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/overlay_mw.png" target-dir="MWBarcodeScanner"/>
+        <resource-file src="src/ios/MWBarcodeScanner/overlay_mw@2x.png" target-dir="MWBarcodeScanner"/>
         <resource-file src="src/ios/MWBarcodeScanner/zoom.png" target-dir="MWBarcodeScanner"/>
         
     </platform>
@@ -123,7 +123,7 @@
         <source-file src="src/wp8/MWBarcodeScanner/ScannerPage.xaml.cs" />
         <source-file src="src/wp8/MWBarcodeScanner/ScannerPage.xaml"/>
     <source-file src="src/wp8/MWBarcodeScanner/MWOverlay.cs"/>
-        <source-file src="src/wp8/MWBarcodeScanner/overlay.png"/>
+        <source-file src="src/wp8/MWBarcodeScanner/overlay_mw.png"/>
     <source-file src="src/wp8/MWBarcodeScanner/flashbuttonon.png"/>
     <source-file src="src/wp8/MWBarcodeScanner/flashbuttonoff.png"/>
     <source-file src="src/wp8/MWBarcodeScanner/zoom.png"/>

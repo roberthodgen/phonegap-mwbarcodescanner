@@ -83,7 +83,7 @@ UIImageView *overlayImage;
 
             overlayImage = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, width, height)];
             overlayImage.contentMode = UIViewContentModeScaleToFill;
-            overlayImage.image = [UIImage imageNamed:@"overlay.png"];
+            overlayImage.image = [UIImage imageNamed:@"overlay_mw.png"];
             [view addSubview:overlayImage];
             
         }
@@ -451,7 +451,6 @@ UIImageView *overlayImage;
 }
 - (void)scanImage:(CDVInvokedUrlCommand*)command
 {
-    [MWScannerViewController initDecoder];
     callbackId = command.callbackId;
     
     NSString *prefixToRemove = @"file://";

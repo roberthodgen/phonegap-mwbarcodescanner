@@ -3,6 +3,8 @@ package com.manateeworks;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,8 +21,7 @@ import com.manateeworks.BarcodeScanner.MWResult;
 import com.manateeworks.BarcodeScanner.MWResults;
 import com.manateeworks.ScannerActivity.State;
 import com.manateeworks.camera.CameraManager;
-
-import android.R;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -31,8 +32,10 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -45,6 +48,7 @@ import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.ScrollView;
@@ -70,6 +74,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 	RelativeLayout rlFullScreen;
 	ScrollView scrollView;
 	ImageView overlayImage;
+	ProgressBar pBar;
 
 	// !!! Rects are in format: x, y, width, height !!!
 	public static final Rect RECT_LANDSCAPE_1D = new Rect(2, 20, 96, 60);
@@ -91,6 +96,18 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 	public void onPause(boolean multitasking) {
 		super.onPause(multitasking);
 		if (rlFullScreen != null) {
+			JSONObject jsonResult = new JSONObject();
+			try {
+				jsonResult.put("code", "");
+				jsonResult.put("type", "Cancel");
+				jsonResult.put("bytes", "");
+
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			cbc.success(jsonResult);
 			ScannerActivity.flashOn = false;
 			// updateFlash();
 			CameraManager.get().stopPreview();
@@ -103,39 +120,47 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 
 	}
 
+	@SuppressLint("NewApi")
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 
 		super.onConfigurationChanged(newConfig);
+
 		if (rlFullScreen != null && CameraManager.get().camera != null) {
+
+			final ViewGroup viewGroupToAddTo = getMainViewGroup();
+			int w = cordova.getActivity().findViewById(android.R.id.content).getWidth();
+			int h = cordova.getActivity().findViewById(android.R.id.content).getHeight();
 
 			WindowManager wm = (WindowManager) cordova.getActivity().getSystemService(Context.WINDOW_SERVICE);
 			Display display = wm.getDefaultDisplay();
+
 			final Point size = new Point();
 			display.getSize(size);
 
-			final double x = xP / 100 * size.x;
-			final double y = yP / 100 * size.y;
-			final double width = widthP / 100 * size.x;
-			final double height = heightP / 100 * size.y;
+			final float AR = (float) size.y / (float) size.x;
+
+			final double x = xP / 100 * w;
+			final double y = yP / 100 * h;
+			final double width = widthP / 100 * w;
+			final double height = heightP / 100 * h;
 
 			LayoutParams lps = (LayoutParams) scrollView.getLayoutParams();
 
-			lps.width = (int) width;
-			lps.height = (int) height;
+			lps.width = (int) Math.round(width);
+			lps.height = (int) Math.round(height);
 
-			lps.leftMargin = (int) x;
-			lps.topMargin = (int) y;
+			lps.leftMargin = (int) Math.round(x);
+			lps.topMargin = (int) Math.round(y);
 			int heightTmp = 0;
 			int widthTmp = 0;
 
-			final float AR = (float) size.y / (float) size.x;
 			if (width * AR >= height) {
-				heightTmp = (int) (width * AR);
-				widthTmp = (int) width;
+				heightTmp = (int) Math.round(width * AR);
+				widthTmp = (int) Math.round(width);
 			} else {
-				widthTmp = (int) (height / AR);
-				heightTmp = (int) height;
+				widthTmp = (int) Math.round(height / AR);
+				heightTmp = (int) Math.round(height);
 			}
 			final float heightTmpRunnable = heightTmp;
 			final float widthTmpRunnable = widthTmp;
@@ -156,9 +181,9 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 				MWOverlay.removeOverlay();
 			} else if (ScannerActivity.param_OverlayMode == 2) {
 				LayoutParams overlayLps = (LayoutParams) overlayImage.getLayoutParams();
-				overlayLps.width = (int) width;
-				overlayLps.height = (int) height;
-				overlayLps.topMargin = (int) (heightTmpRunnable / 2 - height / 2);
+				overlayLps.width = (int) Math.round(width);
+				overlayLps.height = (int) Math.round(height);
+				overlayLps.topMargin = (int) Math.round(heightTmpRunnable / 2 - height / 2);
 
 				overlayImage.setLayoutParams(overlayLps);
 
@@ -176,7 +201,8 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 							if (ScannerActivity.param_OverlayMode == 1) {
 								MWOverlay.addOverlay(cordova.getActivity(), surfaceView);
 							}
-							scrollView.scrollTo((int) (widthTmpRunnable / 2 - width / 2), (int) (heightTmpRunnable / 2 - height / 2));
+							scrollView.scrollTo((int) Math.round(widthTmpRunnable / 2 - width / 2),
+									(int) Math.round(heightTmpRunnable / 2 - height / 2));
 						}
 					});
 				}
@@ -587,46 +613,49 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 
 	public void setAutoRect() {
 
-		float p1x;
-		float p1y;
+		if (rlFullScreen != null) {
 
-		float p2x;
-		float p2y;
+			float p1x;
+			float p1y;
 
-		p1x = (float) (surfaceView.getWidth() - scrollView.getWidth()) / 2 / surfaceView.getWidth();
-		p1y = (float) (surfaceView.getHeight() - scrollView.getHeight()) / 2 / surfaceView.getHeight();
+			float p2x;
+			float p2y;
 
-		p2x = (float) scrollView.getWidth() / surfaceView.getWidth();
-		p2y = (float) scrollView.getHeight() / surfaceView.getHeight();
+			p1x = (float) (surfaceView.getWidth() - scrollView.getWidth()) / 2 / surfaceView.getWidth();
+			p1y = (float) (surfaceView.getHeight() - scrollView.getHeight()) / 2 / surfaceView.getHeight();
 
-		if (surfaceView.getWidth() < surfaceView.getHeight()) {
-			float tmp = p1x;
-			p1x = p1y;
-			p1y = tmp;
-			tmp = p2x;
-			p2x = p2y;
-			p2y = tmp;
+			p2x = (float) scrollView.getWidth() / surfaceView.getWidth();
+			p2y = (float) scrollView.getHeight() / surfaceView.getHeight();
+
+			if (surfaceView.getWidth() < surfaceView.getHeight()) {
+				float tmp = p1x;
+				p1x = p1y;
+				p1y = tmp;
+				tmp = p2x;
+				p2x = p2y;
+				p2y = tmp;
+			}
+
+			p1x += 0.02f;
+			p1y += 0.02f;
+			p2x -= 0.04f;
+			p2y -= 0.04f;
+
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_25, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_39, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_93, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_128, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_AZTEC, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DM, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_EANUPC, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_PDF, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_QR, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_RSS, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_CODABAR, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DOTCODE, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_11, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
+			BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_MSI, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
 		}
-
-		p1x += 0.02f;
-		p1y += 0.02f;
-		p2x -= 0.04f;
-		p2y -= 0.04f;
-
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_25, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_39, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_93, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_128, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_AZTEC, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DM, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_EANUPC, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_PDF, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_QR, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_RSS, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_CODABAR, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_DOTCODE, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_11, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
-		BarcodeScanner.MWBsetScanningRect(BarcodeScanner.MWB_CODE_MASK_MSI, p1x * 100, p1y * 100, (p2x) * 100, (p2y) * 100);
 	}
 
 	public static int MAX_IMAGE_SIZE = 1280;
@@ -931,6 +960,12 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 		return null;
 	}
 
+	public static boolean isFullscreen(View topLeftView) {
+		int location[] = new int[2];
+		topLeftView.getLocationOnScreen(location);
+		return location[0] == 0 && location[1] == 0;
+	}
+
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		// TODO Auto-generated method stub
@@ -938,12 +973,25 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 	}
 
 	@Override
-	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-		if (!hasSurface) {
+	public void surfaceChanged(final SurfaceHolder holder, int format, int width, int height) {
 
-			hasSurface = true;
-			initCamera(holder);
-		}
+		new Timer().schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				cordova.getActivity().runOnUiThread(new Runnable() {
+					public void run() {
+						if (!hasSurface) {
+
+							hasSurface = true;
+							initCamera(holder);
+						}
+					}
+				});
+			}
+		}, 1);
+
 	}
 
 	@Override
@@ -962,8 +1010,11 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 			// High resolutions will slow down scanning proccess on slower
 			// devices
 
-			CameraManager.setDesiredPreviewSize(1280, 720);
-
+			if (ScannerActivity.param_EnableHiRes) {
+				CameraManager.setDesiredPreviewSize(1280, 720);
+			} else {
+				CameraManager.setDesiredPreviewSize(800, 480);
+			}
 			CameraManager.get().openDriver(surfaceHolder,
 					(cordova.getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT));
 			// int maxZoom = CameraManager.get().getMaxZoom();
@@ -1025,10 +1076,10 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 		ScannerActivity.state = State.PREVIEW;
 		CameraManager.get().requestPreviewFrame(ScannerActivity.handler, ScannerActivity.MSG_DECODE);
 		CameraManager.get().requestAutoFocus(ScannerActivity.handler, ScannerActivity.MSG_AUTOFOCUS);
-
+		scrollView.setVisibility(View.VISIBLE);
+		pBar.setVisibility(View.GONE);
 		// flashOn = false;
 		// updateFlash();
-
 	}
 
 	public void handleDecode(MWResult result) {
@@ -1199,20 +1250,26 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 		}
 	}
 
+	@SuppressLint("NewApi")
 	private void startScannerView() {
 		if (rlFullScreen == null) {
+			final ViewGroup viewGroupToAddTo = getMainViewGroup();
+			int w = cordova.getActivity().findViewById(android.R.id.content).getWidth();
+			int h = cordova.getActivity().findViewById(android.R.id.content).getHeight();
 
 			WindowManager wm = (WindowManager) cordova.getActivity().getSystemService(Context.WINDOW_SERVICE);
 			Display display = wm.getDefaultDisplay();
+
 			final Point size = new Point();
 			display.getSize(size);
 
-			final double x = xP / 100 * size.x;
-			final double y = yP / 100 * size.y;
-			final double width = widthP / 100 * size.x;
-			final double height = heightP / 100 * size.y;
+			final float AR = (float) size.y / (float) size.x;
 
-			final ViewGroup viewGroupToAddTo = getMainViewGroup();
+			final double x = xP / 100 * w;
+			final double y = yP / 100 * h;
+			final double width = widthP / 100 * w;
+			final double height = heightP / 100 * h;
+
 			cordova.getActivity().runOnUiThread(new Runnable() {
 
 				public void run() {
@@ -1220,9 +1277,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 
 					rlFullScreen = new RelativeLayout(cordova.getActivity());
 					rlSurfaceContainer = new RelativeLayout(cordova.getActivity());
-
 					scrollView = new ScrollView(cordova.getActivity());
-
 					scrollView.setVerticalScrollBarEnabled(false);
 					scrollView.setOnTouchListener(new OnTouchListener() {
 
@@ -1231,38 +1286,43 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 							return true;
 						}
 					});
-
+					scrollView.setVisibility(View.INVISIBLE);
 					surfaceView = new SurfaceView(cordova.getActivity());
+					pBar = new ProgressBar(cordova.getActivity());
+					RelativeLayout.LayoutParams pBarParams = new LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+							android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+					pBarParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+					pBar.setLayoutParams(pBarParams);
+					pBar.setVisibility(View.VISIBLE);
 					rlFullScreen.setLayoutParams(
 							new LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
 
-					LayoutParams lps = new LayoutParams((int) width, (int) height);
-					lps.leftMargin = (int) x;
-					lps.topMargin = (int) y;
+					LayoutParams lps = new LayoutParams((int) Math.round(width), (int) Math.round(height));
+					lps.leftMargin = (int) Math.round(x);
+					lps.topMargin = (int) Math.round(y);
 					int heightTmp = 0;
 					int widthTmp = 0;
 
-					final float AR = (float) size.y / (float) size.x;
 					if (width * AR >= height) {
-						heightTmp = (int) (width * AR);
-						widthTmp = (int) width;
+						heightTmp = (int) Math.round(width * AR);
+						widthTmp = (int) Math.round(width);
 					} else {
-						widthTmp = (int) (height / AR);
-						heightTmp = (int) height;
+						widthTmp = (int) Math.round(height / AR);
+						heightTmp = (int) Math.round(height);
 					}
 					final float heightTmpRunnable = heightTmp;
-					rlSurfaceContainer.setLayoutParams(new LayoutParams((int) widthTmp, (int) heightTmp));
-					surfaceView.setLayoutParams(new LayoutParams((int) widthTmp, (int) heightTmp));
+					rlSurfaceContainer.setLayoutParams(new LayoutParams((int) Math.round(widthTmp), (int) Math.round(heightTmp)));
+					surfaceView.setLayoutParams(new LayoutParams((int) Math.round(widthTmp), (int) Math.round(heightTmp)));
 
 					rlSurfaceContainer.addView(surfaceView);
 
 					scrollView.addView(rlSurfaceContainer);
-					scrollView.setPadding(1, 1, 1, 1);
 
 					scrollView.setClipToPadding(true);
 					scrollView.setLayoutParams(lps);
 					rlFullScreen.addView(scrollView);
 					viewGroupToAddTo.addView(rlFullScreen);
+					rlFullScreen.addView(pBar);
 
 					new Timer().schedule(new TimerTask() {
 
@@ -1271,18 +1331,19 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 							// TODO Auto-generated method stub
 							cordova.getActivity().runOnUiThread(new Runnable() {
 								public void run() {
+
 									setAutoRect();
 									scrollView.scrollTo(0, (int) (heightTmpRunnable / 2 - height / 2));
-
 									if (ScannerActivity.param_OverlayMode == 1) {
 										MWOverlay.addOverlay(cordova.getActivity(), surfaceView);
+										MWOverlay.setPaused(false);
 									} else if (ScannerActivity.param_OverlayMode == 2) {
 										overlayImage = new ImageView(cordova.getActivity());
 										overlayImage.setScaleType(ScaleType.FIT_XY);
-										overlayImage.setImageResource(cordova.getActivity().getResources().getIdentifier("overlay", "drawable",
+										overlayImage.setImageResource(cordova.getActivity().getResources().getIdentifier("overlay_mw", "drawable",
 												cordova.getActivity().getPackageName()));
-										LayoutParams lps = new LayoutParams((int) width, (int) height);
-										lps.topMargin = (int) (heightTmpRunnable / 2 - height / 2);
+										LayoutParams lps = new LayoutParams((int) Math.round(width), (int) Math.round(height));
+										lps.topMargin = (int) Math.round(heightTmpRunnable / 2 - height / 2);
 										rlSurfaceContainer.addView(overlayImage, lps);
 									}
 

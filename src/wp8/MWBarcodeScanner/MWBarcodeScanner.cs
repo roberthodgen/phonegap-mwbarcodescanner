@@ -164,7 +164,7 @@ namespace Cordova.Extension.Commands
                         Margin = new Thickness(widthClip,heightClip,0,0)
                         };
                         
-                        BitmapImage BitImg = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/overlay.png", UriKind.Relative));
+                        BitmapImage BitImg = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/overlay_mw.png", UriKind.Relative));
                         imgOverlay.Source = BitImg;
                         canvas.Children.Add(imgOverlay);
                     }
