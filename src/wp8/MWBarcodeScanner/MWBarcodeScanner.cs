@@ -16,7 +16,6 @@ using BarcodeScanners;
 using BarcodeScannerPage;
 using System.Windows.Controls;
 using System.Diagnostics;
-using com.phonegap.helloworld;
 using Windows.Phone.Media.Devices;
 using Windows.Phone.Media.Capture;
 using Microsoft.Devices;
@@ -40,7 +39,7 @@ namespace Cordova.Extension.Commands
         float widthClip;
         ScannerPage scannerPage;
         float heightClip;
-        MainPage currentPage;
+        public static PhoneApplicationPage currentPage;
         Image imgOverlay;
 
         public void initDecoder(string options)
@@ -48,7 +47,7 @@ namespace Cordova.Extension.Commands
 
             BarcodeScanners.BarcodeHelper.initDecoder();
             DispatchCommandResult(new PluginResult(PluginResult.Status.OK));
-
+            var appId = Windows.ApplicationModel.Store.CurrentApp.AppId;
         }
 
         public void startScanner(string options)
@@ -94,7 +93,7 @@ namespace Cordova.Extension.Commands
                     if (currentPage == null)
                     {
                         firstTimePageLoad = true;
-                        currentPage = (MainPage)(((App)Application.Current).RootFrame.Content as PhoneApplicationPage);
+                        currentPage = (((PhoneApplicationFrame)Application.Current.RootVisual).Content as PhoneApplicationPage);
                     }
 
                     var screenWidth = (currentPage.Orientation == PageOrientation.Portrait || currentPage.Orientation == PageOrientation.PortraitUp || currentPage.Orientation == PageOrientation.PortraitDown) ? Application.Current.Host.Content.ActualWidth : Application.Current.Host.Content.ActualHeight;
@@ -143,8 +142,7 @@ namespace Cordova.Extension.Commands
                     canvas.Clip = rg;
                     canvas.Margin = new Thickness(x - widthClip, y - heightClip, 0, 0);
 
-
-                    currentPage.LayoutRoot.Children.Add(canvas);
+                    (currentPage.FindName("LayoutRoot") as Grid).Children.Add(canvas);
 
                     scannerPage = new ScannerPage();
                     scannerPage.videoBrush = videoBrush;
@@ -423,8 +421,8 @@ namespace Cordova.Extension.Commands
                    {
                        canvas.Children.Remove(imgOverlay);
                    }
-                
-                   currentPage.LayoutRoot.Children.Remove(canvas);
+
+                   (currentPage.FindName("LayoutRoot") as Grid).Children.Remove(canvas);
                    scannerPage.stopCamera();
                    scannerPage = null;
                    canvas = null;

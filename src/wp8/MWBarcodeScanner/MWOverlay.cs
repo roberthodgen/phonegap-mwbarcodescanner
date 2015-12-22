@@ -46,7 +46,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Microsoft.Phone.Controls;
 using System.Windows;
-using com.phonegap.helloworld;
 
 namespace BarcodeScanners
 {
@@ -121,8 +120,10 @@ namespace BarcodeScanners
 
         public static void removeOverlay()
         {
-            checkTimer.Stop();
-            checkTimer = null;
+            if (checkTimer != null) { 
+                checkTimer.Stop();
+                checkTimer = null;
+            }
             removeAnimation();
             if (viewportLayer != null)
             {
@@ -203,8 +204,8 @@ namespace BarcodeScanners
             }
 
 
-           
-            PageOrientation currentOrientation = (((App)Application.Current).RootFrame.Content as PhoneApplicationPage).Orientation;
+
+            PageOrientation currentOrientation = Cordova.Extension.Commands.MWBarcodeScanner.currentPage.Orientation;
 
           if ((currentOrientation & PageOrientation.LandscapeRight) == (PageOrientation.LandscapeRight))
             {
