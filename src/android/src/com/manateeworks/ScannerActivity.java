@@ -445,6 +445,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 				if (rawResult != null) {
 
 					state = State.STOPPED;
+					BarcodeScanner.MWBsetDuplicate(mwResult.bytes, mwResult.bytesLength);
 					MWOverlay.setPaused(true);
 
 					long end = System.currentTimeMillis();
