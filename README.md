@@ -22,7 +22,7 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
 * Add plugin to the project with:
 
 
-		 phonegap local plugin add com.manateeworks.barcodescanner
+		 phonegap plugin add manateeworks-barcodescanner
 
 
 	or   
@@ -53,7 +53,7 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
 * Copy confing.xml from project’s dir to /www
 * Add  this line in www/confing.xml:
     
-        <gap:plugin name="com.manateeworks.barcodescanner" />
+        <gap:plugin name="manateeworks-barcodescanner" source="npm"/>
 
 * Add this code in www/index.html:
 
