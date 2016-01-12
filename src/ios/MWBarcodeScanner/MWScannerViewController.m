@@ -18,7 +18,7 @@
 #define RECT_DOTCODE            30, 20, 40, 60
 
 
-UIInterfaceOrientationMask param_Orientation = UIInterfaceOrientationMaskLandscapeLeft;
+UIInterfaceOrientationMask param_Orientation = UIInterfaceOrientationMaskAll;
 BOOL param_EnableHiRes = YES;
 BOOL param_EnableFlash = YES;
 BOOL param_EnableZoom = YES;

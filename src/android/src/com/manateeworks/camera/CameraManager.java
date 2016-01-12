@@ -1,15 +1,19 @@
-package com.manateeworks.camera;
+package com.manateeworks;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import java.util.List;
 
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Parameters;
@@ -50,7 +54,7 @@ public final class CameraManager {
 	public static AutoFocusCallback afCallback;
 	public static boolean refocusingActive = false;
 
-	public static boolean DEBUG = true;
+	public static boolean DEBUG = false;
 	public static String TAG = "CameraManager";
 
 	public static void setDesiredPreviewSize(int width, int height) {
@@ -497,8 +501,7 @@ public final class CameraManager {
 		int rotation = windowManager.getDefaultDisplay().getRotation();
 
 		if (((rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) && config.orientation == Configuration.ORIENTATION_LANDSCAPE)
-				|| ((rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270)
-						&& config.orientation == Configuration.ORIENTATION_PORTRAIT)) {
+				|| ((rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) && config.orientation == Configuration.ORIENTATION_PORTRAIT)) {
 			return Configuration.ORIENTATION_LANDSCAPE;
 		} else {
 			return Configuration.ORIENTATION_PORTRAIT;
@@ -651,14 +654,20 @@ final class CameraConfigurationManager {
 		 */
 
 		try {
-			String vs = parameters.get("video-stabilization");
-			if (vs != null) {
-				parameters.set("video-stabilization", "true");
+			String vss = parameters.get("video-stabilization-supported");
+			if (vss != null && vss.equalsIgnoreCase("true")) {
+				try {
+					String vs = parameters.get("video-stabilization");
+					if (vs != null) {
+						parameters.set("video-stabilization", "true");
+					}
+				} catch (Exception e) {
+				}
 			}
 		} catch (Exception e) {
 		}
 
-		try {
+		/*try {
 			String vs = parameters.get("video-stabilization-ocr");
 			if (vs != null) {
 				parameters.set("video-stabilization-ocr", "true");
@@ -672,7 +681,7 @@ final class CameraConfigurationManager {
 				parameters.set("touch-af-aec-values", "touch-on");
 			}
 		} catch (Exception e) {
-		}
+		}*/
 
 		String focusMode = parameters.getFocusMode();
 
@@ -768,8 +777,11 @@ final class CameraConfigurationManager {
 		int minDif = 99999;
 		int minIndex = -1;
 
-		float screenAR = ((float) Math.max(CameraConfigurationManager.screenResolution.x, CameraConfigurationManager.screenResolution.y)
-				/ Math.min(CameraConfigurationManager.screenResolution.x, CameraConfigurationManager.screenResolution.y));
+		int X = CameraConfigurationManager.screenResolution.x;
+		int Y = CameraConfigurationManager.screenResolution.y;
+
+		float screenAR = ((float) (X > Y ? X : Y)) / (X < Y ? X : Y);
+
 		for (int i = 0; i < sizes.size(); i++) {
 
 			float resAR = ((float) sizes.get(i).width) / sizes.get(i).height;

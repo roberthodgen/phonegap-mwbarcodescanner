@@ -625,6 +625,14 @@ MWBtoggleZoom: function() {
     */
    MWBduplicateCodeDelay: function(delay) {
        cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "duplicateCodeDelay", [delay]);
+   },
+   /**
+    *  Use auto generated full screen scanning rectangle, or use user defined scanning rectangles
+    *
+    *  useAutoRect   Whether or not to use auto generated full screen scanning rectangle, or use user defined scanning rectangles [true, false]; default: true
+    */
+   MWBuseAutoRect: function(useAutoRect) {
+       cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setUseAutorect", [useAutoRect]);
    }
  
  };
@@ -852,7 +860,9 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
                   //  mwbs['MWBcloseScannerOnDecode'](false);
                   //  mwbs['MWBuse60fps'](true);      
                   //  mwbs['MWBsetParam'](constants.MWB_CODE_MASK_DM, constants.MWB_PAR_ID_RESULT_PREFIX, constants.MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS);
-                  //  mwbs['MWBduplicateCodeDelay'](1000);      
+                  //  mwbs['MWBduplicateCodeDelay'](1000);    
+                  //  mwbs['MWBuseAutoRect'](false);      
+  
 
                                   
 
