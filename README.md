@@ -382,6 +382,14 @@ Add a notification plugin (if not already present):
 
 * (Optional): You can replace our default overlay_mw.png for the camera screen with your own customized image;
 
+&nbsp;
+###Changes in 1.8.2:
+&nbsp;
+- Added option to set scanning rectangle for partial view scanning. To use it just add the following line to the scanner configuration:
+
+        mwbs['MWBuseAutoRect'](false);
+        
+- Bug fixes
 
 &nbsp;
 ###Changes in 1.8:

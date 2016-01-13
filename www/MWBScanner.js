@@ -1,5 +1,9 @@
 /*
-    Version 1.8
+    Version 1.8.2
+   
+    - Added option to set scanning rectangle for partial view scanning. To use it just add the following line to the scanner configuration:
+
+        mwbs['MWBuseAutoRect'](false);
 
     - Added new feature that makes possible scanning in view:
 

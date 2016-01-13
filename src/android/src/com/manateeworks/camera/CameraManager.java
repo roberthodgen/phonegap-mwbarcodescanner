@@ -1,4 +1,4 @@
-package com.manateeworks;
+package com.manateeworks.camera;
 
 import java.io.IOException;
 import java.util.ArrayList;

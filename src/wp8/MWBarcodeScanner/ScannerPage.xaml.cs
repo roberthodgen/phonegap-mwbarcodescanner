@@ -95,7 +95,7 @@ namespace BarcodeScannerPage
         public static bool param_CloseScannerOnDecode = true;
 
 
-        public static SupportedPageOrientation param_Orientation = SupportedPageOrientation.Landscape;
+        public static SupportedPageOrientation param_Orientation = SupportedPageOrientation.PortraitOrLandscape;
 
         public int MAX_RESOLUTION = 1280 * 768;
 

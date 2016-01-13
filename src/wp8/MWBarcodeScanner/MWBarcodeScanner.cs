@@ -41,6 +41,9 @@ namespace Cordova.Extension.Commands
         float heightClip;
         public static PhoneApplicationPage currentPage;
         Image imgOverlay;
+        public static bool useAutoRect = true;
+
+        public Dictionary<int, float[]> scanningRects;
 
         public void initDecoder(string options)
         {
@@ -78,6 +81,12 @@ namespace Cordova.Extension.Commands
             }
         }
 
+        public void setUseAutorect(string options)
+        {
+           useAutoRect = Convert.ToBoolean(JsonHelper.Deserialize<string[]>(options)[0]);
+        }
+
+        
         public void startScannerView(string options)
         {
 
@@ -200,12 +209,12 @@ namespace Cordova.Extension.Commands
                                     AR = (float)screenHeight / (float)screenWidth;
                                     if (width * AR >= height)
                                     {
-                                        heightTmp = (int)(width * AR);
+                                        heightTmp = (float)(width * AR);
                                         heightClip = (float)(heightTmp - height) / 2;
                                     }
                                     else
                                     {
-                                        widthTmp = (int)(height / AR);
+                                        widthTmp = (float)(height / AR);
                                         widthClip = (float)(widthTmp - width) / 2;
                                     }
 
@@ -466,6 +475,8 @@ namespace Cordova.Extension.Commands
                 p2y = tmp;
             }
 
+            if (useAutoRect) { 
+            
             p1x += 0.02f;
             p1y += 0.02f;
             p2x -= 0.04f;
@@ -498,6 +509,73 @@ namespace Cordova.Extension.Commands
                              Convert.ToInt32(p1y * 100), Convert.ToInt32(p2x * 100), Convert.ToInt32(p2y * 100));
             Scanner.MWBsetScanningRect(Convert.ToInt32(Scanner.MWB_CODE_MASK_MSI), Convert.ToInt32(p1x * 100),
                              Convert.ToInt32(p1y * 100), Convert.ToInt32(p2x * 100), Convert.ToInt32(p2y * 100));
+            }
+            else
+            {
+                if (scanningRects == null) {
+                    scanningRects = new Dictionary<int, float[]>();
+                    float left,top,rWidth,rHeight;
+
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_25,out left,out top,out rWidth,out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_25,new float[]{left,top,rWidth,rHeight});
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_39, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_39, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_93, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_93, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_128, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_128, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_AZTEC, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_AZTEC, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_DM, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_DM, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_EANUPC, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_EANUPC, new float[] { left, top, rWidth, rHeight });
+                    
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_PDF, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_PDF, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_QR, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_QR, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_RSS, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_RSS, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_CODABAR, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_CODABAR, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_DOTCODE, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_DOTCODE, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_11, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_11, new float[] { left, top, rWidth, rHeight });
+
+                    Scanner.MWBgetScanningRect(Scanner.MWB_CODE_MASK_MSI, out left, out top, out rWidth, out rHeight);
+                    scanningRects.Add(Scanner.MWB_CODE_MASK_MSI, new float[] { left, top, rWidth, rHeight });
+
+                }
+                else
+                {
+                    foreach (KeyValuePair<int, float[]> sRect in scanningRects)
+                    {
+                        Scanner.MWBsetScanningRect(Convert.ToInt32(sRect.Key), Convert.ToInt32(sRect.Value[0]),
+                             Convert.ToInt32(sRect.Value[1]), Convert.ToInt32(sRect.Value[2]), Convert.ToInt32(sRect.Value[3]));
+                    }
+                }
+
+
+                    float rcLeft, rcTop, rcWidth, rcHeight;
+                    Scanner.MWBgetScanningRect(Convert.ToInt32(Scanner.MWB_CODE_MASK_128), out rcLeft,out rcTop, out rcWidth, out rcHeight);
+                    Scanner.MWBsetScanningRect(Convert.ToInt32(Scanner.MWB_CODE_MASK_128), Convert.ToInt32((p1x + (1 - p1x * 2) * (rcLeft / 100)) * 100), Convert.ToInt32((p1y + (1 - p1y * 2) * (rcTop / 100)) * 100), Convert.ToInt32((p2x*(rcWidth/100))*100), Convert.ToInt32((p2y*(rcHeight/100))*100));
+
+                //
+            }
 
         }
 
