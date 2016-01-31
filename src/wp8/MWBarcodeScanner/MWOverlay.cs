@@ -203,9 +203,9 @@ namespace BarcodeScanners
                 return;
             }
 
+            
 
-
-            PageOrientation currentOrientation = Cordova.Extension.Commands.MWBarcodeScanner.currentPage.Orientation;
+            PageOrientation currentOrientation = (((PhoneApplicationFrame)Application.Current.RootVisual).Content as PhoneApplicationPage).Orientation;
 
           if ((currentOrientation & PageOrientation.LandscapeRight) == (PageOrientation.LandscapeRight))
             {

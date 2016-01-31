@@ -50,7 +50,7 @@ namespace Cordova.Extension.Commands
 
             BarcodeScanners.BarcodeHelper.initDecoder();
             DispatchCommandResult(new PluginResult(PluginResult.Status.OK));
-            var appId = Windows.ApplicationModel.Store.CurrentApp.AppId;
+           // var appId = Windows.ApplicationModel.Store.CurrentApp.AppId;
         }
 
         public void startScanner(string options)
@@ -64,7 +64,7 @@ namespace Cordova.Extension.Commands
                 var root = Application.Current.RootVisual as PhoneApplicationFrame;
                 mwbScanner = this;
                 kallbackID = JsonHelper.Deserialize<string[]>(options)[0];
-                root.Navigate(new System.Uri("/Plugins/com.manateeworks.barcodescanner/ScannerPage.xaml", UriKind.Relative));
+                root.Navigate(new System.Uri("/Plugins/manateeworks-barcodescanner/ScannerPage.xaml", UriKind.Relative));
 
                 root.Navigated += new System.Windows.Navigation.NavigatedEventHandler(root_Navigated);
             });
@@ -171,7 +171,7 @@ namespace Cordova.Extension.Commands
                         Margin = new Thickness(widthClip,heightClip,0,0)
                         };
                         
-                        BitmapImage BitImg = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/overlay_mw.png", UriKind.Relative));
+                        BitmapImage BitImg = new BitmapImage(new Uri("/Plugins/manateeworks-barcodescanner/overlay_mw.png", UriKind.Relative));
                         imgOverlay.Source = BitImg;
                         canvas.Children.Add(imgOverlay);
                     }

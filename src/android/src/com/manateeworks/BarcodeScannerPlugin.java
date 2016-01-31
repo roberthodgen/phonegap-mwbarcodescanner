@@ -1424,6 +1424,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 	@SuppressLint("NewApi")
 	private void startScannerView() {
 		if (rlFullScreen == null) {
+			rects = null;
 			final ViewGroup viewGroupToAddTo = getMainViewGroup();
 			int w = cordova.getActivity().findViewById(android.R.id.content).getWidth();
 			int h = cordova.getActivity().findViewById(android.R.id.content).getHeight();

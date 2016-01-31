@@ -364,13 +364,13 @@ namespace BarcodeScannerPage
                         {
                             flashActive = true;
                             cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.On);
-                            flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonon.png", UriKind.Relative));
+                            flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/manateeworks-barcodescanner/flashbuttonon.png", UriKind.Relative));
                         }
                         else
                         {
                             flashActive = false;
                             cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.Off);
-                            flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png", UriKind.Relative));
+                            flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/manateeworks-barcodescanner/flashbuttonoff.png", UriKind.Relative));
                         }
 
                         flashButton.Visibility = System.Windows.Visibility.Visible;
@@ -542,7 +542,7 @@ namespace BarcodeScannerPage
                     cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.On);
                     if (isPage)
                     {
-                        flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonon.png", UriKind.Relative));
+                        flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/manateeworks-barcodescanner/flashbuttonon.png", UriKind.Relative));
                     }
                 }
                 else
@@ -550,7 +550,7 @@ namespace BarcodeScannerPage
                     cameraDevice.SetProperty(KnownCameraAudioVideoProperties.VideoTorchMode, VideoTorchMode.Off);
                     if (isPage)
                     {
-                        flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png", UriKind.Relative));
+                        flashButtonImage.Source = new BitmapImage(new Uri("/Plugins/manateeworks-barcodescanner/flashbuttonoff.png", UriKind.Relative));
                     }
                 }
             }

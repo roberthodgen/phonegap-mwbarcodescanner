@@ -44,6 +44,7 @@ NSMutableDictionary *recgtVals;
 {
     
     if (![self.viewController.view viewWithTag:9158436]) {
+        recgtVals = nil;
         
         currentOrientation = [[UIApplication sharedApplication]statusBarOrientation];
         

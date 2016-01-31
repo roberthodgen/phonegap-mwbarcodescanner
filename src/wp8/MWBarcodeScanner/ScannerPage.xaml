@@ -22,11 +22,11 @@
             </Canvas.Background>
 
         </Canvas>
-        <Image x:Name="cameraOverlay" Height="Auto" Width="Auto" Source="/Plugins/com.manateeworks.barcodescanner/overlay.png" Stretch="Fill"/>
+        <Image x:Name="cameraOverlay" Height="Auto" Width="Auto" Source="/Plugins/manateeworks-barcodescanner/overlay.png" Stretch="Fill"/>
         <Button x:Name="flashButton" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="0" Background="{x:Null}" Height="96" Width="96" Margin="0" BorderThickness="0" Click="flashButton_Click" Visibility="Collapsed">
 
             <StackPanel>
-                <Image x:Name="flashButtonImage" Source="/Plugins/com.manateeworks.barcodescanner/flashbuttonoff.png" Stretch="Fill" Height="48" Width="48" />
+                <Image x:Name="flashButtonImage" Source="/Plugins/manateeworks-barcodescanner/flashbuttonoff.png" Stretch="Fill" Height="48" Width="48" />
             </StackPanel>
 
         </Button>
