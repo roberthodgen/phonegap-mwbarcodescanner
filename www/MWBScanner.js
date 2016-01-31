@@ -1,5 +1,5 @@
 /*
-    Version 1.8.2
+    Version 1.8.3
    
     - Added option to set scanning rectangle for partial view scanning. To use it just add the following line to the scanner configuration:
 

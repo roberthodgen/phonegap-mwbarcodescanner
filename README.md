@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.8.2
+ Version 1.8.3
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 

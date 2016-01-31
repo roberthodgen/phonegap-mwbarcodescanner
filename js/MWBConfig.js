@@ -94,6 +94,7 @@ MWBSInitSpace.init = function(mwbs,constants,dvc){
                   //  mwbs['MWBuse60fps'](true);      
                   //  mwbs['MWBsetParam'](constants.MWB_CODE_MASK_DM, constants.MWB_PAR_ID_RESULT_PREFIX, constants.MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS);
                   //  mwbs['MWBduplicateCodeDelay'](1000);      
+                  //  mwbs['MWBuseAutoRect'](false);      
 
                                   
 
