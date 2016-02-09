@@ -239,10 +239,10 @@ namespace BarcodeScanners
                   Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_PDF, "username", "key");
                   Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_QR, "username", "key");
                   Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_RSS, "username", "key");
-                  Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_CODABAR, "username", "key");*/
+                  Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_CODABAR, "username", "key");
                 Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_DOTCODE, "username", "key");
                 Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_11, "username", "key");
-                Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_MSI, "username", "key");
+                Scanner.MWBregisterCode(Scanner.MWB_CODE_MASK_MSI, "username", "key");*/
 
 
                 // choose code type or types you want to search for

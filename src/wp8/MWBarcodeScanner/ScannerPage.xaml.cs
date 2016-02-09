@@ -205,6 +205,7 @@ namespace BarcodeScannerPage
         {
             activeThreads = 0;
             isClosing = false;
+            resultDisplayed = false;
             Windows.Foundation.Size captureResolution = new Windows.Foundation.Size(1280, 720);
             Windows.Foundation.Size previewResolution = new Windows.Foundation.Size(1280, 720);
 
