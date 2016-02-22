@@ -43,6 +43,8 @@ namespace Cordova.Extension.Commands
         Image imgOverlay;
         public static bool useAutoRect = true;
 
+        Button flashButton;
+
         public Dictionary<int, float[]> scanningRects;
 
         public void initDecoder(string options)
@@ -175,14 +177,42 @@ namespace Cordova.Extension.Commands
                         imgOverlay.Source = BitImg;
                         canvas.Children.Add(imgOverlay);
                     }
+                    if (ScannerPage.param_EnableFlash)
+                    {
+                        flashButton = new Button()
+                        {
+                            Width = 70,
+                            Height = 70,
+                            BorderThickness = new Thickness(0, 0, 0, 0),
+                            Margin = new Thickness(x + 5, y + 5, 0, 0),
+                            Background = new ImageBrush()
+                            {
+                                ImageSource = new BitmapImage(new Uri("/Plugins/manateeworks-barcodescanner/flashbuttonoff.png", UriKind.Relative))
+                            },
+                            HorizontalAlignment = HorizontalAlignment.Left,
+                            VerticalAlignment = VerticalAlignment.Top
+
+                        };
+                        flashButton.Click += delegate
+                        {
+                            scannerPage.flashButton_Click(null, null);
+                        };
+
+                        (currentPage.FindName("LayoutRoot") as Grid).Children.Add(flashButton);
+
+                    }
+
                     if (firstTimePageLoad)
                     {
+
+
 
                         currentPage.NavigationService.Navigating += delegate
                         {
                             stopScanner("");
                         };
 
+                      
                         currentPage.OrientationChanged += delegate
                         {
                             Deployment.Current.Dispatcher.BeginInvoke(delegate()
@@ -225,7 +255,10 @@ namespace Cordova.Extension.Commands
                                     canvas.Clip = rg;
                                     canvas.Margin = new Thickness(x - widthClip, y - heightClip, 0, 0);
 
+                                    if (flashButton != null) {
+                                        flashButton.Margin = new Thickness(x + 5, y + 5, 0, 0);
 
+                                    }
                                     scannerPage.fixOrientation(currentPage.Orientation);
                                     setAutoRect();
                                     if ((int)ScannerPage.param_OverlayMode == 1) {
@@ -246,11 +279,16 @@ namespace Cordova.Extension.Commands
                                          imgOverlay.Height = height;
                                          imgOverlay.Margin = new Thickness(widthClip, heightClip, 0, 0);
                                     }
-                                    
+
+
+                                   
+
                                 }
                                 
                             });
                         };
+
+                        
                     }
                     
                 }
@@ -432,6 +470,12 @@ namespace Cordova.Extension.Commands
                    }
 
                    (currentPage.FindName("LayoutRoot") as Grid).Children.Remove(canvas);
+                   if (flashButton != null)
+                   {
+                       (currentPage.FindName("LayoutRoot") as Grid).Children.Remove(flashButton);
+                       flashButton = null;                
+                   }
+
                    scannerPage.stopCamera();
                    scannerPage = null;
                    canvas = null;

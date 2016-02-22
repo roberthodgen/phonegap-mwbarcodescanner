@@ -13,6 +13,7 @@
 #define OM_MW       1
 #define OM_IMAGE    2
 
+
 @protocol ScanningFinishedDelegate <NSObject>
 - (void)scanningFinished:(NSString *)result withType:(NSString *)lastFormat isGS1: (bool) isGS1 andRawResult: (NSData *) rawResult locationPoints:(MWLocation *)locationPoints imageWidth:(int)imageWidth imageHeight:(int)imageHeight;
 @end
@@ -73,6 +74,8 @@ typedef enum eMainScreenState {
 
 - (IBAction)doClose:(id)sender;
 - (IBAction)doZoomToggle:(id)sender;
+- (IBAction)doFlashToggle:(id)sender;
+
 + (void) initDecoder;
 - (AVCaptureVideoPreviewLayer *)generateLayerWithRect:(CGPoint)bottomRightPoint;
 
@@ -98,6 +101,8 @@ typedef enum eMainScreenState {
 - (void) stopScanning;
 - (void) toggleTorch;
 + (void) setDuplicateDelayTime: (int) delay;
++ (BOOL) isFlashEnabled;
++ (BOOL) isZoomEnabled;
 
 
 @end

@@ -74,6 +74,10 @@ NSMutableDictionary *recgtVals;
         
         previewLayer = [scannerViewController generateLayerWithRect:CGPointMake(width, height)];
         
+    
+        
+        
+        
         [view.layer addSublayer:previewLayer];
         
         [self.viewController.view addSubview:view];
@@ -91,6 +95,28 @@ NSMutableDictionary *recgtVals;
             overlayImage.contentMode = UIViewContentModeScaleToFill;
             overlayImage.image = [UIImage imageNamed:@"overlay_mw.png"];
             [view addSubview:overlayImage];
+            
+        }
+        if ([MWScannerViewController isFlashEnabled]) {
+            scannerViewController.flashButton = [[UIButton alloc]initWithFrame:CGRectMake(view.frame.size.width-10-35, 10, 35, 35)];
+            [scannerViewController.flashButton setImage:[UIImage imageNamed:@"flashbuttonoff.png"] forState:UIControlStateNormal];
+            [scannerViewController.flashButton setImage:[UIImage imageNamed:@"flashbuttonon.png"] forState:UIControlStateSelected];
+            [scannerViewController.flashButton setSelected:NO];
+            [scannerViewController.flashButton setHidden:NO];
+            [scannerViewController.flashButton setBackgroundImage:nil forState:UIControlStateSelected];
+            [scannerViewController.flashButton setBackgroundImage:nil forState:UIControlStateNormal];
+            [scannerViewController.flashButton addTarget:scannerViewController action:@selector(doFlashToggle:) forControlEvents:UIControlEventTouchUpInside];
+            [view addSubview:scannerViewController.flashButton];
+            
+        }
+        
+        if ([MWScannerViewController isZoomEnabled]) {
+            scannerViewController.zoomButton = [[UIButton alloc]initWithFrame:CGRectMake(10, 10, 35, 35)];
+            [scannerViewController.zoomButton setImage:[UIImage imageNamed:@"zoom.png"] forState:UIControlStateNormal];
+            [scannerViewController.zoomButton setHidden:NO];
+            [scannerViewController.zoomButton setBackgroundImage:nil forState:UIControlStateNormal];
+            [scannerViewController.zoomButton addTarget:scannerViewController action:@selector(doZoomToggle:) forControlEvents:UIControlEventTouchUpInside];
+            [view addSubview:scannerViewController.zoomButton];
             
         }
         
@@ -422,6 +448,9 @@ NSMutableDictionary *recgtVals;
             [MWOverlay addToPreviewLayer:previewLayer];
         }else if([MWScannerViewController getOverlayMode] == 2){
             [overlayImage setFrame:previewLayer.frame];
+        }
+        if ([MWScannerViewController isFlashEnabled] && scannerViewController.flashButton) {
+            scannerViewController.flashButton.frame = CGRectMake(scannerView.frame.size.width-10-35, 10, 35, 35);
         }
 
         

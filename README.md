@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.8.4
+ Version 1.8.5
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -88,12 +88,12 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
 
 * Instead of scanner.startScanning() use:
 
-        scanner.scanImage(x, y, width, height);
+        scanner.startScanning(x, y, width, height);
         
         
     or with custom init and callback:
     
-        scanImage(MWBSInitSpace.init, MWBSInitSpace.callback, x, y, width, height);
+        startScanning(MWBSInitSpace.init, MWBSInitSpace.callback, x, y, width, height);
         
 
         

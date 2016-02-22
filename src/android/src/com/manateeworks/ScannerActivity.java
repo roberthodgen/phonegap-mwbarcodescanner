@@ -58,8 +58,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 	public static int param_ZoomLevel1 = 0;
 	public static int param_ZoomLevel2 = 0;
 	public static int zoomLevel = 0;
-	private static int firstZoom = 150;
-	private static int secondZoom = 300;
+	public static int firstZoom = 150;
+	public static int secondZoom = 300;
 	public static int param_maxThreads = 4;
 
 	private ImageView overlayImage;
@@ -93,8 +93,6 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
 		setContentView(resources.getIdentifier("scanner", "layout", package_name));
 		activity = this;
-
-		// setContentView(R.layout.scanner);
 
 		overlayImage = (ImageView) findViewById(resources.getIdentifier("overlayImage", "id", package_name));
 
@@ -600,8 +598,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
 			JSONArray rawArray = new JSONArray();
 			if (rawResult != null) {
-				for (int i = 0; i < rawResult.length; i++) {
-					rawArray.put((int) (0xff & rawResult[i]));
+				for (byte aRawResult : rawResult) {
+					rawArray.put(0xff & aRawResult);
 				}
 			}
 

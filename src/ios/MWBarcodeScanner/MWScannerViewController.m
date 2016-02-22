@@ -226,6 +226,16 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     param_EnableFlash = flash;
     
 }
++ (BOOL) isFlashEnabled {
+    
+    return param_EnableFlash;
+    
+}
++ (BOOL) isZoomEnabled {
+    
+    return param_EnableZoom;
+    
+}
 
 + (void) turnFlashOn: (BOOL) flashOn {
     
