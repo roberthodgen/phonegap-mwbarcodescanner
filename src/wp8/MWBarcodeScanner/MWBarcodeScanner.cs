@@ -153,6 +153,9 @@ namespace Cordova.Extension.Commands
                     canvas.Clip = rg;
                     canvas.Margin = new Thickness(x - widthClip, y - heightClip, 0, 0);
 
+                    if (pX == 0 && pY == 0 && pWidth ==1 && pHeight == 1) {
+                        canvas.Visibility = Visibility.Collapsed;
+                    }
                     (currentPage.FindName("LayoutRoot") as Grid).Children.Add(canvas);
 
                     scannerPage = new ScannerPage();

@@ -93,6 +93,7 @@ typedef enum eMainScreenState {
 + (BOOL) getCloseScannerOnDecode;
 
 + (void) use60fps: (BOOL) use;
++ (void) setUseFrontCamera: (BOOL) use;
 
 - (void)revertToNormal;
 - (void)decodeResultNotification: (NSNotification *)notification;

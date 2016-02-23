@@ -80,7 +80,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
     ImageView overlayImage;
     ProgressBar pBar;
     public static boolean useAutoRect = true;
-
+    public static boolean useFrontCamera = false;
     // !!! Rects are in format: x, y, width, height !!!
     public static final Rect RECT_LANDSCAPE_1D = new Rect(2, 20, 96, 60);
     public static final Rect RECT_LANDSCAPE_2D = new Rect(20, 2, 60, 96);
@@ -468,8 +468,14 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
             }
             return true;
 
-        } else if ("duplicateCodeDelay".equals(action)) {
+        }
+        else if ("duplicateCodeDelay".equals(action)) {
             BarcodeScanner.MWBsetDuplicatesTimeout(args.getInt(0));
+            return true;
+
+        }
+        else if ("useFrontCamera".equals(action)) {
+            useFrontCamera = args.getBoolean(0);
             return true;
 
         } else if ("scanImage".equals(action)) {
@@ -1619,6 +1625,9 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
                     rlFullScreen.addView(scrollView);
                     viewGroupToAddTo.addView(rlFullScreen);
 
+                    if (xP==0 && yP==0 && widthP ==1 && heightP==1){
+                        rlFullScreen.setVisibility(View.INVISIBLE);
+                    }
 
                     rlFullScreen.addView(pBar);
 

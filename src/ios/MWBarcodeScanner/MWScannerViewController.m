@@ -24,6 +24,7 @@ BOOL param_EnableFlash = YES;
 BOOL param_EnableZoom = YES;
 BOOL param_closeOnSuccess = YES;
 
+
 static BOOL param_use60fps = NO;
 
 BOOL param_defaultFlashOn = NO;
@@ -34,6 +35,7 @@ int zoomLevel = 0;
 int param_maxThreads = 4;
 int activeThreads = 0;
 int availableThreads = 0;
+BOOL useFrontCamera = NO;
 
 
 static NSString *DecoderResultNotification = @"DecoderResultNotification";
@@ -289,6 +291,10 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
     
     
 }
++ (void) setUseFrontCamera: (BOOL) use
+{
+    useFrontCamera = use;
+}
 
 + (void) setZoomLevels: (int) zoomLevel1 zoomLevel2: (int) zoomLevel2 initialZoomLevel: (int) initialZoomLevel {
     
@@ -478,7 +484,17 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 - (void)initCapture
 {
     /*We setup the input*/
-    self.device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if (useFrontCamera) {
+        NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+        for (AVCaptureDevice *device in devices) {
+            if ([device position] == AVCaptureDevicePositionFront) {
+                self.device = device;
+                break;
+            }
+        }
+    }else{
+        self.device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    }
     
     AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:self.device error:nil];
     
@@ -696,7 +712,17 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 - (AVCaptureVideoPreviewLayer *)generateLayerWithRect:(CGPoint)bottomRightPoint
 {
     /*We setup the input*/
-    self.device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if (useFrontCamera) {
+        NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+        for (AVCaptureDevice *device in devices) {
+            if ([device position] == AVCaptureDevicePositionFront) {
+                self.device = device;
+                break;
+            }
+        }
+    }else{
+        self.device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    }
     
     AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:self.device error:nil];
     

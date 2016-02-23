@@ -1,5 +1,5 @@
 /*
-    Version 1.8.5
+    Version 1.8.6
    
     - Added option to set scanning rectangle for partial view scanning. To use it just add the following line to the scanner configuration:
 
@@ -637,6 +637,14 @@ MWBtoggleZoom: function() {
     */
    MWBuseAutoRect: function(useAutoRect) {
        cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setUseAutorect", [useAutoRect]);
+   },
+   /**
+    *  Use front facing camera
+    *
+    *  useFrontCamera   Whether or not to use front facing camera [true, false]; default: false
+    */
+   MWBuseFrontCamera: function(useFrontCamera) {
+        cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "useFrontCamera", [useFrontCamera]);
    }
  
  };
@@ -711,6 +719,9 @@ scanner.toggleFlash = function(){
 }
 scanner.toggleZoom = function(){
     BarcodeScanner.MWBtoggleZoom();
+}
+scanner.resumeScanning = function(){
+    BarcodeScanner.MWBresumeScanning();
 }
 
 scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
@@ -866,7 +877,7 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
                   //  mwbs['MWBsetParam'](constants.MWB_CODE_MASK_DM, constants.MWB_PAR_ID_RESULT_PREFIX, constants.MWB_PAR_VALUE_RESULT_PREFIX_ALWAYS);
                   //  mwbs['MWBduplicateCodeDelay'](1000);    
                   //  mwbs['MWBuseAutoRect'](false);      
-  
+                  //  mwbs['MWBuseFrontCamera'](true);
 
                                   
 
@@ -921,7 +932,7 @@ scanner.scanImage =function(initMWBS,callbackMWBS,imageURI){
                 */
                 /*
                  setTimeout(function(){                  
-                    BarcodeScanner.MWBresumeScanning();  
+                    scanner.resumeScanning();  
                  },2000);                                
                 */
 

@@ -35,6 +35,8 @@ AVCaptureVideoPreviewLayer *previewLayer;
 UIInterfaceOrientation currentOrientation;
 UIImageView *overlayImage;
 BOOL useAutoRect = true;
+BOOL useFCamera = false;
+
 NSMutableDictionary *recgtVals;
 
 
@@ -47,9 +49,9 @@ NSMutableDictionary *recgtVals;
         recgtVals = nil;
         
         currentOrientation = [[UIApplication sharedApplication]statusBarOrientation];
-        
         scannerViewController = [[MWScannerViewController alloc] initWithNibName:@"MWScannerViewController" bundle:nil];
         scannerViewController.delegate = self;
+        [MWScannerViewController setUseFrontCamera:useFCamera];
         scannerViewController.customParams = customParams;
         [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(decodeNotification:) name: @"DecoderResultNotification" object: nil];
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -119,6 +121,9 @@ NSMutableDictionary *recgtVals;
             [view addSubview:scannerViewController.zoomButton];
             
         }
+        if (leftP == 0 && topP == 0 && widthP == 1 && heightP == 1) {
+            [view setHidden:YES];
+        }
         
 #if !__has_feature(objc_arc)
         callbackId= [command.callbackId retain];
@@ -136,6 +141,7 @@ NSMutableDictionary *recgtVals;
     
     scannerViewController = [[MWScannerViewController alloc] initWithNibName:@"MWScannerViewController" bundle:nil];
     scannerViewController.delegate = self;
+    [MWScannerViewController setUseFrontCamera:useFCamera];
     scannerViewController.customParams = customParams;
     [self.viewController presentViewController:scannerViewController animated:YES completion:^{}];
 #if !__has_feature(objc_arc)
@@ -469,6 +475,11 @@ NSMutableDictionary *recgtVals;
 {
     int codeMask = [[command.arguments objectAtIndex:0] intValue];
     MWB_setActiveCodes(codeMask);
+}
+
+- (void)useFrontCamera:(CDVInvokedUrlCommand*)command
+{
+    useFCamera = [[command.arguments objectAtIndex:0] boolValue];
 }
 
 - (void)setActiveSubcodes:(CDVInvokedUrlCommand*)command

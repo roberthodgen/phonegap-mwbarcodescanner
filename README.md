@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.8.5
+ Version 1.8.6
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -383,6 +383,15 @@ Add a notification plugin (if not already present):
 * (Optional): You can replace our default overlay_mw.png for the camera screen with your own customized image;
 
 &nbsp;
+###Changes in 1.8.6:
+&nbsp;
+- Added option for using the front facing camera:
+
+        mwbs['MWBuseFrontCamera'](true);
+        
+- Bug fixes
+
+&nbsp;
 ###Changes in 1.8.2:
 &nbsp;
 - Added option to set scanning rectangle for partial view scanning. To use it just add the following line to the scanner configuration:
@@ -429,8 +438,8 @@ Add a notification plugin (if not already present):
 - Added continuous scanning functionality:
 
         mwbs['MWBcloseScannerOnDecode'](false)  - to enable continuous scanning
-        BarcodeScanner.MWBresumeScanning()      - for resuming after successful scan
-        BarcodeScanner.MWBcloseScanner()        - to finish with continuous scanning
+        scanner.resumeScanning()                - for resuming after successful scan
+        scanner.stopScanner()                   - to finish with continuous scanning
     
 - Added support for 64bit android devices.
 - Camera overlay bug fixes.
