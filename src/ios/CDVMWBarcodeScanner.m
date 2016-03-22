@@ -545,6 +545,9 @@ NSMutableDictionary *recgtVals;
     if ([orientation isEqualToString:@"LandscapeRight"]){
         interfaceOrientation = UIInterfaceOrientationMaskLandscapeRight;
     }
+    if ([orientation isEqualToString:@"All"]){
+        interfaceOrientation = UIInterfaceOrientationMaskAll;
+    }
     
     [MWScannerViewController setInterfaceOrientation:interfaceOrientation];
     

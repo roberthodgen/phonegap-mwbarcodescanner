@@ -1,5 +1,5 @@
 /*
-    Version 1.8.6
+    Version 1.8.7
    
     - Added option to set scanning rectangle for partial view scanning. To use it just add the following line to the scanner configuration:
 
@@ -304,6 +304,7 @@
      OrientationPortrait :         'Portrait',
      OrientationLandscapeLeft :    'LandscapeLeft',
      OrientationLandscapeRight :   'LandscapeRight',
+     OrientationAll :              'All',
      OverlayModeNone :    0,
      OverlayModeMW :      1,
      OverlayModeImage :   2

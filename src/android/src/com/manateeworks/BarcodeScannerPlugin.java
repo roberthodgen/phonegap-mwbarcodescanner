@@ -348,19 +348,21 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 
             String orientation = args.getString(0);
             if (orientation.equalsIgnoreCase("Portrait"))
-
             {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-            }
+            } else
             if (orientation.equalsIgnoreCase("LandscapeLeft"))
 
             {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-            }
+            } else
             if (orientation.equalsIgnoreCase("LandscapeRight"))
 
             {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+            } else
+            if (orientation.equalsIgnoreCase("All")){
+                ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
             }
 
             return true;
@@ -468,13 +470,11 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
             }
             return true;
 
-        }
-        else if ("duplicateCodeDelay".equals(action)) {
+        } else if ("duplicateCodeDelay".equals(action)) {
             BarcodeScanner.MWBsetDuplicatesTimeout(args.getInt(0));
             return true;
 
-        }
-        else if ("useFrontCamera".equals(action)) {
+        } else if ("useFrontCamera".equals(action)) {
             useFrontCamera = args.getBoolean(0);
             return true;
 
@@ -1236,7 +1236,6 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
     }
 
 
-
     public void initCamera(SurfaceHolder surfaceHolder) {
 
         try {
@@ -1598,7 +1597,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
                         zoomParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
                         zoomParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
                         zoomParams.topMargin = (int) ((heightTmp - height) / 2) + marginDP;
-                        zoomButton.setPadding(padding,padding,padding,padding);
+                        zoomButton.setPadding(padding, padding, padding, padding);
                         zoomParams.leftMargin = (int) ((widthTmp - width) / 2) + marginDP;
                         zoomButton.setImageResource(cordova.getActivity().getResources().getIdentifier("zoom", "drawable", cordova.getActivity().getApplication().getPackageName()));
 
@@ -1625,7 +1624,7 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
                     rlFullScreen.addView(scrollView);
                     viewGroupToAddTo.addView(rlFullScreen);
 
-                    if (xP==0 && yP==0 && widthP ==1 && heightP==1){
+                    if (xP == 0 && yP == 0 && widthP == 1 && heightP == 1) {
                         rlFullScreen.setVisibility(View.INVISIBLE);
                     }
 

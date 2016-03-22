@@ -18,7 +18,7 @@
 #define RECT_DOTCODE            30, 20, 40, 60
 
 
-UIInterfaceOrientationMask param_Orientation = UIInterfaceOrientationMaskAll;
+UIInterfaceOrientationMask param_Orientation = UIInterfaceOrientationMaskLandscapeLeft;
 BOOL param_EnableHiRes = YES;
 BOOL param_EnableFlash = YES;
 BOOL param_EnableZoom = YES;
@@ -368,6 +368,7 @@ static NSString *DecoderResultNotification = @"DecoderResultNotification";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [self.view setBackgroundColor:[UIColor blackColor]];
     self.prevLayer = nil;
     [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(decodeResultNotification:) name: DecoderResultNotification object: nil];
     
@@ -1131,20 +1132,63 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
 }
 
-- (NSUInteger)supportedInterfaceOrientations {
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     
     return param_Orientation;
 }
 
 - (BOOL) shouldAutorotate {
     
-    return YES;
+    return (param_Orientation & (1 << self.interfaceOrientation)) != 0;
     
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+    return (param_Orientation & (1 << interfaceOrientation)) != 0;
 }
+
+- (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+
+    if (param_OverlayMode == OM_MW) {
+        [MWOverlay addToPreviewLayer:self.prevLayer];
+    }
+
+    
+}
+
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    
+    if (param_OverlayMode == OM_MW) {
+        [MWOverlay removeFromPreviewLayer];
+    }
+    
+    
+    
+    if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft){
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(self.view.frame.size.width,self.view.frame.size.height), MIN(self.view.frame.size.width,self.view.frame.size.height));
+    }
+    if (toInterfaceOrientation == UIInterfaceOrientationLandscapeRight){
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+        self.prevLayer.frame = CGRectMake(0, 0, MAX(self.view.frame.size.width,self.view.frame.size.height), MIN(self.view.frame.size.width,self.view.frame.size.height));
+    }
+    
+    
+    if (toInterfaceOrientation == UIInterfaceOrientationPortrait) {
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortrait;
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(self.view.frame.size.width,self.view.frame.size.height), MAX(self.view.frame.size.width,self.view.frame.size.height));
+    }
+    if (toInterfaceOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        self.prevLayer.connection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+        self.prevLayer.frame = CGRectMake(0, 0, MIN(self.view.frame.size.width,self.view.frame.size.height), MAX(self.view.frame.size.width,self.view.frame.size.height));
+    }
+    
+    
+    
+}
+
+
+
 
 
 @end

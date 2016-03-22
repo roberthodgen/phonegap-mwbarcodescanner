@@ -101,7 +101,6 @@ typedef enum eMainScreenState {
 - (void) startScanning;
 - (void) stopScanning;
 - (void) toggleTorch;
-+ (void) setDuplicateDelayTime: (int) delay;
 + (BOOL) isFlashEnabled;
 + (BOOL) isZoomEnabled;
 
