@@ -1,18 +1,5 @@
 package com.manateeworks;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-
-import org.apache.cordova.CallbackContext;
-import org.apache.cordova.PluginResult;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.manateeworks.BarcodeScanner.MWResult;
-import com.manateeworks.camera.CameraManager;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -29,6 +16,19 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+
+import com.manateeworks.BarcodeScanner.MWResult;
+import com.manateeworks.camera.CameraManager;
+
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.PluginResult;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 
 public class ScannerActivity extends Activity implements SurfaceHolder.Callback {
 
@@ -90,6 +90,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
         if (param_Orientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             setRequestedOrientation(param_Orientation);
         }
+
 
         state = State.STOPPED;
         package_name = getApplication().getPackageName();

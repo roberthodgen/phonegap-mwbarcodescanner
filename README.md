@@ -1,6 +1,6 @@
 Manatee Works Barcode Scanner Plugin
 =========================
- Version 1.8.7
+ Version 1.8.8
 
 Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your project(s)
 
@@ -109,7 +109,7 @@ Guide on how to add the Manatee Works Barcode Scanner Phonegap plugin to your pr
                 <input type="button" value="Scan fullscreen" onclick="scanner.startScanning()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
                 <input type="button" value="Scan in view" onclick="scanner.startScanning(0,4,100,50)" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
                 <input type="button" value="Pause/Resume" onclick="scanner.togglePauseResume()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
-                <input type="button" value="Close" onclick="scanner.stopScanner()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
+                <input type="button" value="Close" onclick="scanner.closeScanner()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
                 <input type="button" value="Flash" onclick="scanner.toggleFlash()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
                 <input type="button" value="Zoom" onclick="scanner.toggleZoom()" style="font-size: 12px; width: 105px; height: 30px; margin-top: 10px;"/>
             </form>
@@ -383,6 +383,12 @@ Add a notification plugin (if not already present):
 * (Optional): You can replace our default overlay_mw.png for the camera screen with your own customized image;
 
 &nbsp;
+###Changes in 1.8.8:
+&nbsp;
+- Added support for android API 23 app permissions:
+- Bug fixes
+
+&nbsp;
 ###Changes in 1.8.6:
 &nbsp;
 - Added option for using the front facing camera:
@@ -411,7 +417,7 @@ Add a notification plugin (if not already present):
 - Other methods for partial screen scanning control:
 
         scanner.togglePauseResume() - toggle pause resume scanning
-        scanner.stopScanner()       - stop and remove scanner view
+        scanner.closeScanner()       - stop and remove scanner view
         scanner.toggleFlash()       - toggle flash on/off
         scanner.toggleZoom()        - toggle zoom in/out
 
@@ -439,7 +445,7 @@ Add a notification plugin (if not already present):
 
         mwbs['MWBcloseScannerOnDecode'](false)  - to enable continuous scanning
         scanner.resumeScanning()                - for resuming after successful scan
-        scanner.stopScanner()                   - to finish with continuous scanning
+        scanner.closeScanner()                   - to finish with continuous scanning
     
 - Added support for 64bit android devices.
 - Camera overlay bug fixes.

@@ -1,9 +1,11 @@
 package com.manateeworks;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -51,7 +53,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -254,13 +255,14 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
             stopScanner();
             cbc = callbackContext;
             ScannerActivity.cbc = cbc;
-            Context context = this.cordova.getActivity().getApplicationContext();
-            Intent intent = new Intent(context, com.manateeworks.ScannerActivity.class);
-            this.cordova.startActivityForResult(this, intent, 1);
-            return true;
 
-        } else if ("stopScanner".equals(action)) {
-            stopScanner();
+            if(cordova.hasPermission(Manifest.permission.CAMERA)){
+                Context context = this.cordova.getActivity().getApplicationContext();
+                Intent intent = new Intent(context, com.manateeworks.ScannerActivity.class);
+                this.cordova.startActivityForResult(this, intent, 1);
+            }else{
+                cordova.requestPermission(this,234,Manifest.permission.CAMERA);
+            }
             return true;
 
         } else if ("startScannerView".equals(action)) {
@@ -347,21 +349,17 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
         } else if ("setInterfaceOrientation".equals(action)) {
 
             String orientation = args.getString(0);
-            if (orientation.equalsIgnoreCase("Portrait"))
-            {
+            if (orientation.equalsIgnoreCase("Portrait")) {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-            } else
-            if (orientation.equalsIgnoreCase("LandscapeLeft"))
+            } else if (orientation.equalsIgnoreCase("LandscapeLeft"))
 
             {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-            } else
-            if (orientation.equalsIgnoreCase("LandscapeRight"))
+            } else if (orientation.equalsIgnoreCase("LandscapeRight"))
 
             {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
-            } else
-            if (orientation.equalsIgnoreCase("All")){
+            } else if (orientation.equalsIgnoreCase("All")) {
                 ScannerActivity.param_Orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
             }
 
@@ -465,6 +463,8 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
             return true;
 
         } else if ("closeScanner".equals(action)) {
+            stopScanner();
+
             if (ScannerActivity.activity != null) {
                 ScannerActivity.activity.finish();
             }
@@ -1237,7 +1237,6 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
 
 
     public void initCamera(SurfaceHolder surfaceHolder) {
-
         try {
             // Select desired camera resoloution. Not all devices supports all
             // resolutions, closest available will be chosen
@@ -1316,6 +1315,8 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
         pBar.setVisibility(View.GONE);
         // flashOn = false;
         // updateFlash();
+
+
     }
 
     public void handleDecode(MWResult result) {
@@ -1491,182 +1492,212 @@ public class BarcodeScannerPlugin extends CordovaPlugin implements SurfaceHolder
         updateFlash();
     }
 
+    public void onRequestPermissionResult(int requestCode, String[] permissions,
+                                          int[] grantResults) throws JSONException {
+        for (int r : grantResults) {
+            if (r == PackageManager.PERMISSION_DENIED) {
+                stopScanner();
+                if (ScannerActivity.activity != null) {
+                    ScannerActivity.activity.finish();
+                }
+                return;
+            }
+            if (r == PackageManager.PERMISSION_GRANTED) {
+                if (requestCode==123)
+                    startScannerView();
+                else if (requestCode == 234){
+                    Context context = this.cordova.getActivity().getApplicationContext();
+                    Intent intent = new Intent(context, com.manateeworks.ScannerActivity.class);
+                    this.cordova.startActivityForResult(this, intent, 1);
+                }
+            }
+        }
+
+    }
+
+
     @SuppressLint("NewApi")
     private void startScannerView() {
-        if (rlFullScreen == null) {
-            rects = null;
-            final ViewGroup viewGroupToAddTo = getMainViewGroup();
-            int w = cordova.getActivity().findViewById(android.R.id.content).getWidth();
-            int h = cordova.getActivity().findViewById(android.R.id.content).getHeight();
+        if (cordova.hasPermission(Manifest.permission.CAMERA)) {
+            if (rlFullScreen == null) {
+                rects = null;
+                final ViewGroup viewGroupToAddTo = getMainViewGroup();
+                int w = cordova.getActivity().findViewById(android.R.id.content).getWidth();
+                int h = cordova.getActivity().findViewById(android.R.id.content).getHeight();
 
-            WindowManager wm = (WindowManager) cordova.getActivity().getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
+                WindowManager wm = (WindowManager) cordova.getActivity().getSystemService(Context.WINDOW_SERVICE);
+                Display display = wm.getDefaultDisplay();
 
-            final Point size = new Point();
-            display.getSize(size);
+                final Point size = new Point();
+                display.getSize(size);
 
-            final float AR = (float) size.y / (float) size.x;
+                final float AR = (float) size.y / (float) size.x;
 
-            final double x = xP / 100 * w;
-            final double y = yP / 100 * h;
-            final double width = widthP / 100 * w;
-            final double height = heightP / 100 * h;
+                final double x = xP / 100 * w;
+                final double y = yP / 100 * h;
+                final double width = widthP / 100 * w;
+                final double height = heightP / 100 * h;
 
-            cordova.getActivity().runOnUiThread(new Runnable() {
+                cordova.getActivity().runOnUiThread(new Runnable() {
 
-                public void run() {
-                    CameraManager.init(cordova.getActivity());
+                    public void run() {
+                        CameraManager.init(cordova.getActivity());
 
-                    rlFullScreen = new RelativeLayout(cordova.getActivity());
-                    rlSurfaceContainer = new RelativeLayout(cordova.getActivity());
-                    scrollView = new ScrollView(cordova.getActivity());
-                    scrollView.setVerticalScrollBarEnabled(false);
-                    scrollView.setOnTouchListener(new OnTouchListener() {
+                        rlFullScreen = new RelativeLayout(cordova.getActivity());
+                        rlSurfaceContainer = new RelativeLayout(cordova.getActivity());
+                        scrollView = new ScrollView(cordova.getActivity());
+                        scrollView.setVerticalScrollBarEnabled(false);
+                        scrollView.setOnTouchListener(new OnTouchListener() {
 
-                        @Override
-                        public boolean onTouch(View v, MotionEvent event) {
-                            return true;
+                            @Override
+                            public boolean onTouch(View v, MotionEvent event) {
+                                return true;
+                            }
+                        });
+                        scrollView.setVisibility(View.INVISIBLE);
+                        surfaceView = new SurfaceView(cordova.getActivity());
+                        pBar = new ProgressBar(cordova.getActivity());
+                        RelativeLayout.LayoutParams pBarParams = new LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+                        pBarParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+                        pBar.setLayoutParams(pBarParams);
+                        pBar.setVisibility(View.VISIBLE);
+                        rlFullScreen.setLayoutParams(
+                                new LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+                        LayoutParams lps = new LayoutParams((int) Math.round(width), (int) Math.round(height));
+                        lps.leftMargin = (int) Math.round(x);
+                        lps.topMargin = (int) Math.round(y);
+                        int heightTmp = 0;
+                        int widthTmp = 0;
+
+                        if (width * AR >= height) {
+                            heightTmp = (int) Math.round(width * AR);
+                            widthTmp = (int) Math.round(width);
+                        } else {
+                            widthTmp = (int) Math.round(height / AR);
+                            heightTmp = (int) Math.round(height);
                         }
-                    });
-                    scrollView.setVisibility(View.INVISIBLE);
-                    surfaceView = new SurfaceView(cordova.getActivity());
-                    pBar = new ProgressBar(cordova.getActivity());
-                    RelativeLayout.LayoutParams pBarParams = new LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-                    pBarParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-                    pBar.setLayoutParams(pBarParams);
-                    pBar.setVisibility(View.VISIBLE);
-                    rlFullScreen.setLayoutParams(
-                            new LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+                        final float heightTmpRunnable = heightTmp;
+                        rlSurfaceContainer.setLayoutParams(new LayoutParams(Math.round(widthTmp), Math.round(heightTmp)));
+                        surfaceView.setLayoutParams(new LayoutParams(Math.round(widthTmp), Math.round(heightTmp)));
 
-                    LayoutParams lps = new LayoutParams((int) Math.round(width), (int) Math.round(height));
-                    lps.leftMargin = (int) Math.round(x);
-                    lps.topMargin = (int) Math.round(y);
-                    int heightTmp = 0;
-                    int widthTmp = 0;
+                        rlSurfaceContainer.addView(surfaceView);
 
-                    if (width * AR >= height) {
-                        heightTmp = (int) Math.round(width * AR);
-                        widthTmp = (int) Math.round(width);
-                    } else {
-                        widthTmp = (int) Math.round(height / AR);
-                        heightTmp = (int) Math.round(height);
-                    }
-                    final float heightTmpRunnable = heightTmp;
-                    rlSurfaceContainer.setLayoutParams(new LayoutParams(Math.round(widthTmp), Math.round(heightTmp)));
-                    surfaceView.setLayoutParams(new LayoutParams(Math.round(widthTmp), Math.round(heightTmp)));
+                        if (ScannerActivity.param_EnableFlash) {
+                            int widthHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64, cordova.getActivity().getResources().getDisplayMetrics());
+                            int marginDP = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, cordova.getActivity().getResources().getDisplayMetrics());
+                            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, cordova.getActivity().getResources().getDisplayMetrics());
 
-                    rlSurfaceContainer.addView(surfaceView);
+                            flashButton = new ImageButton(cordova.getActivity());
+                            LayoutParams flashParams = new LayoutParams(widthHeight, widthHeight);
+                            flashParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                            flashParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                            flashParams.topMargin = (int) ((heightTmp - height) / 2) + marginDP;
+                            flashParams.rightMargin = (int) ((widthTmp - width) / 2) + marginDP;
+                            flashButton.setImageResource(cordova.getActivity().getResources().getIdentifier("flashbuttonoff", "drawable", cordova.getActivity().getApplication().getPackageName()));
+                            flashButton.setScaleType(ScaleType.FIT_XY);
+                            flashButton.setPadding(padding, padding, padding, padding);
+                            flashButton.setBackground(null);
+                            if (flashButton != null) {
+                                flashButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        toggleFlash();
 
-                    if (ScannerActivity.param_EnableFlash) {
-                        int widthHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64, cordova.getActivity().getResources().getDisplayMetrics());
-                        int marginDP = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, cordova.getActivity().getResources().getDisplayMetrics());
-                        int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, cordova.getActivity().getResources().getDisplayMetrics());
-
-                        flashButton = new ImageButton(cordova.getActivity());
-                        LayoutParams flashParams = new LayoutParams(widthHeight, widthHeight);
-                        flashParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-                        flashParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-                        flashParams.topMargin = (int) ((heightTmp - height) / 2) + marginDP;
-                        flashParams.rightMargin = (int) ((widthTmp - width) / 2) + marginDP;
-                        flashButton.setImageResource(cordova.getActivity().getResources().getIdentifier("flashbuttonoff", "drawable", cordova.getActivity().getApplication().getPackageName()));
-                        flashButton.setScaleType(ScaleType.FIT_XY);
-                        flashButton.setPadding(padding, padding, padding, padding);
-                        flashButton.setBackground(null);
-                        if (flashButton != null) {
-                            flashButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    toggleFlash();
-
-                                }
-                            });
-                        }
-
-                        rlSurfaceContainer.addView(flashButton, flashParams);
-                        rlSurfaceContainer.bringChildToFront(flashButton);
-                    }
-
-                    if (ScannerActivity.param_EnableZoom) {
-                        int widthHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64, cordova.getActivity().getResources().getDisplayMetrics());
-                        int marginDP = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, cordova.getActivity().getResources().getDisplayMetrics());
-                        int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, cordova.getActivity().getResources().getDisplayMetrics());
-
-                        zoomButton = new ImageButton(cordova.getActivity());
-                        LayoutParams zoomParams = new LayoutParams(widthHeight, widthHeight);
-                        zoomParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-                        zoomParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-                        zoomParams.topMargin = (int) ((heightTmp - height) / 2) + marginDP;
-                        zoomButton.setPadding(padding, padding, padding, padding);
-                        zoomParams.leftMargin = (int) ((widthTmp - width) / 2) + marginDP;
-                        zoomButton.setImageResource(cordova.getActivity().getResources().getIdentifier("zoom", "drawable", cordova.getActivity().getApplication().getPackageName()));
-
-                        zoomButton.setScaleType(ScaleType.FIT_XY);
-                        zoomButton.setBackground(null);
-                        if (zoomButton != null) {
-                            zoomButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    ScannerActivity.toggleZoom();
-
-                                }
-                            });
-                        }
-
-                        rlSurfaceContainer.addView(zoomButton, zoomParams);
-                        rlSurfaceContainer.bringChildToFront(zoomButton);
-                    }
-
-                    scrollView.addView(rlSurfaceContainer);
-
-                    scrollView.setClipToPadding(true);
-                    scrollView.setLayoutParams(lps);
-                    rlFullScreen.addView(scrollView);
-                    viewGroupToAddTo.addView(rlFullScreen);
-
-                    if (xP == 0 && yP == 0 && widthP == 1 && heightP == 1) {
-                        rlFullScreen.setVisibility(View.INVISIBLE);
-                    }
-
-                    rlFullScreen.addView(pBar);
-
-                    new Timer().schedule(new TimerTask() {
-
-                        @Override
-                        public void run() {
-                            // TODO Auto-generated method stub
-                            cordova.getActivity().runOnUiThread(new Runnable() {
-                                public void run() {
-
-                                    setAutoRect();
-                                    scrollView.scrollTo(0, (int) (heightTmpRunnable / 2 - height / 2));
-                                    if (ScannerActivity.param_OverlayMode == 1) {
-                                        MWOverlay.addOverlay(cordova.getActivity(), surfaceView);
-                                        MWOverlay.setPaused(false);
-                                    } else if (ScannerActivity.param_OverlayMode == 2) {
-                                        overlayImage = new ImageView(cordova.getActivity());
-                                        overlayImage.setScaleType(ScaleType.FIT_XY);
-                                        overlayImage.setImageResource(cordova.getActivity().getResources().getIdentifier("overlay_mw", "drawable",
-                                                cordova.getActivity().getPackageName()));
-                                        LayoutParams lps = new LayoutParams((int) Math.round(width), (int) Math.round(height));
-                                        lps.topMargin = (int) Math.round(heightTmpRunnable / 2 - height / 2);
-                                        rlSurfaceContainer.addView(overlayImage, lps);
                                     }
+                                });
+                            }
 
-                                }
-                            });
+                            rlSurfaceContainer.addView(flashButton, flashParams);
+                            rlSurfaceContainer.bringChildToFront(flashButton);
                         }
-                    }, 500);
 
-                    SurfaceHolder surfaceHolder = surfaceView.getHolder();
+                        if (ScannerActivity.param_EnableZoom) {
+                            int widthHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64, cordova.getActivity().getResources().getDisplayMetrics());
+                            int marginDP = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, cordova.getActivity().getResources().getDisplayMetrics());
+                            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, cordova.getActivity().getResources().getDisplayMetrics());
 
-                    surfaceHolder.addCallback(BarcodeScannerPlugin.this);
-                    surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+                            zoomButton = new ImageButton(cordova.getActivity());
+                            LayoutParams zoomParams = new LayoutParams(widthHeight, widthHeight);
+                            zoomParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                            zoomParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                            zoomParams.topMargin = (int) ((heightTmp - height) / 2) + marginDP;
+                            zoomButton.setPadding(padding, padding, padding, padding);
+                            zoomParams.leftMargin = (int) ((widthTmp - width) / 2) + marginDP;
+                            zoomButton.setImageResource(cordova.getActivity().getResources().getIdentifier("zoom", "drawable", cordova.getActivity().getApplication().getPackageName()));
 
-                }
-            });
+                            zoomButton.setScaleType(ScaleType.FIT_XY);
+                            zoomButton.setBackground(null);
+                            if (zoomButton != null) {
+                                zoomButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        ScannerActivity.toggleZoom();
+
+                                    }
+                                });
+                            }
+
+                            rlSurfaceContainer.addView(zoomButton, zoomParams);
+                            rlSurfaceContainer.bringChildToFront(zoomButton);
+                        }
+
+                        scrollView.addView(rlSurfaceContainer);
+
+                        scrollView.setClipToPadding(true);
+                        scrollView.setLayoutParams(lps);
+                        rlFullScreen.addView(scrollView);
+                        viewGroupToAddTo.addView(rlFullScreen);
+
+                        if (xP == 0 && yP == 0 && widthP == 1 && heightP == 1) {
+                            rlFullScreen.setVisibility(View.INVISIBLE);
+                        }
+
+                        rlFullScreen.addView(pBar);
+
+                        new Timer().schedule(new TimerTask() {
+
+                            @Override
+                            public void run() {
+                                // TODO Auto-generated method stub
+                                cordova.getActivity().runOnUiThread(new Runnable() {
+                                    public void run() {
+
+                                        setAutoRect();
+                                        scrollView.scrollTo(0, (int) (heightTmpRunnable / 2 - height / 2));
+                                        if (ScannerActivity.param_OverlayMode == 1) {
+                                            MWOverlay.addOverlay(cordova.getActivity(), surfaceView);
+                                            MWOverlay.setPaused(false);
+                                        } else if (ScannerActivity.param_OverlayMode == 2) {
+                                            overlayImage = new ImageView(cordova.getActivity());
+                                            overlayImage.setScaleType(ScaleType.FIT_XY);
+                                            overlayImage.setImageResource(cordova.getActivity().getResources().getIdentifier("overlay_mw", "drawable",
+                                                    cordova.getActivity().getPackageName()));
+                                            LayoutParams lps = new LayoutParams((int) Math.round(width), (int) Math.round(height));
+                                            lps.topMargin = (int) Math.round(heightTmpRunnable / 2 - height / 2);
+                                            rlSurfaceContainer.addView(overlayImage, lps);
+                                        }
+
+                                    }
+                                });
+                            }
+                        }, 500);
+
+                        SurfaceHolder surfaceHolder = surfaceView.getHolder();
+
+                        surfaceHolder.addCallback(BarcodeScannerPlugin.this);
+                        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+                    }
+                });
+
+            }
+        } else {
+            cordova.requestPermission(this, 123, android.Manifest.permission.CAMERA);
 
         }
+
     }
 
 }

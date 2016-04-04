@@ -632,6 +632,16 @@ NSMutableDictionary *recgtVals;
 }
 - (void)closeScanner:(CDVInvokedUrlCommand*)command
 {
+    if ([self.viewController.view viewWithTag:9158436]) {
+        [[self.viewController.view viewWithTag:9158436]removeFromSuperview];
+        [scannerViewController stopScanning];
+        previewLayer = nil;
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:@"DecoderResultNotification" object:nil];
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:@"UIDeviceOrientationDidChangeNotification" object:nil];
+        scannerViewController = nil;
+        
+        
+    }
     if (scannerViewController) {
         [scannerViewController dismissViewControllerAnimated:YES completion:nil];
     }

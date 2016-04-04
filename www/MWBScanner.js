@@ -1,4 +1,9 @@
 /*
+    Version 1.8.8
+   
+    - Added support for android API 23 app permissions
+    - Bugfixes
+    
     Version 1.8.7
    
     - Added option to set scanning rectangle for partial view scanning. To use it just add the following line to the scanner configuration:
@@ -13,7 +18,7 @@
     - Other methods for partial screen scanning control:
 
         scanner.togglePauseResume() - toggle pause resume scanning
-        scanner.stopScanner()       - stop and remove scanner view
+        scanner.closeScanner()       - stop and remove scanner view
         scanner.toggleFlash()       - toggle flash on/off
         scanner.toggleZoom()        - toggle zoom in/out
 
@@ -612,12 +617,6 @@ MWBtoggleZoom: function() {
        cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "setParam", [codeMask, paramId, paramValue]);
    },
    /**
-    * Remove scanner view 
-    */
-   MWBstopScannerView: function() {
-       cordova.exec(function(){}, function(){}, "MWBarcodeScanner", "stopScanner", []);
-   },
-   /**
     * Pause scanner view
     */
    MWBtogglePauseResume: function() {
@@ -709,8 +708,8 @@ MWBtoggleZoom: function() {
 /* END registration settings */
  scanner = {};
 
-scanner.stopScanner= function(){
-    BarcodeScanner.MWBstopScannerView();
+scanner.closeScanner = function(){
+    BarcodeScanner.MWBcloseScanner();
 }
 scanner.togglePauseResume= function(){
        BarcodeScanner.MWBtogglePauseResume();
